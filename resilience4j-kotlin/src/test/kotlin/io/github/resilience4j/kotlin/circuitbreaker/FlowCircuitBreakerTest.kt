@@ -16,8 +16,6 @@
  *
  *
  */
-@file:Suppress("EXPERIMENTAL_API_USAGE")
-
 package io.github.resilience4j.kotlin.circuitbreaker
 
 
@@ -29,9 +27,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
+
 import java.util.concurrent.Phaser
 
+@ExperimentalCoroutinesApi
 class FlowCircuitBreakerTest {
 
     @Test

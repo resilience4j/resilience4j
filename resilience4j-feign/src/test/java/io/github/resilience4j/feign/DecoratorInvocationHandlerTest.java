@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,17 +22,21 @@ import feign.Target.HardCodedTarget;
 import io.github.resilience4j.feign.test.TestFeignDecorator;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class DecoratorInvocationHandlerTest {
+class DecoratorInvocationHandlerTest {
 
     private DecoratorInvocationHandler testSubject;
     private TestService testService;
@@ -42,8 +46,8 @@ public class DecoratorInvocationHandlerTest {
     private Map<Method, MethodHandler> dispatch;
     private Target<TestService> target;
 
-    @Before
-    public void setUp() throws Throwable {
+    @BeforeEach
+    void setUp() throws Throwable {
         target = new HardCodedTarget<TestService>(TestService.class,
             TestService.class.getSimpleName());
         testService = new TestServiceImpl();
@@ -60,10 +64,10 @@ public class DecoratorInvocationHandlerTest {
     }
 
     @Test
-    public void testInvoke() throws Throwable {
+    void invoke() throws Throwable {
         final Object result = testSubject.invoke(testService, greetingMethod, new Object[0]);
 
-        verify(methodHandler, times(1)).invoke(any());
+        verify(methodHandler).invoke(any());
         assertThat(feignDecorator.isCalled())
             .describedAs("FeignDecorator is called")
             .isTrue();
@@ -73,13 +77,13 @@ public class DecoratorInvocationHandlerTest {
     }
 
     @Test
-    public void testDecorator() throws Throwable {
+    void decorator() throws Throwable {
         feignDecorator.setAlternativeFunction(fnArgs -> "AlternativeFunction");
         testSubject = new DecoratorInvocationHandler(target, dispatch, feignDecorator);
 
         final Object result = testSubject.invoke(testService, greetingMethod, new Object[0]);
 
-        verify(methodHandler, times(0)).invoke(any());
+        verify(methodHandler, never()).invoke(any());
         assertThat(feignDecorator.isCalled())
             .describedAs("FeignDecorator is called")
             .isTrue();
@@ -89,12 +93,12 @@ public class DecoratorInvocationHandlerTest {
     }
 
     @Test
-    public void testInvokeToString() throws Throwable {
+    void invokeToString() throws Throwable {
         final Method toStringMethod = testService.getClass().getMethod("toString");
 
         final Object result = testSubject.invoke(testService, toStringMethod, new Object[0]);
 
-        verify(methodHandler, times(0)).invoke(any());
+        verify(methodHandler, never()).invoke(any());
         assertThat(feignDecorator.isCalled())
             .describedAs("FeignDecorator is called")
             .isTrue();
@@ -104,13 +108,13 @@ public class DecoratorInvocationHandlerTest {
     }
 
     @Test
-    public void testInvokeEquals() throws Throwable {
+    void invokeEquals() throws Throwable {
         final Method equalsMethod = testService.getClass().getMethod("equals", Object.class);
 
         final Boolean result = (Boolean) testSubject
             .invoke(testService, equalsMethod, new Object[]{testSubject});
 
-        verify(methodHandler, times(0)).invoke(any());
+        verify(methodHandler, never()).invoke(any());
         assertThat(feignDecorator.isCalled())
             .describedAs("FeignDecorator is called")
             .isTrue();
@@ -121,13 +125,13 @@ public class DecoratorInvocationHandlerTest {
 
 
     @Test
-    public void testInvokeHashcode() throws Throwable {
+    void invokeHashcode() throws Throwable {
         final Method hashCodeMethod = testService.getClass().getMethod("hashCode");
 
         final Integer result = (Integer) testSubject
             .invoke(testService, hashCodeMethod, new Object[0]);
 
-        verify(methodHandler, times(0)).invoke(any());
+        verify(methodHandler, never()).invoke(any());
         assertThat(feignDecorator.isCalled())
             .describedAs("FeignDecorator is called")
             .isTrue();

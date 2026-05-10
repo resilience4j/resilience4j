@@ -1,16 +1,33 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.common.retry.configuration;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.retry.RetryConfig;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CommonRetryConfigurationPropertiesTest {
+class CommonRetryConfigurationPropertiesTest {
 
     private static final Consumer<CommonRetryConfigurationProperties.InstanceProperties> WITH_WAIT_DURATION = instanceProperties -> instanceProperties.setWaitDuration(Duration.ofSeconds(1));
     private static final Consumer<CommonRetryConfigurationProperties.InstanceProperties> ENABLE_EXPONENTIAL_BACKOFF = instanceProperties -> instanceProperties.setEnableExponentialBackoff(true);
@@ -20,57 +37,57 @@ public class CommonRetryConfigurationPropertiesTest {
     private static final Consumer<CommonRetryConfigurationProperties.InstanceProperties> WITH_RANDOMIZED_FACTOR = instanceProperties -> instanceProperties.setRandomizedWaitFactor(0.5);
 
     @Test
-    public void createRetryConfig_withDefault() {
+    void createRetryConfig_withDefault() {
         testCreateRetryConfig();
     }
 
     @Test
-    public void createRetryConfig_withWaitDuration() {
+    void createRetryConfig_withWaitDuration() {
         testCreateRetryConfig(WITH_WAIT_DURATION);
     }
 
     @Test
-    public void createRetryConfig_withExponentialBackoff() {
+    void createRetryConfig_withExponentialBackoff() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_EXPONENTIAL_BACKOFF);
     }
 
     @Test
-    public void createRetryConfig_withBackoffMultiplier() {
+    void createRetryConfig_withBackoffMultiplier() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER);
     }
 
     @Test
-    public void createRetryConfig_withExponentialMaxWaitDuration() {
+    void createRetryConfig_withExponentialMaxWaitDuration() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER, WITH_EXPONENTIAL_MAX_WAIT_DURATION);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedWait() {
+    void createRetryConfig_withRandomizedWait() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedFactor() {
+    void createRetryConfig_withRandomizedFactor() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, WITH_RANDOMIZED_FACTOR);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedExponentialBackoff() {
+    void createRetryConfig_withRandomizedExponentialBackoff() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, ENABLE_EXPONENTIAL_BACKOFF);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedExponentialBackoffMultiplier() {
+    void createRetryConfig_withRandomizedExponentialBackoffMultiplier() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedFactorExponentialBackoffMultiplier() {
+    void createRetryConfig_withRandomizedFactorExponentialBackoffMultiplier() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, WITH_RANDOMIZED_FACTOR, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER);
     }
 
     @Test
-    public void createRetryConfig_withRandomizedExponentialMaxWaitDuration() {
+    void createRetryConfig_withRandomizedExponentialMaxWaitDuration() {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, WITH_RANDOMIZED_FACTOR, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER, WITH_EXPONENTIAL_MAX_WAIT_DURATION);
     }
 
@@ -88,9 +105,9 @@ public class CommonRetryConfigurationPropertiesTest {
 
         RetryConfig retryConfig = properties.createRetryConfig(testConfigurationName, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(retryConfig).isNotNull(); // assert that retryConfig does not throw an exception
-        Assertions.assertThat(retryConfig.getIntervalFunction()).isNull();
-        Assertions.assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig).isNotNull(); // assert that retryConfig does not throw an exception
+        assertThat(retryConfig.getIntervalFunction()).isNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
     }
 
 }

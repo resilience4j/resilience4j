@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.common.RecordResultPredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -28,6 +27,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.LOCK_FREE;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
@@ -37,11 +39,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * test custom init of circuit breaker registry
  */
-public class CircuitBreakerConfigurationPropertiesTest {
+class CircuitBreakerConfigurationPropertiesTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testCreateCircuitBreakerRegistry() {
+    void createCircuitBreakerRegistry() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
@@ -74,7 +76,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getBackends()).hasSize(2);
         assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
 
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
@@ -87,8 +89,8 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getMinimumNumberOfCalls()).isEqualTo(10);
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
-        assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
-        assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
+        assertThat(circuitBreaker1.getSlowCallDurationThreshold()).hasSeconds(5);
+        assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState()).hasSeconds(5);
         assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
         assertThat(circuitBreaker1.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
@@ -96,8 +98,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         final CommonCircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties
             .getBackendProperties("backend1");
-        assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1"))
-            .isNotEmpty();
+        assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isPresent();
         assertThat(
             circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1").get()
                 .getRegisterHealthIndicator()).isTrue();
@@ -114,7 +115,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
 
     @Test
-    public void testCircuitBreakerIntervalFunctionProperties() {
+    void circuitBreakerIntervalFunctionProperties() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(1000));
@@ -136,7 +137,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         //Then
         assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
         assertThat(circuitBreakerConfigurationProperties.getTags()).isNotEmpty();
-        assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getBackends()).hasSize(2);
         final CircuitBreakerConfig circuitBreakerConfig1 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("backend1", instanceProperties1,
                 compositeCircuitBreakerCustomizer());
@@ -145,8 +146,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
                 compositeCircuitBreakerCustomizer());
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = circuitBreakerConfigurationProperties
             .getInstances().get("backend1");
-        assertThat(instancePropertiesForRetry1.getWaitDurationInOpenState().toMillis())
-            .isEqualTo(1000);
+        Assertions.assertThat(instancePropertiesForRetry1.getWaitDurationInOpenState()).hasMillis(1000);
         assertThat(circuitBreakerConfig1).isNotNull();
         assertThat(circuitBreakerConfig1.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(circuitBreakerConfig2).isNotNull();
@@ -155,7 +155,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
+    void createCircuitBreakerRegistryWithSharedConfigs() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setSlidingWindowSize(1000);
@@ -217,7 +217,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithDefaultConfig() {
+    void createCircuitBreakerRegistryWithDefaultConfig() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setSlidingWindowSize(1000);
@@ -277,7 +277,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithUnknownConfig() {
+    void createCircuitBreakerRegistryWithUnknownConfig() {
         CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -292,101 +292,116 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnFailureRateThresholdLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setFailureRateThreshold(0.999f);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnFailureRateThresholdAboveHundred() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setFailureRateThreshold(100.001f);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDurationInOpenStateLessThanMillisecond() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDurationInOpenState(Duration.ofNanos(999999));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnPermittedNumberOfCallsInHalfOpenStateLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setPermittedNumberOfCallsInHalfOpenState(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMinimumNumberOfCallsLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setMinimumNumberOfCalls(0);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlidingWindowSizeLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setSlidingWindowSize(0);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlowCallRateThresholdLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setSlowCallRateThreshold(0.999f);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlowCallRateThresholdAboveHundred() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setSlowCallRateThreshold(100.001f);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlowCallDurationThresholdLessThanOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setSlowCallDurationThreshold(Duration.ZERO);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDurationInHalfOpenStateNegative() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ofMillis(-1));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setExponentialBackoffMultiplier(0.0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnExponentialMaxWaitDurationInOpenStateLessThanMillisecond() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setExponentialMaxWaitDurationInOpenState(Duration.ofNanos(999999));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRandomizedWaitFactorNegative() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setRandomizedWaitFactor(-0.001);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setRandomizedWaitFactor(1.0);
+    @Test
+    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testCircuitBreakerConfigWithBaseConfig() {
+    void illegalArgumentOnFailureRateThresholdLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setFailureRateThreshold(0.999f))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnFailureRateThresholdAboveHundred() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setFailureRateThreshold(100.001f))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnWaitDurationInOpenStateLessThanMillisecond() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setWaitDurationInOpenState(Duration.ofNanos(999999)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnPermittedNumberOfCallsInHalfOpenStateLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setPermittedNumberOfCallsInHalfOpenState(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnMinimumNumberOfCallsLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setMinimumNumberOfCalls(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    void illegalArgumentOnSlidingWindowSizeLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setSlidingWindowSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    void illegalArgumentOnSlowCallRateThresholdLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setSlowCallRateThreshold(0.999f))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnSlowCallRateThresholdAboveHundred() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setSlowCallRateThreshold(100.001f))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    void illegalArgumentOnSlowCallDurationThresholdLessThanOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setSlowCallDurationThreshold(Duration.ZERO))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnWaitDurationInHalfOpenStateNegative() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ofMillis(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setExponentialBackoffMultiplier(0.0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnExponentialMaxWaitDurationInOpenStateLessThanMillisecond() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setExponentialMaxWaitDurationInOpenState(Duration.ofNanos(999999)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnRandomizedWaitFactorNegative() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setRandomizedWaitFactor(-0.001))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
+CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setRandomizedWaitFactor(1.0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void circuitBreakerConfigWithBaseConfig() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultConfig.setSlidingWindowSize(2000);
         defaultConfig.setWaitDurationInOpenState(Duration.ofMillis(100L));
@@ -414,7 +429,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testRecordExceptionWithBaseConfig() {
+    void recordExceptionWithBaseConfig() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -428,13 +443,13 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
-        assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new IllegalArgumentException())).isTrue();
-        assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new NullPointerException())).isFalse();
+        Assertions.assertThat(circuitBreakerConfig.getRecordExceptionPredicate()).accepts(new IllegalArgumentException());
+        Assertions.assertThat(circuitBreakerConfig.getRecordExceptionPredicate()).rejects(new NullPointerException());
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testIgnoreExceptionWithBaseConfig() {
+    void ignoreExceptionWithBaseConfig() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -448,13 +463,13 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
-        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IllegalArgumentException())).isTrue();
-        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
+        Assertions.assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate()).accepts(new IllegalArgumentException());
+        Assertions.assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate()).rejects(new NullPointerException());
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testIgnoreExceptionPredicateWithBaseConfig() {
+    void ignoreExceptionPredicateWithBaseConfig() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -468,23 +483,22 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
-        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IOException())).isTrue();
-        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testCircularReferenceInBaseConfigThrowsIllegalStateException() {
-        CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
-
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties selfReferencingConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        selfReferencingConfig.setBaseConfig("selfReferencingConfig");
-        circuitBreakerConfigurationProperties.getConfigs().put("selfReferencingConfig", selfReferencingConfig);
-
-        circuitBreakerConfigurationProperties.createCircuitBreakerConfig("selfReferencingConfig", selfReferencingConfig, compositeCircuitBreakerCustomizer());
+        Assertions.assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate()).accepts(new IOException());
+        Assertions.assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate()).rejects(new NullPointerException());
     }
 
     @Test
-    public void testFindCircuitBreakerPropertiesWithoutDefaultConfig() {
+    void circularReferenceInBaseConfigThrowsIllegalStateException() {
+CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties selfReferencingConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        selfReferencingConfig.setBaseConfig("selfReferencingConfig");
+        circuitBreakerConfigurationProperties.getConfigs().put("selfReferencingConfig", selfReferencingConfig);
+        assertThatThrownBy(() -> circuitBreakerConfigurationProperties.createCircuitBreakerConfig("selfReferencingConfig", selfReferencingConfig, compositeCircuitBreakerCustomizer()))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void findCircuitBreakerPropertiesWithoutDefaultConfig() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
 
@@ -504,7 +518,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void testFindCircuitBreakerPropertiesWithDefaultConfig() {
+    void findCircuitBreakerPropertiesWithDefaultConfig() {
         //Given
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setRegisterHealthIndicator(true);
@@ -529,7 +543,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithBaseAndDefaultConfig() {
+    void createCircuitBreakerRegistryWithBaseAndDefaultConfig() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties baseProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         baseProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED);
         baseProperties.setSlidingWindowSize(2000);
@@ -553,7 +567,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldRejectLockFreeTimeBasedWithSize1() {
+    void shouldRejectLockFreeTimeBasedWithSize1() {
         assertThatThrownBy(() -> CircuitBreakerConfig.custom()
                 .slidingWindow(1,1, CircuitBreakerConfig.SlidingWindowType.TIME_BASED, LOCK_FREE)
                 .build())

@@ -21,7 +21,9 @@ package io.github.resilience4j.kotlin.retry
 import io.github.resilience4j.kotlin.HelloWorldService
 import io.github.resilience4j.retry.Retry
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BiConsumer
@@ -41,13 +43,13 @@ class RetryTest {
         }
 
         //Then
-        Assertions.assertThat(result).isEqualTo("Hello world")
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+        assertThat(result).isEqualTo("Hello world")
+        assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
+        assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
         // Then the helloWorldService should be invoked 1 time
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
     }
 
     @Test
@@ -67,13 +69,13 @@ class RetryTest {
         }
 
         //Then
-        Assertions.assertThat(result).isEqualTo("Hello world")
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+        assertThat(result).isEqualTo("Hello world")
+        assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+        assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
         // Then the helloWorldService should be invoked twice
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(2)
     }
 
     @Test
@@ -93,13 +95,13 @@ class RetryTest {
         }
 
         //Then
-        Assertions.assertThat(result).isEqualTo("Hello world")
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+        assertThat(result).isEqualTo("Hello world")
+        assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+        assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
         // Then the helloWorldService should be invoked twice
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(2)
     }
 
     @Test
@@ -121,12 +123,12 @@ class RetryTest {
         }
 
         //Then
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
+        assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
         // Then the helloWorldService should be invoked the maximum number of times
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
     }
 
     @Test
@@ -141,13 +143,13 @@ class RetryTest {
         }
 
         //Then
-        Assertions.assertThat(function()).isEqualTo("Hello world")
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+        assertThat(function()).isEqualTo("Hello world")
+        assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
+        assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+        assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
         // Then the helloWorldService should be invoked 1 time
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
     }
 
     @Test
@@ -173,8 +175,8 @@ class RetryTest {
         val supplier = Retry.decorateSupplier(retry) { helloWorldService.returnHelloWorld() }
         val result = supplier.get()
 
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(3)
-        Assertions.assertThat(result).isEqualTo(helloWorldServiceReturnValue)
-        Assertions.assertThat(consumerInvocations.get()).isEqualTo(2)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(3)
+        assertThat(result).isEqualTo(helloWorldServiceReturnValue)
+        assertThat(consumerInvocations.get()).isEqualTo(2)
     }
 }

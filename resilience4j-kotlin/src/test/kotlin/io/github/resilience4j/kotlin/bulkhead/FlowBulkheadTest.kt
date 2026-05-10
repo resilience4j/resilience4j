@@ -29,10 +29,12 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.Phaser
 
+@ExperimentalCoroutinesApi
 class FlowBulkheadTest {
 
     private var permittedEvents = 0

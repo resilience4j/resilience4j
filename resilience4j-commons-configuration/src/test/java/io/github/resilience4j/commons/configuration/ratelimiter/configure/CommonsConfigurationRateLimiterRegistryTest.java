@@ -1,5 +1,5 @@
 /*
- *   Copyright 2023: Deepak Kumar
+ *   Copyright 2026: Deepak Kumar
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -23,30 +23,30 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-public class CommonsConfigurationRateLimiterRegistryTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class CommonsConfigurationRateLimiterRegistryTest {
     @Test
-    public void testRateLimiterRegistryFromPropertiesFile() throws ConfigurationException {
+    void rateLimiterRegistryFromPropertiesFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(PropertiesConfiguration.class, TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME);
 
         RateLimiterRegistry registry = CommonsConfigurationRateLimiterRegistry.of(config, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(registry.rateLimiter(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
-        Assertions.assertThat(registry.rateLimiter(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
+        assertThat(registry.rateLimiter(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
+        assertThat(registry.rateLimiter(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
     }
 
     @Test
-    public void testRateLimiterRegistryFromYamlFile() throws ConfigurationException {
+    void rateLimiterRegistryFromYamlFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(YAMLConfiguration.class, TestConstants.RESILIENCE_CONFIG_YAML_FILE_NAME);
 
         RateLimiterRegistry registry = CommonsConfigurationRateLimiterRegistry.of(config, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(registry.rateLimiter(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
-        Assertions.assertThat(registry.rateLimiter(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
+        assertThat(registry.rateLimiter(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
+        assertThat(registry.rateLimiter(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
     }
 }

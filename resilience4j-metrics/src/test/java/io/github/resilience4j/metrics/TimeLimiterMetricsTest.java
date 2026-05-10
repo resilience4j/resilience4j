@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 authors
+ *  Copyright 2026 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
 
-public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
+class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 
     @Override
     protected TimeLimiter given(String prefix, MetricRegistry metricRegistry) {
@@ -51,7 +51,7 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldRecordSuccesses() {
+    void shouldRecordSuccesses() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
 
@@ -68,7 +68,7 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldRecordErrors() {
+    void shouldRecordErrors() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
 
@@ -85,7 +85,7 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldRecordTimeouts() {
+    void shouldRecordTimeouts() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
             .timeoutDuration(Duration.ZERO)
             .build());

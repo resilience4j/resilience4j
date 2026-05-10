@@ -1,0 +1,48 @@
+= resilience4j-spring6
+
+This module offers simple and highly configurable integration of Resilience4j with **Spring Framework 6.x** (plain Spring, _not_ Spring Boot).
+With this module you can apply rate limiters, circuit breakers, bulkheads and other Resilience4j components to your Spring beans by using annotations and external configuration.
+
+NOTE: For detailed documentation, refer to our *https://resilience4j.readme.io/docs/getting-started-3[Usage&nbsp;Guide]*.
+
+== Virtual Thread configuration
+
+Starting with Resilience4j 3, the Spring 6 module can switch the internal schedulers  
+(CircuitBreaker, RateLimiter, etc.) to Java *virtual threads* (Project Loom).
+
+Add the following property to your configuration (e.g. `application.properties`,  
+`ConfigurableEnvironment`, or system property):
+
+[source,properties]
+----
+resilience4j.thread.type=virtual
+----
+
+You can achieve the same via a JVM flag:
+
+```
+-Dresilience4j.thread.type=virtual
+```
+
+If the property (or system property) is omitted, Resilience4j falls back to regular *platform* threads.
+
+NOTE: The setting above **only switches the internal schedulers of Resilience4j** to virtual threads.
+It does **not** automatically reconfigure any other threading facilities you might use
+(e.g. `TaskExecutor`, `@Scheduled`, Web container thread pools).  
+Configure those separately if you want them to run on virtual threads as well.
+
+== License
+
+Copyright 2025 Robert Winkler and Bohdan Storozhuk
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.  
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software  
+distributed under the License is distributed on an "AS IS" BASIS,  
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
+See the License for the specific language governing permissions and  
+limitations under the License.

@@ -1,5 +1,5 @@
 /*
- *   Copyright 2023: Deepak Kumar
+ *   Copyright 2026: Deepak Kumar
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -22,16 +22,16 @@ import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Map;
 
-public class CommonsConfigurationBulkHeadConfigurationTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class CommonsConfigurationBulkHeadConfigurationTest {
     @Test
-    public void testFromPropertiesFile() throws ConfigurationException {
+    void fromPropertiesFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(PropertiesConfiguration.class, TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME);
 
         CommonsConfigurationBulkHeadConfiguration bulkHeadConfiguration  = CommonsConfigurationBulkHeadConfiguration.of(config);
@@ -41,7 +41,7 @@ public class CommonsConfigurationBulkHeadConfigurationTest {
     }
 
     @Test
-    public void testFromYamlFile() throws ConfigurationException {
+    void fromYamlFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(YAMLConfiguration.class, TestConstants.RESILIENCE_CONFIG_YAML_FILE_NAME);
 
         CommonsConfigurationBulkHeadConfiguration bulkHeadConfiguration  = CommonsConfigurationBulkHeadConfiguration.of(config);
@@ -51,36 +51,38 @@ public class CommonsConfigurationBulkHeadConfigurationTest {
     }
 
     private static void assertConfigs(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> config) {
-        Assertions.assertThat(config.size()).isEqualTo(1);
-        Assertions.assertThat(config.containsKey(TestConstants.DEFAULT)).isTrue();
+        assertThat(config)
+                .hasSize(1)
+                .containsKey(TestConstants.DEFAULT);
         assertConfigDefault(config.get(TestConstants.DEFAULT));
     }
 
     private static void assertConfigDefault(CommonBulkheadConfigurationProperties.InstanceProperties configDefault) {
-        Assertions.assertThat(configDefault.getMaxWaitDuration()).isNull();
-        Assertions.assertThat(configDefault.getMaxConcurrentCalls()).isEqualTo(100);
-        Assertions.assertThat(configDefault.getEventConsumerBufferSize()).isNull();
-        Assertions.assertThat(configDefault.isWritableStackTraceEnabled()).isNull();
+        assertThat(configDefault.getMaxWaitDuration()).isNull();
+        assertThat(configDefault.getMaxConcurrentCalls()).isEqualTo(100);
+        assertThat(configDefault.getEventConsumerBufferSize()).isNull();
+        assertThat(configDefault.isWritableStackTraceEnabled()).isNull();
     }
 
     private static void assertInstances(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> instances) {
-        Assertions.assertThat(instances.size()).isEqualTo(2);
-        Assertions.assertThat(instances.containsKey(TestConstants.BACKEND_A)).isTrue();
+        assertThat(instances)
+                .hasSize(2)
+                .containsKey(TestConstants.BACKEND_A);
         assertInstanceBackendA(instances.get(TestConstants.BACKEND_A));
         assertInstanceBackendB(instances.get(TestConstants.BACKEND_B));
     }
 
     private static void assertInstanceBackendA(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendA) {
-        Assertions.assertThat(instanceBackendA.getMaxWaitDuration()).isNull();
-        Assertions.assertThat(instanceBackendA.getMaxConcurrentCalls()).isEqualTo(10);
-        Assertions.assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
-        Assertions.assertThat(instanceBackendA.isWritableStackTraceEnabled()).isNull();
+        assertThat(instanceBackendA.getMaxWaitDuration()).isNull();
+        assertThat(instanceBackendA.getMaxConcurrentCalls()).isEqualTo(10);
+        assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
+        assertThat(instanceBackendA.isWritableStackTraceEnabled()).isNull();
     }
 
     private static void assertInstanceBackendB(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendB) {
-        Assertions.assertThat(instanceBackendB.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(10));
-        Assertions.assertThat(instanceBackendB.getMaxConcurrentCalls()).isEqualTo(20);
-        Assertions.assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(15);
-        Assertions.assertThat(instanceBackendB.isWritableStackTraceEnabled()).isTrue();
+        assertThat(instanceBackendB.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(10));
+        assertThat(instanceBackendB.getMaxConcurrentCalls()).isEqualTo(20);
+        assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(15);
+        assertThat(instanceBackendB.isWritableStackTraceEnabled()).isTrue();
     }
 }

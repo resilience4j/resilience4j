@@ -1,5 +1,5 @@
 /*
- *   Copyright 2023: Deepak Kumar
+ *   Copyright 2026: Deepak Kumar
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -18,43 +18,44 @@ package io.github.resilience4j.commons.configuration.util;
 
 import io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable;
 import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.function.Predicate;
 
-public class ClassParseUtilTest {
+class ClassParseUtilTest {
     @Test
-    public void testConvertStringsToClassesList() {
+    void convertStringsToClassesList() {
         List<String> recordExceptionsList = List.of("java.lang.Exception", "java.lang.RuntimeException");
 
         Class<? extends Throwable>[] recordExceptions = ClassParseUtil
                 .convertStringListToClassTypeArray(recordExceptionsList, Throwable.class);
 
-        Assertions.assertThat(recordExceptions).containsExactlyInAnyOrder(Exception.class, RuntimeException.class);
+        assertThat(recordExceptions).containsExactlyInAnyOrder(Exception.class, RuntimeException.class);
     }
 
     @Test
-    public void testConvertStringToClass() {
+    void convertStringToClass() {
         Class<? extends Throwable> clazz = ClassParseUtil.convertStringToClassType("java.lang.Exception", Throwable.class);
 
-        Assertions.assertThat(clazz).isEqualTo(Exception.class);
+        assertThat(clazz).isEqualTo(Exception.class);
     }
 
     @Test
-    public void testConvertPredicate() {
+    void convertPredicate() {
         String predicateString = "io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable";
 
         Class<Predicate<Throwable>> clazz = (Class<Predicate<Throwable>>) ClassParseUtil.convertStringToClassType(predicateString, Predicate.class);
 
-        Assertions.assertThat(clazz).isEqualTo(DummyPredicateThrowable.class);
+        assertThat(clazz).isEqualTo(DummyPredicateThrowable.class);
     }
 
-    @Test(expected = ConfigParseException.class)
-    public void testConvertPredicateInvalidType() {
-        String predicateString = "java.lang.Exception";
-
-        ClassParseUtil.convertStringToClassType(predicateString, Predicate.class);
+    @Test
+    void convertPredicateInvalidType() {
+        assertThatThrownBy(() -> ClassParseUtil.convertStringToClassType("java.lang.Exception", Predicate.class))
+            .isInstanceOf(ConfigParseException.class);
     }
 }

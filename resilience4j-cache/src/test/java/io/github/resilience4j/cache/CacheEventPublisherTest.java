@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 package io.github.resilience4j.cache;
 
 import io.github.resilience4j.core.functions.CheckedFunction;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -36,20 +36,20 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CacheEventPublisherTest {
+class CacheEventPublisherTest {
 
     private javax.cache.Cache<String, String> cache;
     private Logger logger;
 
     @SuppressWarnings("unchecked")
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         cache = mock(javax.cache.Cache.class);
         logger = mock(Logger.class);
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         Cache<String, String> cacheContext = Cache.of(cache);
         Cache.EventPublisher eventPublisher = cacheContext.getEventPublisher();
         Cache.EventPublisher eventPublisher2 = cacheContext.getEventPublisher();
@@ -58,7 +58,7 @@ public class CacheEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCacheHitEvent() throws Throwable {
+    void shouldConsumeOnCacheHitEvent() throws Throwable {
         given(cache.get("testKey")).willReturn("Hello world");
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheHit(
@@ -73,7 +73,7 @@ public class CacheEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCacheMissEvent() throws Throwable {
+    void shouldConsumeOnCacheMissEvent() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -89,7 +89,7 @@ public class CacheEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnGetErrorEvent() throws Throwable {
+    void shouldConsumeOnGetErrorEvent() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -105,7 +105,7 @@ public class CacheEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnGetAndInvokeErrorEvent() throws Throwable {
+    void shouldConsumeOnGetAndInvokeErrorEvent() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
         given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("ALSO BLA"));
         Cache<String, String> cacheContext = Cache.of(cache);
