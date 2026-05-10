@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@
  */
 package io.github.resilience4j.cache.event;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static io.github.resilience4j.cache.event.CacheEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CacheEventTest {
+class CacheEventTest {
 
     @Test
-    public void testCacheOnErrorEvent() {
+    void cacheOnErrorEvent() {
         CacheOnErrorEvent cacheOnErrorEvent = new CacheOnErrorEvent("test",
             new IOException());
         assertThat(cacheOnErrorEvent.getCacheName()).isEqualTo("test");
@@ -39,7 +39,7 @@ public class CacheEventTest {
     }
 
     @Test
-    public void testCacheOnHitEvent() {
+    void cacheOnHitEvent() {
         CacheOnHitEvent<String> cacheOnHitEvent = new CacheOnHitEvent<>("test",
             "testKey");
         assertThat(cacheOnHitEvent.getCacheName()).isEqualTo("test");
@@ -50,7 +50,7 @@ public class CacheEventTest {
     }
 
     @Test
-    public void testCacheOnMissEvent() {
+    void cacheOnMissEvent() {
         CacheOnMissEvent<String> cacheOnMissEvent = new CacheOnMissEvent<>("test",
             "testKey");
         assertThat(cacheOnMissEvent.getCacheName()).isEqualTo("test");

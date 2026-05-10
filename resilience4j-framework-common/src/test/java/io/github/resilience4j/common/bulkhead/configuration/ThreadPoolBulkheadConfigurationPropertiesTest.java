@@ -1,23 +1,41 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * unit test for thread pool bulkhead properties
  */
-public class ThreadPoolBulkheadConfigurationPropertiesTest  {
+class ThreadPoolBulkheadConfigurationPropertiesTest  {
 
     @Test
-    public void tesFixedThreadPoolBulkHeadProperties() {
+    void tesFixedThreadPoolBulkHeadProperties() {
         //Given
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties1.setCoreThreadPoolSize(1);
@@ -43,7 +61,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backend1", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead1).isNotNull();
-        assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(1);
+        assertThat(bulkhead1.getCoreThreadPoolSize()).isOne();
 
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backend2", compositeThreadPoolBulkheadCustomizer());
@@ -58,7 +76,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     }
 
     @Test
-    public void testCreateThreadPoolBulkHeadPropertiesWithSharedConfigs() {
+    void createThreadPoolBulkHeadPropertiesWithSharedConfigs() {
         //Given
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setCoreThreadPoolSize(1);
@@ -90,7 +108,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
 
         //When
         //Then
-        assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getBackends()).hasSize(2);
         // Should get default config and core number
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backendWithDefaultConfig",
@@ -98,7 +116,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
         assertThat(bulkhead1.getMaxThreadPoolSize()).isEqualTo(10);
-        assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
+        assertThat(bulkhead1.getQueueCapacity()).isOne();
         // Should get shared config and overwrite core number
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backendWithSharedConfig",
@@ -118,7 +136,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     }
 
     @Test
-    public void testCreateThreadPoolBulkHeadPropertiesWithDefaultConfig() {
+    void createThreadPoolBulkHeadPropertiesWithDefaultConfig() {
         //Given
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setCoreThreadPoolSize(1);
@@ -149,7 +167,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
 
         //When
         //Then
-        assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getBackends()).hasSize(2);
         // Should get default config and core number
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backendWithoutBaseConfig",
@@ -157,7 +175,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
         assertThat(bulkhead1.getMaxThreadPoolSize()).isEqualTo(10);
-        assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
+        assertThat(bulkhead1.getQueueCapacity()).isOne();
         // Should get shared config and overwrite core number
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backendWithSharedConfig",
@@ -171,17 +189,18 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
             .createThreadPoolBulkheadConfig("unknownBackend",
                 compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead3).isNotNull();
-        assertThat(bulkhead3.getCoreThreadPoolSize()).isEqualTo(1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(0);
+        assertThat(bulkhead3.getCoreThreadPoolSize()).isOne();
     }
 
     @Test
-    public void testThreadPoolBulkheadConfigWithBaseConfig() {
+    void threadPoolBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void threadPoolBulkheadConfigWithBaseConfig() {
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultConfig.setMaxThreadPoolSize(2000);
         defaultConfig.setKeepAliveDuration(Duration.ofMillis(100L));

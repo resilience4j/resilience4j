@@ -185,7 +185,10 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         Gauge availableThreadCount = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME).gauge();
 
         assertThat(availableThreadCount).isNotNull();
-        assertThat(availableThreadCount.value()).isEqualTo(bulkhead.getMetrics().getAvailableThreadCount());
+        // `greaterThanOrEqualTo` prevents timing issue where available count changes
+        // between getting the value from the gauge and
+        // asserting it is equal to the current value
+        assertThat(availableThreadCount.value()).isGreaterThanOrEqualTo(bulkhead.getMetrics().getAvailableThreadCount());
         assertThat(availableThreadCount.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
     }
 

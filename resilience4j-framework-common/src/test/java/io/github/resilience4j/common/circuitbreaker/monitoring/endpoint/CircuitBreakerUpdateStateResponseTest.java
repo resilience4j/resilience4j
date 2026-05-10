@@ -1,16 +1,33 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.common.circuitbreaker.monitoring.endpoint;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * unit test for CircuitBreakerUpdateStateResponse DTO
  */
-public class CircuitBreakerUpdateStateResponseTest {
+class CircuitBreakerUpdateStateResponseTest {
 
     @Test
-    public void testEquals() {
+    void equals() {
         // Setup
         CircuitBreakerUpdateStateResponse response1 = new CircuitBreakerUpdateStateResponse();
         response1.setCircuitBreakerName("test2");
@@ -23,14 +40,14 @@ public class CircuitBreakerUpdateStateResponseTest {
 
 
         // Verify the results
-        assertEquals(response1.getMessage(), response2.getMessage());
-        assertEquals(response1.getCircuitBreakerName(), response2.getCircuitBreakerName());
-        assertEquals(response1.getCurrentState(), response2.getCurrentState());
-        assertEquals(response1, response2);
+        assertThat(response2.getMessage()).isEqualTo(response1.getMessage());
+        assertThat(response2.getCircuitBreakerName()).isEqualTo(response1.getCircuitBreakerName());
+        assertThat(response2.getCurrentState()).isEqualTo(response1.getCurrentState());
+        assertThat(response2).isEqualTo(response1);
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         // Setup
         CircuitBreakerUpdateStateResponse response1 = new CircuitBreakerUpdateStateResponse();
         response1.setCircuitBreakerName("test2");
@@ -42,12 +59,12 @@ public class CircuitBreakerUpdateStateResponseTest {
         response2.setMessage("TestMessage");
 
         // Verify the results
-        assertEquals(response1.hashCode(), response2.hashCode());
+        Assertions.assertThat(response2).hasSameHashCodeAs(response1);
     }
 
 
     @Test
-    public void testToString() {
+    void testToString() {
         // Setup
         CircuitBreakerUpdateStateResponse response1 = new CircuitBreakerUpdateStateResponse();
         response1.setCircuitBreakerName("test2");
@@ -58,6 +75,6 @@ public class CircuitBreakerUpdateStateResponseTest {
         response2.setCurrentState("TESTState");
         response2.setMessage("TestMessage");
         // Verify the results
-        assertEquals(response1.toString(), response2.toString());
+        Assertions.assertThat(response2).hasToString(response1.toString());
     }
 }

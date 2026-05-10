@@ -21,5 +21,11 @@ package io.github.resilience4j.core;
 
 public interface EventPublisher<T> {
 
+    /**
+     * Registers a consumer that will be notified for every event.
+     *
+     * @param onEventConsumer the event consumer to register
+     * @throws NullPointerException if {@code onEventConsumer} is {@code null}
+     */
     void onEvent(EventConsumer<T> onEventConsumer);
 }

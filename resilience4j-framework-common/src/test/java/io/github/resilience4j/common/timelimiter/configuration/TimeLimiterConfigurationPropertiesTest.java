@@ -1,3 +1,19 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.common.timelimiter.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,16 +24,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-
 import io.github.resilience4j.common.CompositeCustomizer;
+
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class TimeLimiterConfigurationPropertiesTest {
+class TimeLimiterConfigurationPropertiesTest {
 
     @Test
-    public void testTimeLimiterProperties() {
+    void timeLimiterProperties() {
         // Given
         CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
         instanceProperties1.setTimeoutDuration(Duration.ofSeconds(3));
@@ -38,22 +55,22 @@ public class TimeLimiterConfigurationPropertiesTest {
 
         // Then
         assertThat(timeLimiterConfigurationProperties.getTags()).isNotEmpty();
-        assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(timeLimiterConfigurationProperties.getInstances()).hasSize(2);
         final TimeLimiterConfig timeLimiter1 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backend1");
         final TimeLimiterConfig timeLimiter2 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backend2");
 
         CommonTimeLimiterConfigurationProperties.InstanceProperties instancePropertiesForTimeLimiter1 = timeLimiterConfigurationProperties.getInstances().get("backend1");
 
-        assertThat(instancePropertiesForTimeLimiter1.getTimeoutDuration().toMillis()).isEqualTo(3000);
+        Assertions.assertThat(instancePropertiesForTimeLimiter1.getTimeoutDuration()).hasMillis(3000);
         assertThat(timeLimiter1).isNotNull();
         assertThat(timeLimiter1.shouldCancelRunningFuture()).isTrue();
 
         assertThat(timeLimiter2).isNotNull();
-        assertThat(timeLimiter2.getTimeoutDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(timeLimiter2.getTimeoutDuration()).hasMillis(5000);
     }
 
     @Test
-    public void testCreateTimeLimiterPropertiesWithSharedConfigs() {
+    void createTimeLimiterPropertiesWithSharedConfigs() {
         // Given
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setTimeoutDuration(Duration.ofSeconds(3));
@@ -90,23 +107,23 @@ public class TimeLimiterConfigurationPropertiesTest {
         TimeLimiterConfig timeLimiter1 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backendWithDefaultConfig");
         assertThat(timeLimiter1).isNotNull();
         assertThat(timeLimiter1.shouldCancelRunningFuture()).isTrue();
-        assertThat(timeLimiter1.getTimeoutDuration().toMillis()).isEqualTo(200);
+        Assertions.assertThat(timeLimiter1.getTimeoutDuration()).hasMillis(200);
 
         // Should get shared config and overwrite wait time
         TimeLimiterConfig timeLimiter2 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backendWithSharedConfig");
         assertThat(timeLimiter2).isNotNull();
         assertThat(timeLimiter2.shouldCancelRunningFuture()).isFalse();
-        assertThat(timeLimiter2.getTimeoutDuration().toMillis()).isEqualTo(300);
+        Assertions.assertThat(timeLimiter2.getTimeoutDuration()).hasMillis(300);
 
         // Unknown backend should get default config of Registry
         TimeLimiterConfig timeLimiter3 = timeLimiterConfigurationProperties.createTimeLimiterConfig("unknownBackend");
         assertThat(timeLimiter3).isNotNull();
-        assertThat(timeLimiter3.getTimeoutDuration().toMillis()).isEqualTo(1000);
+        Assertions.assertThat(timeLimiter3.getTimeoutDuration()).hasMillis(1000);
 
     }
 
     @Test
-    public void testCreatePropertiesWithUnknownConfig() {
+    void createPropertiesWithUnknownConfig() {
         CommonTimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new CommonTimeLimiterConfigurationProperties();
 
         CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
@@ -119,20 +136,22 @@ public class TimeLimiterConfigurationPropertiesTest {
                 .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-        CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnTimeoutDurationNegative() {
-        CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
-        defaultProperties.setTimeoutDuration(Duration.ofNanos(-1));
+    @Test
+    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testCustomizeTimeLimiterConfig() {
+    void illegalArgumentOnTimeoutDurationNegative() {
+CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setTimeoutDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void customizeTimeLimiterConfig() {
         CommonTimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new CommonTimeLimiterConfigurationProperties();
         TimeLimiterConfigCustomizer customizer = TimeLimiterConfigCustomizer.of("backend",
             builder -> builder.timeoutDuration(Duration.ofSeconds(10)));
@@ -146,7 +165,7 @@ public class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test
-    public void testTimeLimiterConfigWithBaseConfig() {
+    void timeLimiterConfigWithBaseConfig() {
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultConfig = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultConfig.setTimeoutDuration(Duration.ofMillis(4000L));
         defaultConfig.setCancelRunningFuture(false);
@@ -173,7 +192,7 @@ public class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test
-    public void testTimeLimiterConfigWithDefaultConfig() {
+    void timeLimiterConfigWithDefaultConfig() {
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultConfig = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultConfig.setTimeoutDuration(Duration.ofMillis(4000L));
         defaultConfig.setCancelRunningFuture(false);
@@ -206,7 +225,7 @@ public class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetInstancePropertiesPropertiesWithoutDefaultConfig() {
+    void getInstancePropertiesPropertiesWithoutDefaultConfig() {
         //Given
         CommonTimeLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
 
@@ -214,7 +233,7 @@ public class TimeLimiterConfigurationPropertiesTest {
         timeLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(timeLimiterConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get defaults
         CommonTimeLimiterConfigurationProperties.InstanceProperties timeLimiterProperties =
@@ -224,7 +243,7 @@ public class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetIstancePropertiesPropertiesWithDefaultConfig() {
+    void getIstancePropertiesPropertiesWithDefaultConfig() {
         //Given
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(99);
@@ -236,7 +255,7 @@ public class TimeLimiterConfigurationPropertiesTest {
         timeLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(timeLimiterConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get default config and overwrite enableExponentialBackoff but not enableRandomizedWait
         CommonTimeLimiterConfigurationProperties.InstanceProperties timeLimiterProperties =

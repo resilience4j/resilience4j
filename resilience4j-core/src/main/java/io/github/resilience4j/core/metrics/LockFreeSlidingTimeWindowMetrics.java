@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.core.metrics;
 
+import io.github.resilience4j.core.CASBackoffUtil;
 import io.github.resilience4j.core.Clock;
 
 import java.lang.invoke.MethodHandles;
@@ -94,6 +95,7 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
 
     @Override
     public Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
+        int spinCount = 0;
         while (true) {
             advanceTimeSlice();
 
@@ -102,6 +104,8 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
 
             // The current time slice has been marked as processed, no further updates to it are allowed.
             if (current.processed) {
+                // Apply backoff even for processed time slices to prevent busy-waiting
+                spinCount = CASBackoffUtil.performBackoff(spinCount);
                 continue;
             }
 
@@ -112,6 +116,9 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
             if (TIME_SLICE.compareAndSet(tail, current, next)) {
                 return new SnapshotImpl(next.stats);
             }
+
+            // Virtual thread and platform thread friendly backoff strategy
+            spinCount = CASBackoffUtil.performBackoff(spinCount);
         }
     }
 
@@ -122,6 +129,7 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
     }
 
     private void advanceTimeSlice() {
+        int spinCount = 0;
         while (true) {
             Node tail = tailRef;
             TimeSlice current = tail.timeSlice;
@@ -144,6 +152,8 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
                 if (TIME_SLICE.compareAndSet(tail, current, processed)) {
                     current = processed;
                 } else {
+                    // Virtual thread and platform thread friendly backoff strategy
+                    spinCount = CASBackoffUtil.performBackoff(spinCount);
                     continue;
                 }
             }
@@ -170,6 +180,7 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
     }
 
     private void updateWindow(int second, long time) {
+        int spinCount = 0;
         while (true) {
             Node head = headRef;
             Node headNext = head.next;
@@ -178,10 +189,14 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
             Node tailNext = tail.next;
 
             if (head != headRef) {
+                // Virtual thread and platform thread friendly backoff strategy
+                spinCount = CASBackoffUtil.performBackoff(spinCount);
                 continue;
             }
 
             if (tail != tailRef) {
+                // Virtual thread and platform thread friendly backoff strategy
+                spinCount = CASBackoffUtil.performBackoff(spinCount);
                 continue;
             }
 
@@ -221,6 +236,9 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
             } else {
                 TAIL.compareAndSet(this, tail, tailNext);
             }
+
+            // CAS operations failed, apply backoff strategy
+            spinCount = CASBackoffUtil.performBackoff(spinCount);
         }
     }
 

@@ -30,6 +30,7 @@ public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>
      * The constructor with default circuitBreaker properties.
      */
     public DefaultEventConsumerRegistry() {
+        // Using ConcurrentHashMap for virtual thread optimization - simple registry operations don't require FutureHashMap pattern
         this.registry = new ConcurrentHashMap<>();
     }
 

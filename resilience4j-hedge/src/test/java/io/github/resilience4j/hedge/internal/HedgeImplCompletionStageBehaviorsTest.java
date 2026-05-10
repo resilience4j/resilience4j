@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 import io.github.resilience4j.test.TestContextPropagators;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -40,7 +40,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
 
-public class HedgeImplCompletionStageBehaviorsTest {
+class HedgeImplCompletionStageBehaviorsTest {
 
     private static final Duration FIFTY_MILLIS = Duration.ofMillis(50);
     private static final String PRIMARY = "Primary";
@@ -63,7 +63,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
     private static final ThreadLocal<String> threadLocal = ThreadLocal.withInitial(() -> "UNINITIALIZED");
 
     @Test
-    public void shouldUsePropagatorsCorrectly() {
+    void shouldUsePropagatorsCorrectly() {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         ContextPropagator propagator = new TestContextPropagators.TestThreadLocalContextPropagator(threadLocal);
         HedgeConfig config = HedgeConfig
@@ -87,7 +87,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
 
 
     @Test
-    public void shouldReturnHedgeSuccessOnSlowPrimarySuccessFastHedgeSuccess() throws Exception {
+    void shouldReturnHedgeSuccessOnSlowPrimarySuccessFastHedgeSuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -107,12 +107,12 @@ public class HedgeImplCompletionStageBehaviorsTest {
         assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
         assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
         assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
-        assertThat(hedge.getMetrics().getSecondarySuccessCount()).isEqualTo(1);
+        assertThat(hedge.getMetrics().getSecondarySuccessCount()).isOne();
         assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
     }
 
     @Test
-    public void slowPrimarySuccessFastHedgeFailureReturnsHedgeFailure() throws Exception {
+    void slowPrimarySuccessFastHedgeFailureReturnsHedgeFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_FAILURE};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -129,14 +129,14 @@ public class HedgeImplCompletionStageBehaviorsTest {
             assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
             assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
             assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
-            assertThat(hedge.getMetrics().getSecondaryFailureCount()).isEqualTo(1);
+            assertThat(hedge.getMetrics().getSecondaryFailureCount()).isOne();
             assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
             assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
         }
     }
 
     @Test
-    public void slowPrimaryFailureFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
+    void slowPrimaryFailureFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -150,12 +150,12 @@ public class HedgeImplCompletionStageBehaviorsTest {
         assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
         assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
         assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
-        assertThat(hedge.getMetrics().getSecondarySuccessCount()).isEqualTo(1);
+        assertThat(hedge.getMetrics().getSecondarySuccessCount()).isOne();
         assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
     }
 
     @Test
-    public void slowPrimaryFailureFastHedgeFailureReturnsHedgeFailure() throws Exception {
+    void slowPrimaryFailureFastHedgeFailureReturnsHedgeFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, FAST_HEDGE_FAILURE};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -172,14 +172,14 @@ public class HedgeImplCompletionStageBehaviorsTest {
             assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
             assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
             assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
-            assertThat(hedge.getMetrics().getSecondaryFailureCount()).isEqualTo(1);
+            assertThat(hedge.getMetrics().getSecondaryFailureCount()).isOne();
             assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
             assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
         }
     }
 
     @Test
-    public void slowPrimarySuccessSlowHedgeSuccessReturnsPrimarySuccess() throws Exception {
+    void slowPrimarySuccessSlowHedgeSuccessReturnsPrimarySuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_SUCCESS};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -191,14 +191,14 @@ public class HedgeImplCompletionStageBehaviorsTest {
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
         assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
         assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
-        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isEqualTo(1);
+        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isOne();
         assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
         assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
         assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
     }
 
     @Test
-    public void slowPrimarySuccessSlowHedgeFailureReturnsPrimarySuccess() throws Exception {
+    void slowPrimarySuccessSlowHedgeFailureReturnsPrimarySuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_FAILURE};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -210,14 +210,14 @@ public class HedgeImplCompletionStageBehaviorsTest {
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
         assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
         assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
-        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isEqualTo(1);
+        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isOne();
         assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
         assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
         assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();
     }
 
     @Test
-    public void slowPrimaryFailureSlowHedgeSuccessReturnsPrimaryFailure() throws Exception {
+    void slowPrimaryFailureSlowHedgeSuccessReturnsPrimaryFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_SUCCESS};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -232,7 +232,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
             assertThat(e.getCause().getMessage()).isEqualTo(PRIMARY_EXCEPTION_MESSAGE);
             then(logger).should().info(HedgeEvent.Type.PRIMARY_FAILURE.toString());
             assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
-            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isEqualTo(1);
+            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isOne();
             assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
             assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
             assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
@@ -241,7 +241,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
     }
 
     @Test
-    public void slowPrimaryFailureSlowHedgeFailureReturnsPrimaryFailure() throws Exception {
+    void slowPrimaryFailureSlowHedgeFailureReturnsPrimaryFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_FAILURE};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -256,7 +256,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
             assertThat(e.getCause().getMessage()).isEqualTo(PRIMARY_EXCEPTION_MESSAGE);
             then(logger).should().info(HedgeEvent.Type.PRIMARY_FAILURE.toString());
             assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
-            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isEqualTo(1);
+            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isOne();
             assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
             assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
             assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
@@ -265,7 +265,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
     }
 
     @Test
-    public void fastPrimaryFailureDoesNotHedge() throws Exception {
+    void fastPrimaryFailureDoesNotHedge() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {FAST_PRIMARY_FAILURE, FAST_HEDGE_SUCCESS};
         Supplier<CompletableFuture<String>> futureSupplier = hedgingCompletionStage(hedgeBehaviorSpecifications);
 
@@ -280,7 +280,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
             assertThat(e.getCause().getMessage()).isEqualTo(PRIMARY_EXCEPTION_MESSAGE);
             then(logger).should().info(HedgeEvent.Type.PRIMARY_FAILURE.toString());
             assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
-            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isEqualTo(1);
+            assertThat(hedge.getMetrics().getPrimaryFailureCount()).isOne();
             assertThat(hedge.getMetrics().getPrimarySuccessCount()).isZero();
             assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
             assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
@@ -289,7 +289,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
     }
 
     @Test
-    public void fastPrimarySuccessDoesNotHedge() throws Exception {
+    void fastPrimarySuccessDoesNotHedge() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {FAST_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(FIFTY_MILLIS);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -301,7 +301,7 @@ public class HedgeImplCompletionStageBehaviorsTest {
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
         assertThat(hedge.getMetrics().getCurrentHedgeDelay().toMillis()).isLessThan(SLOW_SPEED);
         assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
-        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isEqualTo(1);
+        assertThat(hedge.getMetrics().getPrimarySuccessCount()).isOne();
         assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
         assertThat(hedge.getMetrics().getSecondarySuccessCount()).isZero();
         assertThat(hedge.getMetrics().getSecondaryPoolActiveCount()).isZero();

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020 krnsaurabh
+ *  Copyright 2026 krnsaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,17 +18,18 @@
  */
 package io.github.resilience4j.common.scheduled.threadpool.configuration;
 
+import org.junit.jupiter.api.Test;
+
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder;
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ContextAwareScheduledThreadPoolConfigurationPropertiesTest {
+class ContextAwareScheduledThreadPoolConfigurationPropertiesTest {
 
     @Test
-    public void buildPropertiesWithValidArguments() {
+    void buildPropertiesWithValidArguments() {
         ContextAwareScheduledThreadPoolConfigurationProperties poolConfigurationProperties = new ContextAwareScheduledThreadPoolConfigurationProperties();
         poolConfigurationProperties.setContextPropagators(TestThreadLocalContextPropagatorWithHolder.class);
         poolConfigurationProperties.setCorePoolSize(10);
@@ -39,15 +40,15 @@ public class ContextAwareScheduledThreadPoolConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowErrorWhenCorePoolSizeIsLessThanOne() {
+    void shouldThrowErrorWhenCorePoolSizeIsLessThanOne() {
         ContextAwareScheduledThreadPoolConfigurationProperties poolConfigurationProperties = new ContextAwareScheduledThreadPoolConfigurationProperties();
         poolConfigurationProperties.setContextPropagators(TestThreadLocalContextPropagatorWithHolder.class);
-        assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> poolConfigurationProperties.setCorePoolSize(0));
+        assertThatThrownBy(() -> poolConfigurationProperties.setCorePoolSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void buildPropertiesWithNoContextPropagator() {
+    void buildPropertiesWithNoContextPropagator() {
         ContextAwareScheduledThreadPoolConfigurationProperties poolConfigurationProperties = new ContextAwareScheduledThreadPoolConfigurationProperties();
         poolConfigurationProperties.setCorePoolSize(10);
 
@@ -57,10 +58,10 @@ public class ContextAwareScheduledThreadPoolConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowErrorIfPropertiesNotSet() {
+    void shouldThrowErrorIfPropertiesNotSet() {
         ContextAwareScheduledThreadPoolConfigurationProperties poolConfigurationProperties = new ContextAwareScheduledThreadPoolConfigurationProperties();
-        assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(poolConfigurationProperties::build);
+        assertThatThrownBy(poolConfigurationProperties::build)
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.metrics.AbstractCircuitBreakerMetricsTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
-public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMetricsTest {
+class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMetricsTest {
 
     private CircuitBreakerRegistry circuitBreakerRegistry;
     @Override
@@ -48,7 +48,7 @@ public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMe
     }
 
     @Test
-    public void shouldRemoveAllMetrics() {
+    void shouldRemoveAllMetrics() {
         CircuitBreaker circuitBreaker = givenMetricRegistry("testPrefix", metricRegistry);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
