@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: gradle/actions/wrapper-validation@v5
+      - uses: gradle/actions/wrapper-validation@v6
 
   build:
     name: "Build and publish"
@@ -38,7 +38,7 @@ jobs:
           cache: 'gradle'
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v5
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

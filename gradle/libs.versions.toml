@@ -12,11 +12,11 @@ spring-cloud5 = "5.0.0"
 
 [plugins]
 asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "4.0.5" }
-bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.2.1" }
+bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.2.3" }
 jmh = { id = "me.champeau.jmh", version = "0.7.3" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.21" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.3.21" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
-sonarqube = { id = "org.sonarqube", version = "7.2.3.7755" }
+sonarqube = { id = "org.sonarqube", version = "7.3.0.8198" }
 test-retry = { id = "org.gradle.test-retry", version = "1.6.4" }
 
 [libraries]
