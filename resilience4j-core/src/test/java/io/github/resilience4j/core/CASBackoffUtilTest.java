@@ -1,6 +1,6 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,10 +13,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Unit tests for CASBackoffUtil to verify backoff behavior and thread-specific jittering.
  */
-public class CASBackoffUtilTest {
+class CASBackoffUtilTest {
 
     @Test
-    public void shouldIncrementSpinCountBelowThreshold() {
+    void shouldIncrementSpinCountBelowThreshold() {
         // Given: spin count below MAX_SPIN_COUNT
         int spinCount = 5;
 
@@ -30,7 +30,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldResetSpinCountAboveThreshold() {
+    void shouldResetSpinCountAboveThreshold() {
         // Given: spin count above MAX_SPIN_COUNT
         int spinCount = CASBackoffUtil.getMaxSpinCount() + 10;
 
@@ -44,7 +44,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldResetSpinCountAtThreshold() {
+    void shouldResetSpinCountAtThreshold() {
         // Given: spin count exactly at MAX_SPIN_COUNT
         int spinCount = CASBackoffUtil.getMaxSpinCount();
 
@@ -58,7 +58,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldIncrementGraduallyUpToThreshold() {
+    void shouldIncrementGraduallyUpToThreshold() {
         // Given: initial spin count of 0
         int spinCount = 0;
 
@@ -82,7 +82,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldProvideDeterministicJitterForSameThread() throws InterruptedException {
+    void shouldProvideDeterministicJitterForSameThread() throws InterruptedException {
         // Given: multiple calls from the same thread
         int iterations = 10;
         CountDownLatch latch = new CountDownLatch(1);
@@ -115,7 +115,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldProvideDifferentJitterForDifferentThreads() throws InterruptedException {
+    void shouldProvideDifferentJitterForDifferentThreads() throws InterruptedException {
         // Given: multiple threads with different IDs
         int threadCount = 10;
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -163,7 +163,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldNotBlockIndefinitely() throws InterruptedException {
+    void shouldNotBlockIndefinitely() throws InterruptedException {
         // Given: high spin count requiring park
         int highSpinCount = CASBackoffUtil.getMaxSpinCount() + 100;
         CountDownLatch latch = new CountDownLatch(1);
@@ -190,7 +190,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldHandleZeroSpinCount() {
+    void shouldHandleZeroSpinCount() {
         // Given: zero spin count
         int spinCount = 0;
 
@@ -204,7 +204,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldHandleNegativeSpinCount() {
+    void shouldHandleNegativeSpinCount() {
         // Given: negative spin count (edge case, shouldn't happen in practice)
         int spinCount = -1;
 
@@ -218,7 +218,7 @@ public class CASBackoffUtilTest {
     }
 
     @Test
-    public void shouldProvideMaxParkNanosGetter() {
+    void shouldProvideMaxParkNanosGetter() {
         // Given: MAX_PARK_NANOS is calculated from other constants
         // MIN_PARK_NANOS (1μs) + (JITTER_RANGE-1) * PARK_STEP_NANOS
         // = 1,000ns + 10 * 1,000ns = 11,000ns (11μs)

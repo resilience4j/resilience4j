@@ -1,17 +1,19 @@
 package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import org.junit.Test;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Test;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-public class CheckedSupplierUtilsTest {
+class CheckedSupplierUtilsTest {
 
     @Test
-    public void shouldRecoverFromException() throws Throwable {
+    void shouldRecoverFromException() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -23,7 +25,7 @@ public class CheckedSupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificExceptions() throws Throwable {
+    void shouldRecoverFromSpecificExceptions() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -38,7 +40,7 @@ public class CheckedSupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromResult() throws Throwable {
+    void shouldRecoverFromResult() throws Throwable {
         CheckedSupplier<String> callable = () -> "Wrong Result";
 
         CheckedSupplier<String> callableWithRecovery = CheckedSupplierUtils.andThen(callable, (result, ex) -> {
@@ -54,7 +56,7 @@ public class CheckedSupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromException2() throws Throwable {
+    void shouldRecoverFromException2() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -71,7 +73,7 @@ public class CheckedSupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificResult() throws Throwable {
+    void shouldRecoverFromSpecificResult() throws Throwable {
         CheckedSupplier<String> supplier = () -> "Wrong Result";
 
         CheckedSupplier<String> callableWithRecovery = CheckedSupplierUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
@@ -81,25 +83,27 @@ public class CheckedSupplierUtilsTest {
     }
 
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException() throws Throwable {
+    @Test
+    void shouldRethrowException() throws Throwable {
         CheckedSupplier<String> callable = () -> {
-            throw new IOException("BAM!");
-        };
+                throw new IOException("BAM!");
+            };
         CheckedSupplier<String> callableWithRecovery = CheckedSupplierUtils.recover(callable, (ex) -> {
-            throw new RuntimeException();
-        });
+                throw new RuntimeException();
+            });
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        callableWithRecovery.get();
+            callableWithRecovery.get());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException2() throws Throwable {
+    @Test
+    void shouldRethrowException2() throws Throwable {
         CheckedSupplier<String> callable = () -> {
-            throw new RuntimeException("BAM!");
-        };
+                throw new RuntimeException("BAM!");
+            };
         CheckedSupplier<String> callableWithRecovery = CheckedSupplierUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        callableWithRecovery.get();
+            callableWithRecovery.get());
     }
 }

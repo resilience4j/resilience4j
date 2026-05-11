@@ -55,7 +55,7 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
 
         try {
             boolean taskRanOnVirtualThread = isVirtual.get(1, TimeUnit.SECONDS);
-            
+
             if (isVirtualThreadMode()) {
                 assertThat(taskRanOnVirtualThread)
                     .as("Task executed by SchedulerFactory should run on a virtual thread when configured in " + getThreadModeDescription())
@@ -65,7 +65,7 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
                     .as("Task executed by SchedulerFactory should run on a platform thread by default in " + getThreadModeDescription())
                     .isFalse();
             }
-            
+
             LOG.info("Scheduler thread type test passed in {} - Virtual thread: {}",
                 getThreadModeDescription(), taskRanOnVirtualThread);
         } finally {

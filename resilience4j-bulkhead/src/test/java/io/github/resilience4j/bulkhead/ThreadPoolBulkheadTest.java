@@ -71,7 +71,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     @Test
     public void shouldExecuteRunnableAndFailWithBulkHeadFull() throws InterruptedException {
         LOG.info("Running shouldExecuteRunnableAndFailWithBulkHeadFull in {}", getThreadModeDescription());
-        
+
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
@@ -227,7 +227,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     public void testCreateThreadsUsingNameForPrefix()
         throws ExecutionException, InterruptedException {
         LOG.info("Running testCreateThreadsUsingNameForPrefix in {}", getThreadModeDescription());
-        
+
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
         Supplier<String> getThreadName = () -> Thread.currentThread().getName();
 
@@ -235,7 +235,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
         String actualThreadName = result.toCompletableFuture().get();
         LOG.info("Thread name in {}: {}", getThreadModeDescription(), actualThreadName);
-        
+
         // Thread naming differs between platform and virtual threads
         if (isVirtualThreadMode()) {
             // Virtual threads use naming pattern like "bulkhead-TEST-v-0"
@@ -277,13 +277,13 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     @Test
     public void shouldUseVirtualThreadsWhenConfigured() throws Exception {
         LOG.info("Running shouldUseVirtualThreadsWhenConfigured in {}", getThreadModeDescription());
-        
+
         // Only run the virtual thread specific checks when in virtual thread mode
         if (!isVirtualThreadMode()) {
             LOG.info("Skipping virtual thread specific test in platform thread mode");
             return;
         }
-        
+
         // Create ThreadPoolBulkhead with custom config for this test
         ThreadPoolBulkheadConfig testConfig = ThreadPoolBulkheadConfig.custom()
             .maxThreadPoolSize(5)
@@ -291,43 +291,43 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             .queueCapacity(5)
             .keepAliveDuration(Duration.ofMillis(100))
             .build();
-            
+
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("virtualThreadTest-" + threadType, testConfig);
-        
+
         try {
             // Submit a task that checks if it's running on a virtual thread
             AtomicBoolean ranOnVirtualThread = new AtomicBoolean(false);
-            
+
             // Submit a task that verifies it's running on a virtual thread
             CompletableFuture<Boolean> future = bulkhead.submit(() -> {
                 ranOnVirtualThread.set(Thread.currentThread().isVirtual());
                 return true;
             }).toCompletableFuture();
-            
+
             // Wait for task to complete
             boolean result = future.get(1, TimeUnit.SECONDS);
-            
+
             // Verify execution was successful
             assertThat(result)
                 .as("Task should complete successfully in " + getThreadModeDescription())
                 .isTrue();
-            
+
             // Verify that the task ran on a virtual thread
             assertThat(ranOnVirtualThread.get())
                 .as("Task should execute on a virtual thread when configured in " + getThreadModeDescription())
                 .isTrue();
-                
+
             LOG.info("Virtual thread configuration test passed in {}", getThreadModeDescription());
         } finally {
             // Clean up
             bulkhead.close();
         }
     }
-    
+
     @Test
     public void shouldHandleConcurrentTasksCorrectlyInBothThreadModes() throws Exception {
         LOG.info("Running shouldHandleConcurrentTasksCorrectlyInBothThreadModes in {}", getThreadModeDescription());
-        
+
         // Create ThreadPoolBulkhead config with limited capacity
         ThreadPoolBulkheadConfig testConfig = ThreadPoolBulkheadConfig.custom()
             .maxThreadPoolSize(5)
@@ -335,9 +335,9 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             .queueCapacity(5)
             .keepAliveDuration(Duration.ofMillis(100))
             .build();
-            
+
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("concurrencyTest-" + threadType, testConfig);
-        
+
         try {
             // Submit more tasks than the thread pool and queue capacity
             int numberOfTasks = 15; // 5 (maxThreadPoolSize) + 5 (queueCapacity) + 5 (excess)
@@ -345,11 +345,11 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             AtomicInteger rejectedTasks = new AtomicInteger(0);
             AtomicInteger completedTasks = new AtomicInteger(0);
             CountDownLatch tasksLatch = new CountDownLatch(numberOfTasks);
-            
+
             // Submit tasks to the bulkhead
             for (int i = 0; i < numberOfTasks; i++) {
                 final int taskId = i;
-                
+
                 try {
                     futures[i] = bulkhead.submit(() -> {
                         try {
@@ -362,7 +362,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                             return -1;
                         }
                     }).toCompletableFuture();
-                    
+
                     // Register callback to count down the latch
                     futures[i].whenComplete((result, error) -> tasksLatch.countDown());
                 } catch (BulkheadFullException e) {
@@ -371,30 +371,30 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                     tasksLatch.countDown();
                 }
             }
-            
+
             // Wait for all tasks to complete or be rejected
             boolean completed = tasksLatch.await(10, TimeUnit.SECONDS);
-            
+
             // Verify all tasks were accounted for (either completed or rejected)
             assertThat(completed)
                 .as("All tasks should be completed or rejected within timeout in " + getThreadModeDescription())
                 .isTrue();
-                
+
             // Verify the number of accepted tasks matches the capacity
             assertThat(completedTasks.get())
                 .as("Number of completed tasks should match thread pool and queue capacity in " + getThreadModeDescription())
                 .isLessThanOrEqualTo(10); // 5 + 5
-                
+
             // Verify some tasks were rejected due to capacity limits
             assertThat(rejectedTasks.get())
                 .as("Some tasks should be rejected when exceeding capacity in " + getThreadModeDescription())
                 .isGreaterThan(0);
-                
+
             // Verify total tasks accounted for
             assertThat(completedTasks.get() + rejectedTasks.get())
                 .as("Total tasks (completed + rejected) should equal the number of submitted tasks in " + getThreadModeDescription())
                 .isEqualTo(numberOfTasks);
-                
+
             LOG.info("Concurrency test passed in {} - Completed: {}, Rejected: {}",
                 getThreadModeDescription(), completedTasks.get(), rejectedTasks.get());
         } finally {
@@ -402,11 +402,11 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             bulkhead.close();
         }
     }
-    
+
     @Test
     public void shouldHaveCorrectMetricsInBothThreadModes() throws Exception {
         LOG.info("Running shouldHaveCorrectMetricsInBothThreadModes in {}", getThreadModeDescription());
-        
+
         // Create ThreadPoolBulkhead with custom config for this test
         ThreadPoolBulkheadConfig testConfig = ThreadPoolBulkheadConfig.custom()
             .maxThreadPoolSize(5)
@@ -414,13 +414,13 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             .queueCapacity(5)
             .keepAliveDuration(Duration.ofMillis(100))
             .build();
-            
+
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("metricsTest-" + threadType, testConfig);
-        
+
         try {
             // Get initial metrics
             ThreadPoolBulkhead.Metrics metrics = bulkhead.getMetrics();
-            
+
             // Verify initial metrics (should be consistent across thread modes)
             assertThat(metrics.getCoreThreadPoolSize())
                 .as("Core thread pool size should be correct in " + getThreadModeDescription())
@@ -431,7 +431,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             assertThat(metrics.getQueueCapacity())
                 .as("Queue capacity should be correct in " + getThreadModeDescription())
                 .isEqualTo(5);
-            
+
             // Submit a single task and verify metrics
             CountDownLatch latch = new CountDownLatch(1);
             bulkhead.submit(() -> {
@@ -445,13 +445,13 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                     latch.countDown();
                 }
             });
-            
+
             // Wait for task to complete
             boolean taskCompleted = latch.await(1, TimeUnit.SECONDS);
             assertThat(taskCompleted)
                 .as("Task should complete within timeout in " + getThreadModeDescription())
                 .isTrue();
-            
+
             LOG.info("Metrics test passed in {}", getThreadModeDescription());
         } finally {
             // Clean up

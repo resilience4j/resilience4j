@@ -1,20 +1,15 @@
 package io.github.resilience4j.core;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.Arrays;
-import java.util.Collection;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Comprehensive test for virtual thread configuration and environment handling.
@@ -31,24 +26,24 @@ import static org.junit.Assume.assumeTrue;
  * @author kanghyun.yang
  * @since 3.0.0
  */
-public class VirtualThreadConfigurationTest {
+class VirtualThreadConfigurationTest {
 
     private static final String SYS_PROP_KEY = "resilience4j.thread.type";
     private static final String ENV_VAR_KEY = "RESILIENCE4J_THREAD_TYPE";
-    
+
     private String originalSysProperty;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         // Store original values for restoration
         originalSysProperty = System.getProperty(SYS_PROP_KEY);
-        
+
         // Clear any existing configuration
         System.clearProperty(SYS_PROP_KEY);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         // Restore original configuration
         if (originalSysProperty != null) {
             System.setProperty(SYS_PROP_KEY, originalSysProperty);
@@ -58,58 +53,60 @@ public class VirtualThreadConfigurationTest {
     }
 
     @Test
-    public void shouldUseVirtualThreadsWhenSystemPropertyIsVirtual() throws Exception {
+    void shouldUseVirtualThreadsWhenSystemPropertyIsVirtual() throws Exception {
         // Skip test if not running on Java 21+
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         System.setProperty(SYS_PROP_KEY, ThreadType.VIRTUAL.toString());
-        
-        assertTrue(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.VIRTUAL);
+
         ExecutorService executor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("test");
         Future<Boolean> isVirtual = executor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertTrue(isVirtual.get(1, TimeUnit.SECONDS));
+            assertThat(isVirtual.get(1, TimeUnit.SECONDS)).isTrue();
         } finally {
             executor.shutdownNow();
         }
     }
 
     @Test
-    public void shouldUsePlatformThreadsWhenSystemPropertyIsPlatform() throws Exception {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+    void shouldUsePlatformThreadsWhenSystemPropertyIsPlatform() throws Exception {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         System.setProperty(SYS_PROP_KEY, ThreadType.PLATFORM.toString());
-        
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
+
         ExecutorService executor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("test");
         Future<Boolean> isVirtual = executor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertFalse(isVirtual.get(1, TimeUnit.SECONDS));
+            assertThat(isVirtual.get(1, TimeUnit.SECONDS)).isFalse();
         } finally {
             executor.shutdownNow();
         }
     }
 
     @Test
-    public void shouldDefaultToPlatformThreadsForInvalidValues() throws Exception {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
-        
+    void shouldDefaultToPlatformThreadsForInvalidValues() throws Exception {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
+
         String[] invalidValues = {"invalid", "true", "false", "1", "0", "yes", "no", ""};
-        
+
         for (String invalidValue : invalidValues) {
             System.setProperty(SYS_PROP_KEY, invalidValue);
-            
-            assertFalse("Invalid value '" + invalidValue + "' should default to platform threads", 
-                       ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-            
+
+            assertThat(ExecutorServiceFactory.getThreadType())
+                .as("Invalid value '%s' should default to platform threads", invalidValue)
+                .isEqualTo(ThreadType.PLATFORM);
+
             ExecutorService executor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("test");
             Future<Boolean> isVirtual = executor.submit(() -> Thread.currentThread().isVirtual());
-            
+
             try {
-                assertFalse("Invalid value '" + invalidValue + "' should use platform threads", 
-                           isVirtual.get(1, TimeUnit.SECONDS));
+                assertThat(isVirtual.get(1, TimeUnit.SECONDS))
+                    .as("Invalid value '%s' should use platform threads", invalidValue)
+                    .isFalse();
             } finally {
                 executor.shutdownNow();
             }
@@ -117,115 +114,118 @@ public class VirtualThreadConfigurationTest {
     }
 
     @Test
-    public void shouldBeCaseInsensitive() throws Exception {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+    void shouldBeCaseInsensitive() {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         System.setProperty(SYS_PROP_KEY, "VIRTUAL");
-        assertTrue(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.VIRTUAL);
+
         System.setProperty(SYS_PROP_KEY, "Virtual");
-        assertTrue(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.VIRTUAL);
+
         System.setProperty(SYS_PROP_KEY, "vIrTuAl");
-        assertTrue(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.VIRTUAL);
+
         System.setProperty(SYS_PROP_KEY, "PLATFORM");
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
     }
 
     @Test
-    public void shouldSwitchThreadTypeDynamically() throws Exception {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+    void shouldSwitchThreadTypeDynamically() throws Exception {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         // Start with platform threads
         System.setProperty(SYS_PROP_KEY, ThreadType.PLATFORM.toString());
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
+
         ExecutorService platformExecutor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("platform-test");
         Future<Boolean> platformResult = platformExecutor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertFalse(platformResult.get(1, TimeUnit.SECONDS));
+            assertThat(platformResult.get(1, TimeUnit.SECONDS)).isFalse();
         } finally {
             platformExecutor.shutdownNow();
         }
-        
+
         // Switch to virtual threads
         System.setProperty(SYS_PROP_KEY, ThreadType.VIRTUAL.toString());
-        assertTrue(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.VIRTUAL);
+
         ExecutorService virtualExecutor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("virtual-test");
         Future<Boolean> virtualResult = virtualExecutor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertTrue(virtualResult.get(1, TimeUnit.SECONDS));
+            assertThat(virtualResult.get(1, TimeUnit.SECONDS)).isTrue();
         } finally {
             virtualExecutor.shutdownNow();
         }
     }
 
     @Test
-    public void shouldHandleNullAndEmptyValues() {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+    void shouldHandleNullAndEmptyValues() {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         // Test null property (cleared)
         System.clearProperty(SYS_PROP_KEY);
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
+
         // Test empty string
         System.setProperty(SYS_PROP_KEY, "");
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
-        
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
+
         // Test whitespace
         System.setProperty(SYS_PROP_KEY, "   ");
-        assertFalse(ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL);
+        assertThat(ExecutorServiceFactory.getThreadType()).isEqualTo(ThreadType.PLATFORM);
     }
 
     @Test
-    public void shouldHandlePoolSizeConfiguration() throws Exception {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
+    void shouldHandlePoolSizeConfiguration() throws Exception {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
         System.setProperty(SYS_PROP_KEY, ThreadType.VIRTUAL.toString());
-        
+
         // Test single thread scheduler
         ExecutorService singleThreadExecutor = ExecutorServiceFactory.newSingleThreadScheduledExecutor("single");
         Future<Boolean> singleResult = singleThreadExecutor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertTrue(singleResult.get(1, TimeUnit.SECONDS));
+            assertThat(singleResult.get(1, TimeUnit.SECONDS)).isTrue();
         } finally {
             singleThreadExecutor.shutdownNow();
         }
-        
+
         // Test multi-thread scheduler
         ExecutorService multiThreadExecutor = ExecutorServiceFactory.newScheduledThreadPool(5, "multi");
         Future<Boolean> multiResult = multiThreadExecutor.submit(() -> Thread.currentThread().isVirtual());
-        
+
         try {
-            assertTrue(multiResult.get(1, TimeUnit.SECONDS));
+            assertThat(multiResult.get(1, TimeUnit.SECONDS)).isTrue();
         } finally {
             multiThreadExecutor.shutdownNow();
         }
     }
 
     @Test
-    public void shouldAcceptValidEnvironmentVariableValues() {
-        assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
-        
+    void shouldAcceptValidEnvironmentVariableValues() {
+        assumeTrue(isJava21OrLater(), "Virtual threads require Java 21+");
+
         // This test documents that RESILIENCE4J_THREAD_TYPE environment variable
         // is supported as fallback when system property is not set.
         // Note: We cannot test this directly in unit tests as environment variables
         // cannot be modified at runtime. This would require integration tests
         // with different process environments.
-        
+
         String envValue = System.getenv(ENV_VAR_KEY);
         if (envValue != null) {
             // If environment variable is set, verify it follows the same rules
-            assertTrue("Environment variable should be 'virtual' or 'platform'", 
-                      ThreadType.VIRTUAL.toString().equalsIgnoreCase(envValue) || ThreadType.PLATFORM.toString().equalsIgnoreCase(envValue));
+            assertThat(ThreadType.VIRTUAL.toString().equalsIgnoreCase(envValue)
+                || ThreadType.PLATFORM.toString().equalsIgnoreCase(envValue))
+                .as("Environment variable should be 'virtual' or 'platform'")
+                .isTrue();
         }
-        
+
         // Verify the constant is properly defined
-        assertEquals("Environment variable key should match expected constant", 
-                     "RESILIENCE4J_THREAD_TYPE", ENV_VAR_KEY);
+        assertThat(ENV_VAR_KEY)
+            .as("Environment variable key should match expected constant")
+            .isEqualTo("RESILIENCE4J_THREAD_TYPE");
     }
-    
+
     private boolean isJava21OrLater() {
         try {
             // Try to access Thread.ofVirtual() which was introduced in Java 21
