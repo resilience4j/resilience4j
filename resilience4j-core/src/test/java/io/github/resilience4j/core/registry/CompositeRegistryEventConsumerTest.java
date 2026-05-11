@@ -16,18 +16,18 @@
 
 package io.github.resilience4j.core.registry;
 
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CompositeRegistryEventConsumerTest {
 
     @Test
-    public void testCompositeRegistryEventConsumer() {
+    void compositeRegistryEventConsumer() {
         List<RegistryEventConsumer<String>> consumers = new ArrayList<>();
         TestRegistryEventConsumer registryEventConsumer1 = new TestRegistryEventConsumer();
         TestRegistryEventConsumer registryEventConsumer2 = new TestRegistryEventConsumer();
@@ -46,10 +46,10 @@ public class CompositeRegistryEventConsumerTest {
         assertThat(addedEntry2).isEqualTo("entry2");
 
         Optional<String> removedEntry = testRegistry.remove("name");
-        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        assertThat(removedEntry).hasValue("entry1");
 
         Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        assertThat(replacedEntry).hasValue("entry2");
 
         assertConsumer(registryEventConsumer1);
         assertConsumer(registryEventConsumer2);

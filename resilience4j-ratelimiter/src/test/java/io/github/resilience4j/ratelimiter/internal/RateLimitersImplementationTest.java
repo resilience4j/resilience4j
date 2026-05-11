@@ -135,7 +135,7 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
                 ", Expected: " + config.getLimitForPeriod(), e);
         }
     }
-    
+
     protected void ensureNextCycleStarted(RateLimiter.Metrics metrics, RateLimiterConfig config) {
         try {
             await()
@@ -144,11 +144,11 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
                 .until(() -> metrics.getAvailablePermissions() > 0);
         } catch (Exception e) {
             throw new AssertionError("Cycle did not refresh within expected time. " +
-                "Current permits: " + metrics.getAvailablePermissions() + 
+                "Current permits: " + metrics.getAvailablePermissions() +
                 ". Error: " + e.getMessage(), e);
         }
     }
-    
+
     protected void ensureRefreshIsComplete(RateLimiter.Metrics metrics, RateLimiterConfig config) {
         waitForRefresh(metrics, config);
     }

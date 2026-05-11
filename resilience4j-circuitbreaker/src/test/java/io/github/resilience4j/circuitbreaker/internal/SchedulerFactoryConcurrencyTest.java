@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
  * Tests for concurrent access to SchedulerFactory with both virtual and platform threads.
  * Focuses on thread safety of the AtomicStampedReference implementation.
  * Tests run in both platform and virtual thread modes.
- * 
+ *
  * @author kanghyun.yang
  * @since 3.0.0
  */
@@ -36,13 +36,13 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
     public static Collection<Object[]> threadModes() {
         return ThreadModeTestBase.threadModes();
     }
-    
+
     @Override
     public void setUpThreadMode() {
         super.setUpThreadMode();
         SchedulerFactory.getInstance().reset();
     }
-    
+
     @Override
     public void cleanUpThreadMode() {
         super.cleanUpThreadMode();
@@ -52,7 +52,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
     @Test
     public void shouldHandleConcurrentAccess() throws Exception {
         LOG.info("Testing concurrent access with {}", getThreadModeDescription());
-        
+
         final int numThreads = 10;
         final int operationsPerThread = 100;
         final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -65,11 +65,11 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
             executor.submit(() -> {
                 try {
                     startLatch.await();
-                    
+
                     for (int j = 0; j < operationsPerThread; j++) {
                         ScheduledExecutorService scheduler = SchedulerFactory.getInstance().getScheduler();
                         assertNotNull("Scheduler should never be null", scheduler);
-                        
+
                         // Test that we can actually use the scheduler
                         CountDownLatch taskLatch = new CountDownLatch(1);
                         scheduler.execute(() -> {
@@ -79,7 +79,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
                             assertEquals("Thread type should match configuration", expectedVirtual, actualVirtual);
                             taskLatch.countDown();
                         });
-                        
+
                         assertTrue("Task should complete", taskLatch.await(1, TimeUnit.SECONDS));
                         successCount.incrementAndGet();
                     }
@@ -93,25 +93,25 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
 
         // Start all threads at once
         startLatch.countDown();
-        
+
         // Wait for completion
         assertTrue("All threads should complete", completeLatch.await(30, TimeUnit.SECONDS));
         executor.shutdown();
-        
+
         if (firstException.get() != null) {
             throw new AssertionError("Concurrency test failed", firstException.get());
         }
-        
-        assertEquals("All operations should succeed", 
+
+        assertEquals("All operations should succeed",
                     numThreads * operationsPerThread, successCount.get());
-        
+
         LOG.info("Concurrent access test passed with {}", getThreadModeDescription());
     }
 
     @Test
     public void shouldHandleConsistentThreadTypeUsage() throws Exception {
         LOG.info("Testing thread type consistency with {}", getThreadModeDescription());
-        
+
         final int numOperations = 20;
         final ExecutorService executor = Executors.newFixedThreadPool(2);
         final CountDownLatch completeLatch = new CountDownLatch(numOperations);
@@ -123,23 +123,23 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
                 try {
                     // Small delay to test consistency over time
                     Thread.sleep(5);
-                    
+
                     ScheduledExecutorService scheduler = SchedulerFactory.getInstance().getScheduler();
                     assertNotNull("Scheduler should never be null", scheduler);
-                    
+
                     // Test the scheduler with a task
                     CountDownLatch taskLatch = new CountDownLatch(1);
-                    
+
                     try {
                         scheduler.execute(() -> {
                             boolean expectedVirtual = isVirtualThreadMode();
                             boolean actualVirtual = Thread.currentThread().isVirtual();
-                            
+
                             // Thread type should be consistent for the current mode
                             assertEquals("Thread type should match configured mode", expectedVirtual, actualVirtual);
                             taskLatch.countDown();
                         });
-                        
+
                         assertTrue("Task should complete", taskLatch.await(3, TimeUnit.SECONDS));
                         successCount.incrementAndGet();
                     } catch (java.util.concurrent.RejectedExecutionException e) {
@@ -153,23 +153,23 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
             });
         }
 
-        assertTrue("All operations should complete", 
+        assertTrue("All operations should complete",
                   completeLatch.await(60, TimeUnit.SECONDS));
         executor.shutdown();
-        
+
         if (firstException.get() != null) {
             throw new AssertionError("Thread type consistency test failed", firstException.get());
         }
-        
+
         assertTrue("Most operations should succeed", successCount.get() > numOperations * 0.8);
-        
+
         LOG.info("Thread type consistency test passed with {}", getThreadModeDescription());
     }
 
     @Test
     public void shouldHandleConcurrentResets() throws Exception {
         LOG.info("Testing concurrent resets with {}", getThreadModeDescription());
-        
+
         final int numThreads = 3; // Reduced thread count
         final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
@@ -178,11 +178,11 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
 
         for (int i = 0; i < numThreads; i++) {
             final int threadIndex = i;
-            
+
             executor.submit(() -> {
                 try {
                     startLatch.await();
-                    
+
                     for (int j = 0; j < 10; j++) { // Reduced iterations
                         if (threadIndex == 0) {
                             // Only one thread does reset
@@ -192,7 +192,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
                             // Other threads get schedulers and test them
                             ScheduledExecutorService scheduler = SchedulerFactory.getInstance().getScheduler();
                             assertNotNull("Scheduler should never be null", scheduler);
-                            
+
                             // Quick test that it works, with exception tolerance
                             CountDownLatch taskLatch = new CountDownLatch(1);
                             try {
@@ -210,7 +210,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
                                 // The scheduler might be in process of being shut down
                             }
                         }
-                        
+
                         Thread.sleep(2); // Increased delay for more stability
                     }
                 } catch (Exception e) {
@@ -222,14 +222,14 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
         }
 
         startLatch.countDown();
-        assertTrue("All reset operations should complete", 
+        assertTrue("All reset operations should complete",
                   completeLatch.await(30, TimeUnit.SECONDS));
         executor.shutdown();
-        
+
         if (firstException.get() != null) {
             throw new AssertionError("Reset concurrency test failed", firstException.get());
         }
-        
+
         LOG.info("Concurrent resets test passed with {}", getThreadModeDescription());
     }
 }

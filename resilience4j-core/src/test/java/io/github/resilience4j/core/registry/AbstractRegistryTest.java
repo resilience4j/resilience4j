@@ -1,23 +1,40 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.core.registry;
 
 import io.github.resilience4j.core.RegistryStore;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import static io.github.resilience4j.core.registry.RegistryEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
 
 
-public class AbstractRegistryTest {
+class AbstractRegistryTest {
 
     @Test
-    public void shouldInitRegistryTags(){
+    void shouldInitRegistryTags(){
         TestRegistry testRegistry = new TestRegistry(Map.of("Tag1","Tag1Value"));
         assertThat(testRegistry.getTags()).isNotEmpty();
         assertThat(testRegistry.getTags()).containsOnly(Map.entry("Tag1","Tag1Value"));
@@ -25,15 +42,15 @@ public class AbstractRegistryTest {
 
 
     @Test
-    public void shouldContainDefaultAndCustomConfiguration() {
+    void shouldContainDefaultAndCustomConfiguration() {
         TestRegistry testRegistry = new TestRegistry();
         testRegistry.addConfiguration("custom", "test");
-        assertThat(testRegistry.getConfiguration("custom").get()).isEqualTo("test");
+        assertThat(testRegistry.getConfiguration("custom")).hasValue("test");
         assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
     }
 
     @Test
-    public void shouldNotAllowToOverwriteDefaultConfiguration() {
+    void shouldNotAllowToOverwriteDefaultConfiguration() {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThatThrownBy(() -> testRegistry.addConfiguration("default", "test"))
@@ -41,15 +58,15 @@ public class AbstractRegistryTest {
     }
 
     @Test
-    public void shouldRemoveCustomConfiguration() {
+    void shouldRemoveCustomConfiguration() {
         TestRegistry testRegistry = new TestRegistry();
         testRegistry.addConfiguration("customRemovable", "test");
         testRegistry.removeConfiguration("customRemovable");
-        assertThat(testRegistry.getConfiguration("customRemovable").isPresent()).isEqualTo(false);
+        Assertions.assertThat(testRegistry.getConfiguration("customRemovable")).isEmpty();
     }
 
     @Test
-    public void shouldNotAllowToRemoveDefaultConfiguration() {
+    void shouldNotAllowToRemoveDefaultConfiguration() {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThatThrownBy(() -> testRegistry.removeConfiguration("default"))
@@ -57,7 +74,7 @@ public class AbstractRegistryTest {
     }
 
     @Test
-    public void shouldConsumeRegistryEvents() {
+    void shouldConsumeRegistryEvents() {
         List<RegistryEvent> consumedEvents = new ArrayList<>();
         List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
         List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
@@ -76,10 +93,10 @@ public class AbstractRegistryTest {
         assertThat(addedEntry2).isEqualTo("entry2");
 
         Optional<String> removedEntry = testRegistry.remove("name");
-        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        assertThat(removedEntry).hasValue("entry1");
 
         Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        assertThat(replacedEntry).hasValue("entry2");
 
         assertThat(consumedEvents).hasSize(4);
         assertThat(addedEvents).hasSize(2);
@@ -104,7 +121,7 @@ public class AbstractRegistryTest {
     }
 
     @Test
-    public void testCreateWithRegistryEventConsumer() {
+    void createWithRegistryEventConsumer() {
         List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
         List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
         List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
@@ -135,10 +152,10 @@ public class AbstractRegistryTest {
         assertThat(addedEntry2).isEqualTo("entry2");
 
         Optional<String> removedEntry = testRegistry.remove("name");
-        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        assertThat(removedEntry).hasValue("entry1");
 
         Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        assertThat(replacedEntry).hasValue("entry2");
 
         assertThat(addedEvents).hasSize(2);
         assertThat(removedEvents).hasSize(1);
@@ -158,12 +175,12 @@ public class AbstractRegistryTest {
     }
 
     @Test
-    public void shouldOnlyFindRegisteredObjects() {
+    void shouldOnlyFindRegisteredObjects() {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThat(testRegistry.find("test")).isEmpty();
         testRegistry.entryMap.putIfAbsent("test", "value");
-        assertThat(testRegistry.find("test")).contains("value");
+        assertThat(testRegistry.find("test")).hasValue("value");
     }
 
     static class TestRegistry extends AbstractRegistry<String, String> {
@@ -190,7 +207,7 @@ public class AbstractRegistryTest {
     }
 
     @Test
-    public void shouldCreateRegistryWithRegistryStore() {
+    void shouldCreateRegistryWithRegistryStore() {
         List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
         List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
         List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
@@ -215,7 +232,7 @@ public class AbstractRegistryTest {
         TestRegistry testRegistry  = new TestRegistry(
             registryEventConsumers, Map.of("Tag1","Tag1Value"), new InMemoryRegistryStore<>());
 
-        assertEquals("Wrong Value", "default", testRegistry.getDefaultConfig());
+        assertThat(testRegistry.getDefaultConfig()).as("Wrong Value").isEqualTo("default");
         assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
         assertThat(testRegistry.getTags()).isNotEmpty();
         assertThat(testRegistry.getTags()).containsOnly(Map.entry("Tag1","Tag1Value"));
@@ -227,10 +244,10 @@ public class AbstractRegistryTest {
         assertThat(addedEntry2).isEqualTo("entry2");
 
         Optional<String> removedEntry = testRegistry.remove("name");
-        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        assertThat(removedEntry).hasValue("entry1");
 
         Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        assertThat(replacedEntry).hasValue("entry2");
 
         assertThat(addedEvents).hasSize(2);
         assertThat(removedEvents).hasSize(1);

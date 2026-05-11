@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017: Robert Winkler
+ *  Copyright 2026: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 package io.github.resilience4j.core;
 
 import com.statemachinesystems.mockclock.MockClock;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +28,12 @@ import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StopWatchTest {
+class StopWatchTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(StopWatchTest.class);
 
     @Test
-    public void testStopWatch() {
+    void stopWatch() {
         MockClock mockClock = MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC"));
 
         StopWatch watch = new StopWatch(mockClock);
@@ -42,6 +42,6 @@ public class StopWatchTest {
 
         Duration duration = watch.stop();
         LOG.info(watch.toString());
-        assertThat(duration.getSeconds()).isEqualTo(5);
+        assertThat(duration).hasSeconds(5);
     }
 }
