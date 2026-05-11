@@ -1,17 +1,18 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.function.Function;
 
+import org.junit.jupiter.api.Test;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-public class FunctionUtilsTest {
+class FunctionUtilsTest {
 
     @Test
-    public void shouldChainFunctionAndResultHandler() {
+    void shouldChainFunctionAndResultHandler() {
         Function<String, String> function = ignored -> "foo";
         Function<String, String> functionWithRecovery = FunctionUtils.andThen(function, result -> "bar");
 
@@ -22,7 +23,7 @@ public class FunctionUtilsTest {
 
 
     @Test
-    public void shouldChainFunctionAndRecoverFromException() {
+    void shouldChainFunctionAndRecoverFromException() {
         Function<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -35,7 +36,7 @@ public class FunctionUtilsTest {
     }
 
     @Test
-    public void shouldChainFunctionAndRecoverWithErrorHandler() {
+    void shouldChainFunctionAndRecoverWithErrorHandler() {
         Function<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -48,7 +49,7 @@ public class FunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFunctionFromException() {
+    void shouldRecoverFunctionFromException() {
         Function<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -60,7 +61,7 @@ public class FunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFunctionFromSpecificExceptions() {
+    void shouldRecoverFunctionFromSpecificExceptions() {
         Function<String, String> function = ignored -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -75,7 +76,7 @@ public class FunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFunctionFromSpecificResult() {
+    void shouldRecoverFunctionFromSpecificResult() {
         Function<String, String> function = ignored -> "Wrong Result";
 
         Function<String, String> functionWithRecovery = FunctionUtils.recover(function, (result) -> result.equals("Wrong Result"), (r) -> "Correct Result");
@@ -84,25 +85,27 @@ public class FunctionUtilsTest {
         assertThat(result).isEqualTo("Correct Result");
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException() {
+    @Test
+    void shouldRethrowException() {
         Function<String, String> function = ignored -> {
-            throw new IllegalArgumentException("BAM!");
-        };
+                throw new IllegalArgumentException("BAM!");
+            };
         Function<String, String> functionWithRecovery = FunctionUtils.recover(function, (ex) -> {
-            throw new RuntimeException();
-        });
+                throw new RuntimeException();
+            });
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        functionWithRecovery.apply("foo");
+            functionWithRecovery.apply("foo"));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException2() throws Exception {
+    @Test
+    void shouldRethrowException2() throws Exception {
         Function<String, String> function = ignored -> {
-            throw new RuntimeException("BAM!");
-        };
+                throw new RuntimeException("BAM!");
+            };
         Function<String, String> functionWithRecovery = FunctionUtils.recover(function, IllegalArgumentException.class, (ex) -> "foo");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        functionWithRecovery.apply("bar");
+            functionWithRecovery.apply("bar"));
     }
 }

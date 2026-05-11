@@ -58,7 +58,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
     /**
      * Constructor for parameterized tests.
-     * 
+     *
      * @param threadType the thread mode to test with ("platform" or "virtual")
      */
     public SemaphoreBulkheadTest(ThreadType threadType) {
@@ -96,18 +96,18 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
     @Test
     public void shouldHandleBasicBulkheadOperationsInBothThreadModes() throws InterruptedException {
         LOG.info("Running shouldHandleBasicBulkheadOperationsInBothThreadModes in {}", getThreadModeDescription());
-        
+
         // Test basic permission acquisition
         boolean firstPermission = bulkhead.tryAcquirePermission();
         assertThat(firstPermission)
             .as("First permission should be acquired in " + getThreadModeDescription())
             .isTrue();
-        
+
         boolean secondPermission = bulkhead.tryAcquirePermission();
         assertThat(secondPermission)
             .as("Second permission should be acquired in " + getThreadModeDescription())
             .isTrue();
-        
+
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
             .as("No concurrent calls should be available in " + getThreadModeDescription())
             .isZero();
@@ -139,7 +139,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         testSubscriber.assertValueCount(6)
             .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED,
                 CALL_FINISHED, CALL_PERMITTED);
-        
+
         LOG.info("Basic bulkhead operations test passed in {}", getThreadModeDescription());
     }
 
@@ -175,7 +175,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
     @Test
     public void shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes() throws InterruptedException {
         LOG.info("Running shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes in {}", getThreadModeDescription());
-        
+
         long expectedMillisOfWaitTime = 50;
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -184,12 +184,12 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("timeoutTest-" + threadType, config);
 
         boolean entered = bulkhead.tryEnterBulkhead();
-        
+
         Thread subTestRoutine = new Thread(() -> {
             long start = System.nanoTime();
             boolean acquired = bulkhead.tryAcquirePermission();
             Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);
-            
+
             assertThat(acquired)
                 .as("Permission should be rejected due to timeout in " + getThreadModeDescription())
                 .isFalse();
@@ -203,7 +203,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         assertThat(entered)
             .as("Initial entry should succeed in " + getThreadModeDescription())
             .isTrue();
-        
+
         subTestRoutine.join(2 * expectedMillisOfWaitTime);
         assertThat(subTestRoutine.isInterrupted())
             .as("Sub-thread should not be interrupted in " + getThreadModeDescription())
@@ -211,7 +211,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         assertThat(subTestRoutine.isAlive())
             .as("Sub-thread should complete in " + getThreadModeDescription())
             .isFalse();
-        
+
         LOG.info("Time-out behavior test passed in {}", getThreadModeDescription());
     }
 
@@ -532,13 +532,13 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
     @Test
     public void changePermissionsConcurrentlyWithDetailedLockTesting() throws NoSuchFieldException, IllegalAccessException {
         LOG.info("Running changePermissionsConcurrentlyWithDetailedLockTesting in {}", getThreadModeDescription());
-        
+
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("parameterizedTest-" + threadType, originalConfig);
-        
+
         // Access to reflection to check the lock state of ReentrantLock
         Field field = SemaphoreBulkhead.class.getDeclaredField("lock");
         field.setAccessible(true);
@@ -548,7 +548,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        
+
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             while (bulkheadThreadTrigger.get()) {
@@ -591,7 +591,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         // Enhanced testing: Verify that the second thread is queued when the lock is held
         await().atMost(1, SECONDS)
             .until(() -> lock.isLocked() || lock.hasQueuedThreads());
-        
+
         // In virtual thread mode, verify the lock behavior is consistent
         if (isVirtualThreadMode()) {
             // Virtual threads should handle blocking efficiently without pinning carrier threads
@@ -615,7 +615,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls())
             .as("Final config should reflect successful change in " + getThreadModeDescription())
             .isIn(1, 4);
-        
+
         LOG.info("Enhanced concurrent permissions test passed in {}", getThreadModeDescription());
     }
 

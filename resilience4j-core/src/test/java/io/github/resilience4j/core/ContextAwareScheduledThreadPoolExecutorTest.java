@@ -17,32 +17,29 @@
  *
  */
 package io.github.resilience4j.core;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 
-public class ContextAwareScheduledThreadPoolExecutorTest {
+class ContextAwareScheduledThreadPoolExecutorTest {
 
     private ContextAwareScheduledThreadPoolExecutor schedulerService;
 
-    @Before
-    public void initialise() {
+    @BeforeEach
+    void initialise() {
         schedulerService = ContextAwareScheduledThreadPoolExecutor.newScheduledThreadPool()
             .corePoolSize(20)
             .contextPropagators(new TestContextPropagators.TestThreadLocalContextPropagatorWithHolder())
@@ -50,7 +47,7 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
     }
 
     @Test
-    public void testConfigs() {
+    void configs() {
         assertThat(schedulerService.getCorePoolSize()).isEqualTo(20);
         assertThat(schedulerService.getThreadFactory()).isInstanceOf(NamingThreadFactory.class);
         assertThat(schedulerService.getContextPropagators()).hasSize(1)
@@ -58,15 +55,15 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
     }
 
     @Test
-    public void throwsExceptionWhenCorePoolSizeLessThanOne() {
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->  ContextAwareScheduledThreadPoolExecutor
+    void throwsExceptionWhenCorePoolSizeLessThanOne() {
+        assertThatThrownBy(() -> ContextAwareScheduledThreadPoolExecutor
             .newScheduledThreadPool()
             .corePoolSize(0)
-            .build());
+            .build()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testScheduleRunnablePropagatesContext() {
+    void scheduleRunnablePropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> {
             TestThreadLocalContextHolder.get().orElseThrow(() -> new RuntimeException("Found No Context"));
@@ -75,81 +72,81 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
     }
 
     @Test
-    public void testScheduleRunnableWithDelayPropagatesContext() {
+    void scheduleRunnableWithDelayPropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> {
             TestThreadLocalContextHolder.get().orElseThrow(() -> new RuntimeException("Found No Context"));
         }, 100, TimeUnit.MILLISECONDS);
         try{
-            await().atMost(200, TimeUnit.MILLISECONDS).until(matches(() -> schedule.get()));
+            await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() -> schedule.get());
         } catch (Exception exception) {
-            Assertions.fail("Must not throw an exception");
+            fail("Must not throw an exception");
         }
         
     }
 
     @Test
-    public void testThreadFactory() {
+    void threadFactory() {
         final ScheduledFuture<String> schedule = schedulerService.schedule(() -> Thread.currentThread().getName(), 0, TimeUnit.MILLISECONDS);
-        waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(schedule.get()).contains("ContextAwareScheduledThreadPool")));
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(schedule.get()).contains("ContextAwareScheduledThreadPool"));
     }
 
     @Test
-    public void testScheduleCallablePropagatesContext() {
+    void scheduleCallablePropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> TestThreadLocalContextHolder.get().orElse(null), 0, TimeUnit.MILLISECONDS);
-        waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(schedule.get()).isEqualTo("ValueShouldCrossThreadBoundary")));
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(schedule.get()).isEqualTo("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testScheduleCallableWithDelayPropagatesContext() {
+    void scheduleCallableWithDelayPropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> TestThreadLocalContextHolder.get().orElse(null), 100, TimeUnit.MILLISECONDS);
-        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
-            assertThat(schedule.get()).isEqualTo("ValueShouldCrossThreadBoundary")));
+        await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() ->
+            assertThat(schedule.get()).isEqualTo("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testCompletableFuturePropagatesContext() {
+    void completableFuturePropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
             assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
             return (String) TestThreadLocalContextHolder.get().orElse(null);
         }, schedulerService);
-        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testCompletableFuturePropagatesMDCContext() {
+    void completableFuturePropagatesMDCContext() {
         MDC.put("key", "ValueShouldCrossThreadBoundary");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
         final CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
             assertThat(Thread.currentThread().getName()).isEqualTo("ContextAwareScheduledThreadPool-1");
-            assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+            assertThat(MDC.getCopyOfContextMap()).containsExactlyEntriesOf(contextMap);
             return MDC.getCopyOfContextMap().get("key");
         }, schedulerService);
-        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testScheduleCallablePropagatesMDCContext() {
+    void scheduleCallablePropagatesMDCContext() {
         MDC.put("key", "value");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
         final ScheduledFuture<Map<String, String>> scheduledFuture = this.schedulerService
             .schedule(MDC::getCopyOfContextMap, 0, TimeUnit.MILLISECONDS);
 
-        waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(scheduledFuture.get()).hasSize(2).containsExactlyEntriesOf(contextMap)));
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(scheduledFuture.get()).containsExactlyEntriesOf(contextMap));
     }
 
     @Test
-    public void testMDCWithoutContextPropagator() {
+    void mdcWithoutContextPropagator() {
         final ContextAwareScheduledThreadPoolExecutor schedulerService = ContextAwareScheduledThreadPoolExecutor
             .newScheduledThreadPool()
             .corePoolSize(10)
@@ -161,7 +158,7 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
         final ScheduledFuture<Map<String, String>> scheduledFuture = schedulerService
             .schedule(MDC::getCopyOfContextMap, 0, TimeUnit.MILLISECONDS);
 
-        waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(scheduledFuture.get()).hasSize(2).containsExactlyEntriesOf(contextMap)));
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(scheduledFuture.get()).containsExactlyEntriesOf(contextMap));
     }
 }

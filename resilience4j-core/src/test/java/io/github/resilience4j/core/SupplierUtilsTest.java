@@ -1,17 +1,18 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.junit.jupiter.api.Test;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-public class SupplierUtilsTest {
+class SupplierUtilsTest {
 
     @Test
-    public void shouldChainSupplierAndResultHandler() {
+    void shouldChainSupplierAndResultHandler() {
         Supplier<String> supplier = () -> "BLA";
         Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, result -> "Bla");
 
@@ -21,7 +22,7 @@ public class SupplierUtilsTest {
     }
 
     @Test
-    public void shouldChainSupplierAndRecoverWithHandler() {
+    void shouldChainSupplierAndRecoverWithHandler() {
         Supplier<String> supplier = () -> {
             throw new RuntimeException("BAM!");
         };
@@ -34,7 +35,7 @@ public class SupplierUtilsTest {
     }
 
     @Test
-    public void shouldChainSupplierAndRecoverWithErrorHandler() {
+    void shouldChainSupplierAndRecoverWithErrorHandler() {
         Supplier<String> supplier = () -> {
             throw new RuntimeException("BAM!");
         };
@@ -48,7 +49,7 @@ public class SupplierUtilsTest {
 
 
     @Test
-    public void shouldRecoverSupplierFromException() {
+    void shouldRecoverSupplierFromException() {
         Supplier<String> supplier = () -> {
             throw new RuntimeException("BAM!");
         };
@@ -60,7 +61,7 @@ public class SupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverSupplierFromSpecificResult() {
+    void shouldRecoverSupplierFromSpecificResult() {
         Supplier<String> supplier = () -> "Wrong Result";
 
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
@@ -70,7 +71,7 @@ public class SupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverSupplierFromSpecificException() {
+    void shouldRecoverSupplierFromSpecificException() {
         Supplier<String> supplier = () -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -82,7 +83,7 @@ public class SupplierUtilsTest {
     }
 
     @Test
-    public void shouldRecoverSupplierFromSpecificExceptions() {
+    void shouldRecoverSupplierFromSpecificExceptions() {
         Supplier<String> supplier = () -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -96,25 +97,27 @@ public class SupplierUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException() {
+    @Test
+    void shouldRethrowException() {
         Supplier<String> supplier = () -> {
-            throw new RuntimeException("BAM!");
-        };
+                throw new RuntimeException("BAM!");
+            };
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (ex) -> {
-            throw new RuntimeException();
-        });
+                throw new RuntimeException();
+            });
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        supplierWithRecovery.get();
+            supplierWithRecovery.get());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException2() {
+    @Test
+    void shouldRethrowException2() {
         Supplier<String> supplier = () -> {
-            throw new RuntimeException("BAM!");
-        };
+                throw new RuntimeException("BAM!");
+            };
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, IllegalArgumentException.class, (ex) -> "Bla");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        supplierWithRecovery.get();
+            supplierWithRecovery.get());
     }
 }

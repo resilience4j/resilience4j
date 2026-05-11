@@ -9,24 +9,24 @@ import java.util.Collection;
 
 /**
  * Unified ThreadModeTestBase class for testing with both platform and virtual threads.
- * 
+ *
  * This class consolidates the previously duplicated ThreadModeTestBase implementations
  * from multiple modules into a single shared implementation in resilience4j-core.
  * It provides parameterized test support for running tests in both thread modes.
- * 
+ *
  * @author kanghyun.yang
  * @since 3.0.0
  */
 public abstract class ThreadModeTestBase {
 
     protected static final String SYS_PROP_KEY = "resilience4j.thread.type";
-    
+
     protected ThreadType threadType;
     private String originalPropertyValue;
 
     /**
      * Constructor for parameterized tests.
-     * 
+     *
      * @param threadType the thread type to test with
      */
     public ThreadModeTestBase(ThreadType threadType) {
@@ -45,7 +45,7 @@ public abstract class ThreadModeTestBase {
     public void setUpThreadMode() {
         // Save original property value
         originalPropertyValue = System.getProperty(SYS_PROP_KEY);
-        
+
         // Configure thread mode for test
         if (threadType == ThreadType.VIRTUAL) {
             // Virtual threads require explicit activation via system property
@@ -75,7 +75,7 @@ public abstract class ThreadModeTestBase {
     public boolean isVirtualThreadMode() {
         return threadType == ThreadType.VIRTUAL;
     }
-    
+
     /**
      * Returns a descriptive string for the current thread mode.
      */

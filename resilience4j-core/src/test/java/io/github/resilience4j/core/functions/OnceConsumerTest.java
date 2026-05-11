@@ -1,20 +1,22 @@
 package io.github.resilience4j.core.functions;
 
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 /**
  * Class OnceConsumer test.
  */
-public class OnceConsumerTest {
+class OnceConsumerTest {
 
     @Test
-    public void shouldApplyOnlyOnce() {
+    void shouldApplyOnlyOnce() {
         final List<String> lst = new ArrayList<>();
         OnceConsumer<List<String>> once = OnceConsumer.of(lst);
         once.applyOnce((l) -> l.add("Hello World"));
@@ -24,7 +26,7 @@ public class OnceConsumerTest {
     }
 
     @Test
-    public void shouldRunOnlyOnceWithException() {
+    void shouldRunOnlyOnceWithException() {
         final List<String> lst = new ArrayList<>();
         OnceConsumer<List<String>> once = OnceConsumer.of(lst);
         Consumer<List<String>> blowUp = (l) -> {
