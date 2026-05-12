@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,28 +19,28 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class BulkheadEventPublisherTest {
+class BulkheadEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private BulkheadConfig config;
     private Logger logger;
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -52,7 +52,7 @@ public class BulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         Bulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
         Bulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
 
@@ -60,7 +60,7 @@ public class BulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCallPermittedEvent() {
+    void shouldConsumeOnCallPermittedEvent() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         bulkhead.getEventPublisher().onCallPermitted(
@@ -74,7 +74,7 @@ public class BulkheadEventPublisherTest {
 
 
     @Test
-    public void shouldConsumeOnCallRejectedEvent() {
+    void shouldConsumeOnCallRejectedEvent() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.getEventPublisher().onCallRejected(
             event -> logger.info(event.getEventType().toString()));
@@ -82,26 +82,26 @@ public class BulkheadEventPublisherTest {
         Supplier<String> supplier = Bulkhead
             .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(supplier);
+        assertThatThrownBy(supplier::get).isInstanceOf(BulkheadFullException.class);
 
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
 
     @Test
-    public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
+    void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.getEventPublisher().onCallFinished(
             event -> logger.info(event.getEventType().toString()));
         Supplier<String> supplier = Bulkhead
             .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(supplier);
+        supplier.get();
 
         then(logger).should(times(1)).info("CALL_FINISHED");
     }
 
     @Test
-    public void shouldConsumeOnCallFinishedEventOnComplete() throws Exception {
+    void shouldConsumeOnCallFinishedEventOnComplete() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.getEventPublisher().onCallFinished(
             event -> logger.info(event.getEventType().toString()));

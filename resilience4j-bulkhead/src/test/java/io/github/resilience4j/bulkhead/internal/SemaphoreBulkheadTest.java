@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,145 +21,141 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.github.resilience4j.core.registry.*;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.test.RxJava2Adapter;
 import io.reactivex.subscribers.TestSubscriber;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.github.resilience4j.bulkhead.BulkheadConfig.*;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
-import static java.lang.Thread.State.*;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_FINISHED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
+import static java.lang.Thread.State.RUNNABLE;
+import static java.lang.Thread.State.TERMINATED;
+import static java.lang.Thread.State.TIMED_WAITING;
+import static java.lang.Thread.State.WAITING;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
-@RunWith(Parameterized.class)
-public class SemaphoreBulkheadTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class SemaphoreBulkheadTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBulkheadTest.class);
 
-    /**
-     * Constructor for parameterized tests.
-     *
-     * @param threadType the thread mode to test with ("platform" or "virtual")
-     */
-    public SemaphoreBulkheadTest(ThreadType threadType) {
-        super(threadType);
-    }
-
-    /**
-     * Provides the parameterized test data for different thread modes.
-     */
-    @Parameterized.Parameters(name = "threadMode={0}")
-    public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBase.threadModes();
-    }
-
-    private Bulkhead bulkhead;
-    private TestSubscriber<BulkheadEvent.Type> testSubscriber;
-
-    @Before
-    public void setUp() {
+    // Each @TestTemplate invocation creates a fresh instance, so these fields are per-invocation.
+    // setUp() is called via @TestTemplate's BeforeEachCallback from ThreadModeExtension,
+    // but since there's no @BeforeEach here the fields are initialised inside each test method.
+    // We use a helper to build a standard bulkhead per test.
+    private Bulkhead createDefaultBulkhead(ThreadType threadType) {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(2)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
-        bulkhead = Bulkhead.of("test-" + threadType, config);
-        testSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
+        return Bulkhead.of("test-" + threadType, config);
+    }
+
+    private TestSubscriber<BulkheadEvent.Type> subscribe(Bulkhead bulkhead) {
+        return RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
             .map(BulkheadEvent::getEventType)
             .test();
     }
 
-    @Test
-    public void shouldReturnTheCorrectName() {
+    @TestTemplate
+    void shouldReturnTheCorrectName(ThreadType threadType) {
+        Bulkhead bulkhead = createDefaultBulkhead(threadType);
         assertThat(bulkhead.getName()).isEqualTo("test-" + threadType);
     }
 
-    @Test
-    public void shouldHandleBasicBulkheadOperationsInBothThreadModes() throws InterruptedException {
-        LOG.info("Running shouldHandleBasicBulkheadOperationsInBothThreadModes in {}", getThreadModeDescription());
+    @TestTemplate
+    void shouldHandleBasicBulkheadOperationsInBothThreadModes(ThreadType threadType) {
+        LOG.info("Running shouldHandleBasicBulkheadOperationsInBothThreadModes in {}", threadType);
 
-        // Test basic permission acquisition
+        Bulkhead bulkhead = createDefaultBulkhead(threadType);
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
         boolean firstPermission = bulkhead.tryAcquirePermission();
         assertThat(firstPermission)
-            .as("First permission should be acquired in " + getThreadModeDescription())
+            .as("First permission should be acquired in %s", threadType)
             .isTrue();
 
         boolean secondPermission = bulkhead.tryAcquirePermission();
         assertThat(secondPermission)
-            .as("Second permission should be acquired in " + getThreadModeDescription())
+            .as("Second permission should be acquired in %s", threadType)
             .isTrue();
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
-            .as("No concurrent calls should be available in " + getThreadModeDescription())
+            .as("No concurrent calls should be available in %s", threadType)
             .isZero();
 
-        // Test rejection when no permits available
         boolean thirdPermission = bulkhead.tryAcquirePermission();
         assertThat(thirdPermission)
-            .as("Third permission should be rejected in " + getThreadModeDescription())
+            .as("Third permission should be rejected in %s", threadType)
             .isFalse();
 
-        // Test permission release
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
-            .as("One concurrent call should be available after completion in " + getThreadModeDescription())
+            .as("One concurrent call should be available after completion in %s", threadType)
             .isEqualTo(1);
 
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
-            .as("Two concurrent calls should be available after second completion in " + getThreadModeDescription())
+            .as("Two concurrent calls should be available after second completion in %s", threadType)
             .isEqualTo(2);
 
-        // Test that we can acquire permission again
         boolean fourthPermission = bulkhead.tryAcquirePermission();
         assertThat(fourthPermission)
-            .as("Fourth permission should be acquired after releases in " + getThreadModeDescription())
+            .as("Fourth permission should be acquired after releases in %s", threadType)
             .isTrue();
 
-        // Verify event sequence
         testSubscriber.assertValueCount(6)
             .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED,
                 CALL_FINISHED, CALL_PERMITTED);
 
-        LOG.info("Basic bulkhead operations test passed in {}", getThreadModeDescription());
+        LOG.info("Basic bulkhead operations test passed in {}", threadType);
     }
 
-    @Test
-    public void testToString() {
-        String result = bulkhead.toString();
-
-        assertThat(result).isEqualTo("Bulkhead 'test-" + threadType + "'");
+    @TestTemplate
+    void testToString(ThreadType threadType) {
+        Bulkhead bulkhead = createDefaultBulkhead(threadType);
+        assertThat(bulkhead.toString()).isEqualTo("Bulkhead 'test-" + threadType + "'");
     }
 
-    @Test
-    public void testCreateWithNullConfig() {
+    @TestTemplate
+    void createWithNullConfig(ThreadType threadType) {
         Supplier<BulkheadConfig> configSupplier = () -> null;
-
         assertThatThrownBy(() -> Bulkhead.of("test", configSupplier))
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
-    @Test
-    public void testCreateWithDefaults() {
+    @TestTemplate
+    void createWithDefaults(ThreadType threadType) {
         Bulkhead bulkhead = Bulkhead.ofDefaults("test");
 
         assertThat(bulkhead).isNotNull();
@@ -172,9 +168,9 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             .isEqualTo(DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED);
     }
 
-    @Test
-    public void shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes() throws InterruptedException {
-        LOG.info("Running shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes in {}", getThreadModeDescription());
+    @TestTemplate
+    void shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes(ThreadType threadType) throws InterruptedException {
+        LOG.info("Running shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes in {}", threadType);
 
         long expectedMillisOfWaitTime = 50;
         BulkheadConfig config = BulkheadConfig.custom()
@@ -191,32 +187,32 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);
 
             assertThat(acquired)
-                .as("Permission should be rejected due to timeout in " + getThreadModeDescription())
+                .as("Permission should be rejected due to timeout in %s", threadType)
                 .isFalse();
             assertThat(actualWaitTime.toMillis())
-                .as("Wait time should be within expected range in " + getThreadModeDescription())
+                .as("Wait time should be within expected range in %s", threadType)
                 .isBetween(expectedMillisOfWaitTime, (long) (expectedMillisOfWaitTime * 1.3));
         });
         subTestRoutine.setDaemon(true);
         subTestRoutine.start();
 
         assertThat(entered)
-            .as("Initial entry should succeed in " + getThreadModeDescription())
+            .as("Initial entry should succeed in %s", threadType)
             .isTrue();
 
         subTestRoutine.join(2 * expectedMillisOfWaitTime);
         assertThat(subTestRoutine.isInterrupted())
-            .as("Sub-thread should not be interrupted in " + getThreadModeDescription())
+            .as("Sub-thread should not be interrupted in %s", threadType)
             .isFalse();
         assertThat(subTestRoutine.isAlive())
-            .as("Sub-thread should complete in " + getThreadModeDescription())
+            .as("Sub-thread should complete in %s", threadType)
             .isFalse();
 
-        LOG.info("Time-out behavior test passed in {}", getThreadModeDescription());
+        LOG.info("Timeout behavior test passed in {}", threadType);
     }
 
-    @Test
-    public void testTryEnterWithInterruptDuringTimeout() throws InterruptedException {
+    @TestTemplate
+    void tryEnterWithInterruptDuringTimeout(ThreadType threadType) throws InterruptedException {
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -240,18 +236,18 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
             .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
-            .until(() -> subTestRoutine.getState() == Thread.State.TIMED_WAITING);
+            .until(() -> subTestRoutine.getState() == TIMED_WAITING);
         subTestRoutine.interrupt();
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
             .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
-            .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
+            .until(() -> subTestRoutine.getState() == TERMINATED);
         assertThat(entered).isTrue();
         assertThat(interruptedWithoutCodeFlowBreak.get()).isTrue();
         assertThat(subTestRoutine.isAlive()).isFalse();
     }
 
-    @Test
-    public void testAcquireWithInterruptDuringTimeout() throws InterruptedException {
+    @TestTemplate
+    void acquireWithInterruptDuringTimeout(ThreadType threadType) throws InterruptedException {
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig configTemplate = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -283,32 +279,30 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
             .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
-            .until(() -> subTestRoutine.getState() == Thread.State.TIMED_WAITING);
+            .until(() -> subTestRoutine.getState() == TIMED_WAITING);
         subTestRoutine.interrupt();
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
             .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
-            .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
+            .until(() -> subTestRoutine.getState() == TERMINATED);
         assertThat(entered).isTrue();
         assertThat(interruptedWithoutCodeFlowBreak.get()).isTrue();
         assertThat(interruptedWithException.get()).isTrue();
         assertThat(subTestRoutine.isAlive()).isFalse();
     }
 
-    @Test
-    public void testZeroMaxConcurrentCalls() {
+    @TestTemplate
+    void zeroMaxConcurrentCalls(ThreadType threadType) {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(0)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
 
-        boolean entered = bulkhead.tryAcquirePermission();
-
-        assertThat(entered).isFalse();
+        assertThat(bulkhead.tryAcquirePermission()).isFalse();
     }
 
-    @Test
-    public void testEntryTimeout() {
+    @TestTemplate
+    void entryTimeout(ThreadType threadType) {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(10))
@@ -316,13 +310,11 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
         bulkhead.tryAcquirePermission(); // consume the permit
 
-        boolean entered = bulkhead.tryEnterBulkhead();
-
-        assertThat(entered).isFalse();
+        assertThat(bulkhead.tryEnterBulkhead()).isFalse();
     }
 
-    @Test
-    public void changePermissionsInIdleState() {
+    @TestTemplate
+    void changePermissionsInIdleState(ThreadType threadType) {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(5000))
@@ -330,7 +322,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(5)
@@ -339,7 +331,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(5);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(2)
@@ -348,13 +340,13 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         bulkhead.changeConfig(newConfig);
     }
 
-    @Test
-    public void changeWaitTimeInIdleState() {
+    @TestTemplate
+    void changeWaitTimeInIdleState(ThreadType threadType) {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(5000))
@@ -362,7 +354,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -371,7 +363,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(3000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(3000);
 
         newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -380,24 +372,24 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(7000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(7000);
 
         bulkhead.changeConfig(newConfig);
     }
 
     @SuppressWarnings("Duplicates")
-    @Test
-    public void changePermissionsCountWhileOneThreadIsRunningWithThisPermission() {
+    @TestTemplate
+    void changePermissionsCountWhileOneThreadIsRunningWithThisPermission(ThreadType threadType) {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
 
         AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             while (bulkheadThreadTrigger.get()) {
@@ -456,18 +448,18 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
     }
 
-    @Test
-    public void changePermissionsCountWhileOneThreadIsWaitingForPermission() {
+    @TestTemplate
+    void changePermissionsCountWhileOneThreadIsWaitingForPermission(ThreadType threadType) {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(500000))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         bulkhead.tryAcquirePermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             bulkhead.onComplete();
@@ -492,18 +484,18 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
-    @Test
-    public void changeWaitingTimeWhileOneThreadIsWaitingForPermission() {
+    @TestTemplate
+    void changeWaitingTimeWhileOneThreadIsWaitingForPermission(ThreadType threadType) {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(500000))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         bulkhead.tryAcquirePermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             bulkhead.onComplete();
@@ -529,9 +521,10 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
     }
 
     @SuppressWarnings("Duplicates")
-    @Test
-    public void changePermissionsConcurrentlyWithDetailedLockTesting() throws NoSuchFieldException, IllegalAccessException {
-        LOG.info("Running changePermissionsConcurrentlyWithDetailedLockTesting in {}", getThreadModeDescription());
+    @TestTemplate
+    void changePermissionsConcurrentlyWithDetailedLockTesting(ThreadType threadType)
+            throws NoSuchFieldException, IllegalAccessException {
+        LOG.info("Running changePermissionsConcurrentlyWithDetailedLockTesting in {}", threadType);
 
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -539,7 +532,6 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("parameterizedTest-" + threadType, originalConfig);
 
-        // Access to reflection to check the lock state of ReentrantLock
         Field field = SemaphoreBulkhead.class.getDeclaredField("lock");
         field.setAccessible(true);
         ReentrantLock lock = (ReentrantLock) field.get(bulkhead);
@@ -560,7 +552,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         bulkheadThread.start();
 
         await().atMost(1, SECONDS)
-            .until(() -> bulkheadThread.getState().equals(Thread.State.RUNNABLE));
+            .until(() -> bulkheadThread.getState().equals(RUNNABLE));
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead.tryEnterBulkhead()).isTrue();
@@ -575,9 +567,8 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         firstChangerThread.setDaemon(true);
         firstChangerThread.start();
 
-        // Enhanced testing: Verify that the ReentrantLock is properly acquired during config change
         await().atMost(1, SECONDS)
-            .until(() -> firstChangerThread.getState().equals(Thread.State.WAITING) || lock.isLocked());
+            .until(() -> firstChangerThread.getState().equals(WAITING) || lock.isLocked());
 
         Thread secondChangerThread = new Thread(() -> {
             bulkhead.changeConfig(BulkheadConfig.custom()
@@ -588,12 +579,10 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
         secondChangerThread.setDaemon(true);
         secondChangerThread.start();
 
-        // Enhanced testing: Verify that the second thread is queued when the lock is held
         await().atMost(1, SECONDS)
             .until(() -> lock.isLocked() || lock.hasQueuedThreads());
 
-        // In virtual thread mode, verify the lock behavior is consistent
-        if (isVirtualThreadMode()) {
+        if (threadType == ThreadType.VIRTUAL) {
             // Virtual threads should handle blocking efficiently without pinning carrier threads
             await().atMost(1, SECONDS)
                 .until(() -> lock.hasQueuedThread(secondChangerThread) || lock.getQueueLength() > 0);
@@ -601,26 +590,24 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
         bulkheadThreadTrigger.set(false);
         await().atMost(1, SECONDS)
-            .until(() -> bulkheadThread.getState().equals(Thread.State.TERMINATED));
+            .until(() -> bulkheadThread.getState().equals(TERMINATED));
         await().atMost(1, SECONDS)
-            .until(() -> firstChangerThread.getState().equals(Thread.State.TERMINATED));
+            .until(() -> firstChangerThread.getState().equals(TERMINATED));
         await().atMost(1, SECONDS)
-            .until(() -> secondChangerThread.getState().equals(Thread.State.TERMINATED));
+            .until(() -> secondChangerThread.getState().equals(TERMINATED));
 
-        // Enhanced testing: Verify that the lock is released after all operations complete
         await().atMost(1, SECONDS)
             .until(() -> !lock.isLocked());
 
-        // Final config should reflect the last successful change (could be 1 or 4)
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls())
-            .as("Final config should reflect successful change in " + getThreadModeDescription())
+            .as("Final config should reflect successful change in %s", threadType)
             .isIn(1, 4);
 
-        LOG.info("Enhanced concurrent permissions test passed in {}", getThreadModeDescription());
+        LOG.info("Enhanced concurrent permissions test passed in {}", threadType);
     }
 
-    @Test
-    public void shouldCreateBulkheadRegistryWithRegistryStore() {
+    @TestTemplate
+    void shouldCreateBulkheadRegistryWithRegistryStore(ThreadType threadType) {
         RegistryEventConsumer<Bulkhead> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);

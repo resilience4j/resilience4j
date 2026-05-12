@@ -1,19 +1,20 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Test;
+
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircuitBreakerExceptionHandlingTest {
+class CircuitBreakerExceptionHandlingTest {
 
     @Test
-    public void shouldRecordRuntimeExceptionAsFailureAndBusinessExceptionAsSuccess() {
+    void shouldRecordRuntimeExceptionAsFailureAndBusinessExceptionAsSuccess() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
             .slidingWindowSize(5)
             .recordException(ex -> !(ex instanceof BusinessException))
@@ -26,13 +27,13 @@ public class CircuitBreakerExceptionHandlingTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("test"));
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
     }
 
     @Test
-    public void shouldRecordIOExceptionAsFailureAndBusinessExceptionAsSuccess() {
+    void shouldRecordIOExceptionAsFailureAndBusinessExceptionAsSuccess() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
             .slidingWindowSize(5)
             .recordExceptions(IOException.class)
@@ -45,13 +46,13 @@ public class CircuitBreakerExceptionHandlingTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("test"));
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
     }
 
     @Test
-    public void shouldRecordBusinessExceptionAsFailure() {
+    void shouldRecordBusinessExceptionAsFailure() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
             .slidingWindowSize(5)
             .recordException(ex -> "record".equals(ex.getMessage()))
@@ -64,13 +65,13 @@ public class CircuitBreakerExceptionHandlingTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("bla"));
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
     }
 
     @Test
-    public void shouldIgnoreNumberFormatException() {
+    void shouldIgnoreNumberFormatException() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
             .failureRateThreshold(50)
             .slidingWindowSize(5)
@@ -85,9 +86,9 @@ public class CircuitBreakerExceptionHandlingTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isOne();
     }
 
     private static class BusinessException extends Exception {

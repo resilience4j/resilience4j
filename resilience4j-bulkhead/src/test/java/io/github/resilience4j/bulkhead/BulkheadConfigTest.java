@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,16 +18,18 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class BulkheadConfigTest {
+class BulkheadConfigTest {
 
     @Test
-    public void testBuildCustomWithDuration() {
+    void buildCustomWithDuration() {
         int maxConcurrent = 66;
         long maxWait = 555;
 
@@ -38,11 +40,11 @@ public class BulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
-        assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+        Assertions.assertThat(config.getMaxWaitDuration()).hasMillis(maxWait);
     }
 
     @Test
-    public void testBuildCustomWithWritableStackTraceDisabled() {
+    void buildCustomWithWritableStackTraceDisabled() {
         int maxConcurrent = 66;
 
         BulkheadConfig config = BulkheadConfig.custom()
@@ -56,7 +58,7 @@ public class BulkheadConfigTest {
     }
 
     @Test
-    public void testBuildCustomWithFairStrategyDisabled() {
+    void buildCustomWithFairStrategyDisabled() {
 
         BulkheadConfig config = BulkheadConfig.custom()
             .fairCallHandlingStrategyEnabled(false)
@@ -67,7 +69,7 @@ public class BulkheadConfigTest {
     }
 
     @Test
-    public void testBuildCustom() {
+    void buildCustom() {
         int maxConcurrent = 66;
         long maxWait = 555;
 
@@ -78,12 +80,12 @@ public class BulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
-        assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+        Assertions.assertThat(config.getMaxWaitDuration()).hasMillis(maxWait);
         assertThat(config.isFairCallHandlingEnabled()).isTrue();
     }
 
     @Test
-    public void testBuildWithZeroMaxCurrentCalls() {
+    void buildWithZeroMaxCurrentCalls() {
         int maxConcurrent = 0;
 
         BulkheadConfig config = BulkheadConfig.custom()
@@ -94,30 +96,26 @@ public class BulkheadConfigTest {
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxConcurrent() {
-        BulkheadConfig.custom()
-            .maxConcurrentCalls(-1)
-            .build();
-
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxWait() {
-        BulkheadConfig.custom()
-            .maxWaitDuration(Duration.ofMillis(-1))
-            .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxWaitDuration() {
-        BulkheadConfig.custom()
-            .maxWaitDuration(Duration.ofSeconds(-1))
-            .build();
+    @Test
+    void buildWithIllegalMaxConcurrent() {
+        assertThatThrownBy(() -> BulkheadConfig.custom().maxConcurrentCalls(-1).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testToString() {
+    void buildWithIllegalMaxWait() {
+        assertThatThrownBy(() -> BulkheadConfig.custom().maxWaitDuration(Duration.ofMillis(-1)).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buildWithIllegalMaxWaitDuration() {
+        assertThatThrownBy(() -> BulkheadConfig.custom().maxWaitDuration(Duration.ofSeconds(-1)).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void testToString() {
         int maxConcurrent = 66;
         long maxWait = 555;
 
@@ -129,11 +127,12 @@ public class BulkheadConfigTest {
             .build();
 
         String result = config.toString();
-        assertThat(result).startsWith("BulkheadConfig{");
-        assertThat(result).contains("maxConcurrentCalls=66");
-        assertThat(result).contains("maxWaitDuration=PT0.555S");
-        assertThat(result).contains("writableStackTraceEnabled=false");
-        assertThat(result).contains("fairCallHandlingEnabled=false");
-        assertThat(result).endsWith("}");
+        assertThat(result)
+                .startsWith("BulkheadConfig{")
+                .contains("maxConcurrentCalls=66")
+                .contains("maxWaitDuration=PT0.555S")
+                .contains("writableStackTraceEnabled=false")
+                .contains("fairCallHandlingEnabled=false")
+                .endsWith("}");
     }
 }

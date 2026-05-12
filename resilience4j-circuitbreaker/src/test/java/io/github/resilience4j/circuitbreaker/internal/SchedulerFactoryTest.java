@@ -1,11 +1,11 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,29 +15,25 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
-public class SchedulerFactoryTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class SchedulerFactoryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerFactoryTest.class);
 
-    public SchedulerFactoryTest(ThreadType threadType) {
-        super(threadType);
-    }
-
-    @Before
-    public void setUp() {
-        SchedulerFactory.getInstance().reset(); // Reset the factory before each test
+    @BeforeEach
+    void setUp() {
+        SchedulerFactory.getInstance().reset();
     }
 
     @Test
-    public void shouldBeSameSchedulerFactoryInstance() {
+    void shouldBeSameSchedulerFactoryInstance() {
         SchedulerFactory instance = SchedulerFactory.getInstance();
         SchedulerFactory instance2 = SchedulerFactory.getInstance();
         assertThat(instance).isEqualTo(instance2);
     }
 
     @Test
-    public void shouldBeSameScheduledExecutorServiceInstance() {
+    void shouldBeSameScheduledExecutorServiceInstance() {
         ScheduledExecutorService scheduledExecutorService = SchedulerFactory.getInstance()
             .getScheduler();
         ScheduledExecutorService scheduledExecutorService2 = SchedulerFactory.getInstance()
@@ -45,9 +41,9 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
         assertThat(scheduledExecutorService).isEqualTo(scheduledExecutorService2);
     }
 
-    @Test
-    public void schedulerShouldRunTasksOnCorrectThreadTypeInBothModes() throws Exception {
-        LOG.info("Running schedulerShouldRunTasksOnCorrectThreadTypeInBothModes in {}", getThreadModeDescription());
+    @TestTemplate
+    void schedulerShouldRunTasksOnCorrectThreadTypeInBothModes(ThreadType threadType) throws Exception {
+        LOG.info("Running schedulerShouldRunTasksOnCorrectThreadTypeInBothModes in {}", threadType);
 
         ScheduledExecutorService scheduler = SchedulerFactory.getInstance().getScheduler();
 
@@ -56,18 +52,17 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
         try {
             boolean taskRanOnVirtualThread = isVirtual.get(1, TimeUnit.SECONDS);
 
-            if (isVirtualThreadMode()) {
+            if (threadType == ThreadType.VIRTUAL) {
                 assertThat(taskRanOnVirtualThread)
-                    .as("Task executed by SchedulerFactory should run on a virtual thread when configured in " + getThreadModeDescription())
+                    .as("Task executed by SchedulerFactory should run on a virtual thread when configured in %s", threadType)
                     .isTrue();
             } else {
                 assertThat(taskRanOnVirtualThread)
-                    .as("Task executed by SchedulerFactory should run on a platform thread by default in " + getThreadModeDescription())
+                    .as("Task executed by SchedulerFactory should run on a platform thread by default in %s", threadType)
                     .isFalse();
             }
 
-            LOG.info("Scheduler thread type test passed in {} - Virtual thread: {}",
-                getThreadModeDescription(), taskRanOnVirtualThread);
+            LOG.info("Scheduler thread type test passed in {} - Virtual thread: {}", threadType, taskRanOnVirtualThread);
         } finally {
             scheduler.shutdownNow();
         }

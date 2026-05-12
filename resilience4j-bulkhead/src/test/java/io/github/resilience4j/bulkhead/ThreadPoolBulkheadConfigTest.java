@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.core.ContextPropagator;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
@@ -29,11 +30,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ThreadPoolBulkheadConfigTest {
+class ThreadPoolBulkheadConfigTest {
 
     @Test
-    public void testBuildCustom() {
+    void buildCustom() {
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
         long maxWait = 555;
@@ -49,14 +51,14 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config).isNotNull();
         assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-        assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
+        Assertions.assertThat(config.getKeepAliveDuration()).hasMillis(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
         assertThat(config.getContextPropagator()).isEmpty();
 
     }
 
     @Test
-    public void testCreateFromBaseConfig() {
+    void createFromBaseConfig() {
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
         long maxWait = 555;
@@ -73,51 +75,43 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config).isNotNull();
         assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-        assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
+        Assertions.assertThat(config.getKeepAliveDuration()).hasMillis(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
         assertThat(config.getContextPropagator()).isEmpty();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxThreadPoolSize() {
-        ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(-1)
-            .build();
-
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalCoreThreadPoolSize() {
-        ThreadPoolBulkheadConfig.custom()
-            .coreThreadPoolSize(-1)
-            .build();
-
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxWait() {
-        ThreadPoolBulkheadConfig.custom()
-            .keepAliveDuration(Duration.ofMillis(-1))
-            .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalQueueCapacity() {
-        ThreadPoolBulkheadConfig.custom()
-            .queueCapacity(-1)
-            .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuildWithIllegalMaxCoreThreads() {
-        ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(1)
-            .coreThreadPoolSize(2)
-            .build();
+    @Test
+    void buildWithIllegalMaxThreadPoolSize() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().maxThreadPoolSize(-1).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testContextPropagatorConfig() {
+    void buildWithIllegalCoreThreadPoolSize() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().coreThreadPoolSize(-1).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buildWithIllegalMaxWait() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().keepAliveDuration(Duration.ofMillis(-1)).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buildWithIllegalQueueCapacity() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().queueCapacity(-1).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buildWithIllegalMaxCoreThreads() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().maxThreadPoolSize(1).coreThreadPoolSize(2).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void contextPropagatorConfig() {
 
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig
             .custom()
@@ -126,12 +120,12 @@ public class ThreadPoolBulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getContextPropagator()).isNotNull();
-        assertThat(config.getContextPropagator().size()).isEqualTo(1);
+        assertThat(config.getContextPropagator()).hasSize(1);
         assertThat(config.getContextPropagator().get(0).getClass()).isEqualTo(TestCtxPropagator.class);
     }
 
     @Test
-    public void testContextPropagatorConfigDefault() {
+    void contextPropagatorConfigDefault() {
 
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
@@ -151,7 +145,7 @@ public class ThreadPoolBulkheadConfigTest {
     }
 
     @Test
-    public void testContextPropagatorSetAsBean() {
+    void contextPropagatorSetAsBean() {
 
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
@@ -173,7 +167,7 @@ public class ThreadPoolBulkheadConfigTest {
     }
 
     @Test
-    public void testContextPropagatorSetAsBeanOverrideSetAsClass() {
+    void contextPropagatorSetAsBeanOverrideSetAsClass() {
 
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
@@ -200,7 +194,7 @@ public class ThreadPoolBulkheadConfigTest {
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         int maxThreadPoolSize = 20;
         int coreThreadPoolSize = 2;
         long maxWait = 555;
@@ -216,14 +210,15 @@ public class ThreadPoolBulkheadConfigTest {
             .build();
 
         String result = config.toString();
-        assertThat(result).startsWith("ThreadPoolBulkheadConfig{");
-        assertThat(result).contains("maxThreadPoolSize=20");
-        assertThat(result).contains("coreThreadPoolSize=2");
-        assertThat(result).contains("queueCapacity=50");
-        assertThat(result).contains("keepAliveDuration=PT0.555S");
-        assertThat(result).contains("writableStackTraceEnabled=false");
-        assertThat(result).contains("contextPropagators=[io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfigTest$TestCtxPropagator2");
-        assertThat(result).endsWith("}");
+        assertThat(result)
+                .startsWith("ThreadPoolBulkheadConfig{")
+                .contains("maxThreadPoolSize=20")
+                .contains("coreThreadPoolSize=2")
+                .contains("queueCapacity=50")
+                .contains("keepAliveDuration=PT0.555S")
+                .contains("writableStackTraceEnabled=false")
+                .contains("contextPropagators=[io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfigTest$TestCtxPropagator2")
+                .endsWith("}");
     }
 
     public static class TestCtxPropagator implements ContextPropagator<Object> {

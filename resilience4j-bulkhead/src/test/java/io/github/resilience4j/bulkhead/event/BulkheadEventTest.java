@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@
 package io.github.resilience4j.bulkhead.event;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BulkheadEventTest {
+class BulkheadEventTest {
 
     @Test
-    public void testBulkheadOnCallRejectedEvent() {
+    void bulkheadOnCallRejectedEvent() {
 
         BulkheadOnCallRejectedEvent event = new BulkheadOnCallRejectedEvent("test");
 
@@ -37,7 +37,7 @@ public class BulkheadEventTest {
     }
 
     @Test
-    public void testBulkheadOnCallPermittedEvent() {
+    void bulkheadOnCallPermittedEvent() {
 
         BulkheadOnCallPermittedEvent event = new BulkheadOnCallPermittedEvent("test");
 

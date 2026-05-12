@@ -20,8 +20,9 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
@@ -32,15 +33,21 @@ import java.util.concurrent.TimeUnit;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class CircuitBreakerAutoTransitionStateMachineTest {
+class CircuitBreakerAutoTransitionStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
     private ScheduledExecutorService schedulerMock;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(50)
             .slidingWindow(
@@ -63,7 +70,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     }
 
     @Test
-    public void testAutoTransition() {
+    void autoTransition() {
         // Initially the CircuitBreaker is open
         circuitBreaker.transitionToOpenState();
 
@@ -86,7 +93,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     }
 
     @Test
-    public void shouldCancelAutoTransition() {
+    void shouldCancelAutoTransition() {
 
         ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
         doReturn(mockFuture)
@@ -104,7 +111,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     }
 
     @Test
-    public void notCancelAutoTransitionFutureIfAlreadyDone() {
+    void notCancelAutoTransitionFutureIfAlreadyDone() {
 
         ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
         doReturn(mockFuture)
@@ -121,6 +128,6 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         circuitBreaker.transitionToForcedOpenState();
 
         // Not called again because future is already done.
-        then(mockFuture).should(times(0)).cancel(true);
+        then(mockFuture).should(never()).cancel(true);
     }
 }

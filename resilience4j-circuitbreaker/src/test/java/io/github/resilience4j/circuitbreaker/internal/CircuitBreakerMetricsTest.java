@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,31 +19,31 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 import com.statemachinesystems.mockclock.MockClock;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
 
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.List;
+
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(JUnitParamsRunner.class)
-public class CircuitBreakerMetricsTest {
 
-    private List<SlidingWindowSynchronizationStrategy> slidingWindowConfig() {
-        return Arrays.asList(SlidingWindowSynchronizationStrategy.values());
+class CircuitBreakerMetricsTest {
+
+    private static Stream<SlidingWindowSynchronizationStrategy> slidingWindowConfig() {
+        return Stream.of(SlidingWindowSynchronizationStrategy.values());
     }
 
-    @Test
-    @Parameters(method = "slidingWindowConfig")
-    public void testCircuitBreakerMetrics(SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy) {
+    @ParameterizedTest
+    @MethodSource("slidingWindowConfig")
+    void circuitBreakerMetrics(SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy) {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .clock(MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")))
             .slidingWindow(

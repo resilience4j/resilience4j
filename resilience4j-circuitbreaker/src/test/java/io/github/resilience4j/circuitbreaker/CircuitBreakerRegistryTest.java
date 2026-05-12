@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,16 +20,26 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.*;
-import org.junit.Test;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
-public class CircuitBreakerRegistryTest {
+class CircuitBreakerRegistryTest {
 
     private static Optional<EventProcessor<?>> getEventProcessor(
         Registry.EventPublisher<CircuitBreaker> eventPublisher) {
@@ -41,7 +51,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void shouldInitRegistryTags() {
+    void shouldInitRegistryTags() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
@@ -51,7 +61,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void shouldReturnTheCorrectName() {
+    void shouldReturnTheCorrectName() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isNotNull();
@@ -59,7 +69,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void shouldBeTheSameCircuitBreaker() {
+    void shouldBeTheSameCircuitBreaker() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("testName");
@@ -68,7 +78,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void shouldBeNotTheSameCircuitBreaker() {
+    void shouldBeNotTheSameCircuitBreaker() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
@@ -78,14 +88,14 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void noTagsByDefault() {
+    void noTagsByDefault() {
         CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
             .circuitBreaker("testName");
         assertThat(circuitBreaker.getTags()).isEmpty();
     }
 
     @Test
-    public void tagsOfRegistryAddedToInstance() {
+    void tagsOfRegistryAddedToInstance() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
@@ -98,7 +108,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void tagsAddedToInstance() {
+    void tagsAddedToInstance() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
@@ -108,7 +118,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void tagsOfRetriesShouldNotBeMixed() {
+    void tagsOfRetriesShouldNotBeMixed() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
@@ -123,7 +133,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+    void tagsOfInstanceTagsShouldOverrideRegistryTags() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
@@ -139,7 +149,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithDefaultConfiguration() {
+    void createWithDefaultConfiguration() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
             .of(CircuitBreakerConfig.ofDefaults());
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
@@ -150,7 +160,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithCustomConfiguration() {
+    void createWithCustomConfiguration() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(failureRate).build();
@@ -164,7 +174,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMap() {
+    void createWithConfigurationMap() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(30f).build();
         CircuitBreakerConfig customCircuitBreakerConfig = CircuitBreakerConfig.custom()
@@ -178,11 +188,11 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
             .isEqualTo(30f);
-        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotEmpty();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isPresent();
     }
 
     @Test
-    public void testCreateWithSingleRegistryEventConsumer() {
+    void createWithSingleRegistryEventConsumer() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
             .of(CircuitBreakerConfig.ofDefaults(), new NoOpCircuitBreakerEventConsumer());
 
@@ -191,7 +201,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithMultipleRegistryEventConsumer() {
+    void createWithMultipleRegistryEventConsumer() {
         List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
         registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
@@ -204,7 +214,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+    void createWithConfigurationMapWithSingleRegistryEventConsumer() {
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
         configs.put("custom", CircuitBreakerConfig.ofDefaults());
 
@@ -216,7 +226,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+    void createWithConfigurationMapWithMultiRegistryEventConsumer() {
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
         configs.put("custom", CircuitBreakerConfig.ofDefaults());
 
@@ -232,7 +242,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testAddConfiguration() {
+    void addConfiguration() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
@@ -242,7 +252,7 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
             .isEqualTo(50f);
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isPresent();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("name", "someSharedConfig");
@@ -252,7 +262,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+    void createWithConfigurationMapWithoutDefaultConfig() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(failureRate).build();
@@ -263,7 +273,7 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
             .isEqualTo(50f);
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isPresent();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("name", "someSharedConfig");
@@ -274,13 +284,13 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateWithNullConfig() {
+    void createWithNullConfig() {
         assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig) null))
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
-    public void testCreateUsingBuilderWithDefaultConfig() {
+    void createUsingBuilderWithDefaultConfig() {
         CircuitBreakerRegistry circuitBreakerRegistry =
             CircuitBreakerRegistry.custom().withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults()).build();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
@@ -291,7 +301,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithCustomConfig() {
+    void createUsingBuilderWithCustomConfig() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(failureRate).build();
@@ -305,7 +315,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithoutDefaultConfig() {
+    void createUsingBuilderWithoutDefaultConfig() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(failureRate).build();
@@ -316,7 +326,7 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
             .isEqualTo(50f);
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isPresent();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("name", "someSharedConfig");
@@ -326,15 +336,17 @@ public class CircuitBreakerRegistryTest {
             .isEqualTo(failureRate);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+    @Test
+    void addMultipleDefaultConfigUsingBuilderShouldThrowException() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(30f).build();
-        CircuitBreakerRegistry.custom().addCircuitBreakerConfig("default", circuitBreakerConfig).build();
+
+        assertThatThrownBy(() -> CircuitBreakerRegistry.custom().addCircuitBreakerConfig("default", circuitBreakerConfig).build())
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+    void createUsingBuilderWithDefaultAndCustomConfig() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .failureRateThreshold(30f).build();
         CircuitBreakerConfig customCircuitBreakerConfig = CircuitBreakerConfig.custom()
@@ -348,18 +360,18 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
             .isEqualTo(30f);
-        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotEmpty();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isPresent();
     }
 
     @Test
-    public void testCreateUsingBuilderWithNullConfig() {
+    void createUsingBuilderWithNullConfig() {
         assertThatThrownBy(
             () -> CircuitBreakerRegistry.custom().withCircuitBreakerConfig(null).build())
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
-    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+    void createUsingBuilderWithMultipleRegistryEventConsumer() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.custom()
             .withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
             .addRegistryEventConsumer(new NoOpCircuitBreakerEventConsumer())
@@ -371,7 +383,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithRegistryTags() {
+    void createUsingBuilderWithRegistryTags() {
         Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.custom()
             .withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
@@ -383,7 +395,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithRegistryStore() {
+    void createUsingBuilderWithRegistryStore() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.custom()
             .withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
             .withRegistryStore(new InMemoryRegistryStore<>())
@@ -396,7 +408,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithCircuitBreakerInitialStateOpen(){
+    void createUsingBuilderWithCircuitBreakerInitialStateOpen(){
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .initialState(CircuitBreaker.State.OPEN).build();
         CircuitBreakerRegistry circuitBreakerRegistry =
@@ -410,7 +422,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithCircuitBreakerInitialStateMetricOnly(){
+    void createUsingBuilderWithCircuitBreakerInitialStateMetricOnly(){
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .initialState(CircuitBreaker.State.METRICS_ONLY).build();
         CircuitBreakerRegistry circuitBreakerRegistry =
@@ -424,7 +436,7 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithCircuitBreakerInitialStateDisabled(){
+    void createUsingBuilderWithCircuitBreakerInitialStateDisabled(){
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .initialState(CircuitBreaker.State.DISABLED).build();
         CircuitBreakerRegistry circuitBreakerRegistry =

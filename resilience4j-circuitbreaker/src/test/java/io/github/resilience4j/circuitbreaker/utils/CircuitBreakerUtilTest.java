@@ -1,15 +1,21 @@
 package io.github.resilience4j.circuitbreaker.utils;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker.State;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker.State;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.METRICS_ONLY;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircuitBreakerUtilTest {
+class CircuitBreakerUtilTest {
 
     @Test
-    public void shouldConsiderAllKnownStatusesUsingIsCallPermitted() {
+    void shouldConsiderAllKnownStatusesUsingIsCallPermitted() {
         assertThat(State.values())
             .describedAs("List of statuses changed." +
                 "Please consider updating CircuitBreakerUtil#isCallPermitted to handle" +
