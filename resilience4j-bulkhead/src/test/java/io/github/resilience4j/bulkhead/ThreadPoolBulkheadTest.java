@@ -68,10 +68,12 @@ class ThreadPoolBulkheadTest {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
+        var latch = new CountDownLatch(1);
 
         Thread first = new Thread(() -> {
             try {
                 bulkhead.executeRunnable(() -> {
+                    latch.countDown();
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
@@ -86,6 +88,7 @@ class ThreadPoolBulkheadTest {
 
         Thread second = new Thread(() -> {
             try {
+                latch.await();
                 bulkhead.executeRunnable(helloWorldService::returnHelloWorld);
             } catch (Exception e) {
                 exception.set(e);
@@ -95,6 +98,7 @@ class ThreadPoolBulkheadTest {
 
         Thread third = new Thread(() -> {
             try {
+                latch.await();
                 bulkhead.executeRunnable(helloWorldService::returnHelloWorld);
             } catch (Exception e) {
                 exception.set(e);
