@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 authors
+ * Copyright 2026 authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package io.github.resilience4j.reactor.timelimiter;
 import io.github.resilience4j.test.HelloWorldService;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -34,14 +34,13 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-
-public class TimeLimiterOperatorTest {
+class TimeLimiterOperatorTest {
 
     private final TimeLimiter timeLimiter = mock(TimeLimiter.class);
     private final HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
     @Test
-    public void doNotTimeoutUsingMono() {
+    void doNotTimeoutUsingMono() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
         given(helloWorldService.returnHelloWorld())
@@ -58,7 +57,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void timeoutUsingMono() {
+    void timeoutUsingMono() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMillis(1)));
 
@@ -73,7 +72,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void timeoutNeverUsingMono() {
+    void timeoutNeverUsingMono() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMillis(1)));
 
@@ -88,7 +87,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void otherErrorUsingMono() {
+    void otherErrorUsingMono() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
         given(helloWorldService.returnHelloWorld())
@@ -105,7 +104,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void doNotTimeoutUsingFlux() {
+    void doNotTimeoutUsingFlux() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
 
@@ -121,7 +120,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void timeoutUsingFlux() {
+    void timeoutUsingFlux() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMillis(1)));
 
@@ -136,7 +135,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void timeoutNeverUsingFlux() {
+    void timeoutNeverUsingFlux() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMillis(1)));
 
@@ -151,7 +150,7 @@ public class TimeLimiterOperatorTest {
     }
 
     @Test
-    public void otherErrorUsingFlux() {
+    void otherErrorUsingFlux() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
 

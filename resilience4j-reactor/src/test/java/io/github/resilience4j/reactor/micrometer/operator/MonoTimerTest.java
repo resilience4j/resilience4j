@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Mariusz Kopylec
+ * Copyright 2026 Mariusz Kopylec
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.micrometer.TimerConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
 import static io.github.resilience4j.micrometer.TimerAssertions.thenFailureTimed;
@@ -28,10 +28,10 @@ import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.BDDAssertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class MonoTimerTest {
+class MonoTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulMono() {
+    void shouldTimeSuccessfulMono() {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = Timer.of("timer 1", registry);
@@ -44,7 +44,7 @@ public class MonoTimerTest {
     }
 
     @Test
-    public void shouldTimeFailedMono() {
+    void shouldTimeFailedMono() {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()

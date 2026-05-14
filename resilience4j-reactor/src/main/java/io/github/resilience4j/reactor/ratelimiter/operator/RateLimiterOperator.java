@@ -24,7 +24,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.UnaryOperator;
 
-
 /**
  * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission
  * to subscribe to an upstream Publisher. Otherwise emits a {@link RequestNotPermitted} if the rate

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Mariusz Kopylec
+ * Copyright 2026 Mariusz Kopylec
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.micrometer.TimerConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -30,10 +30,10 @@ import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.BDDAssertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class FluxTimerTest {
+class FluxTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulFlux() {
+    void shouldTimeSuccessfulFlux() {
         List<String> messages = List.of("Hello 1", "Hello 2", "Hello 3");
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = Timer.of("timer 1", registry);
@@ -47,7 +47,7 @@ public class FluxTimerTest {
     }
 
     @Test
-    public void shouldTimeFailedFlux() {
+    void shouldTimeFailedFlux() {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.reactor.ratelimiter.operator.ResponseWithPotentialOverload.SpecificResponseWithPotentialOverload;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -35,10 +35,10 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 
-public class MonoRateLimiterTest {
+class MonoRateLimiterTest {
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -50,7 +50,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -63,7 +63,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldReservePermissionWithCustomPermits() {
+    void shouldReservePermissionWithCustomPermits() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(10)).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -77,7 +77,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofMillis(50).toNanos());
 
@@ -89,9 +89,8 @@ public class MonoRateLimiterTest {
             .verify(Duration.ofMillis(150));
     }
 
-
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(1)).willReturn(-1L);
 
@@ -104,7 +103,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission(1)).willReturn(-1L);
 
@@ -116,7 +115,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -134,7 +133,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
+    void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -156,7 +155,7 @@ public class MonoRateLimiterTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
+    void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
