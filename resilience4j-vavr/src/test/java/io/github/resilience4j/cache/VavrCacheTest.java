@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 package io.github.resilience4j.cache;
 
 import io.vavr.CheckedFunction1;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -31,17 +31,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
-public class VavrCacheTest {
+class VavrCacheTest {
     private javax.cache.Cache<String, String> cache;
 
     @SuppressWarnings("unchecked")
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         cache = mock(javax.cache.Cache.class);
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
+    void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -56,7 +56,7 @@ public class VavrCacheTest {
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCallable() throws Throwable {
+    void shouldReturnValueFromDecoratedCallable() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -71,7 +71,7 @@ public class VavrCacheTest {
     }
 
     @Test
-    public void shouldReturnValueOfSupplier() throws Throwable {
+    void shouldReturnValueOfSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("Also not available"));
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -86,7 +86,7 @@ public class VavrCacheTest {
     }
 
     @Test
-    public void shouldReturnCachedValue() throws Throwable {
+    void shouldReturnCachedValue() throws Throwable {
         given(cache.get("testKey")).willReturn("Hello from cache");
         Cache<String, String> cacheContext = Cache.of(cache);
         CheckedFunction1<String, String> cachedFunction = VavrCache
@@ -100,7 +100,7 @@ public class VavrCacheTest {
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
+    void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
         given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("Also not available"));
         Cache<String, String> cacheContext = Cache.of(cache);

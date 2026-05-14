@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -40,16 +40,16 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
-public class VavrCircuitBreakerTest {
+class VavrCircuitBreakerTest {
     private HelloWorldService helloWorldService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -68,7 +68,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -89,7 +89,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -106,7 +106,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithException() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -125,7 +125,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedConsumerAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedConsumerAndReturnWithSuccess() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -142,7 +142,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -163,7 +163,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -183,9 +183,8 @@ public class VavrCircuitBreakerTest {
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
 
-
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithException() throws Throwable {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -206,7 +205,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReturnFailureWithCircuitBreakerOpenException() {
+    void shouldReturnFailureWithCircuitBreakerOpenException() {
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(2)
@@ -238,7 +237,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReturnFailureWithRuntimeException() {
+    void shouldReturnFailureWithRuntimeException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -257,7 +256,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldNotRecordIOExceptionAsAFailure() {
+    void shouldNotRecordIOExceptionAsAFailure() {
         // tag::shouldNotRecordIOExceptionAsAFailure[]
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(2)
@@ -287,7 +286,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeRecoverFunction() {
+    void shouldInvokeRecoverFunction() {
         // tag::shouldInvokeRecoverFunction[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         // When I decorate my function and invoke the decorated function
@@ -306,7 +305,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeMap() {
+    void shouldInvokeMap() {
         // tag::shouldInvokeMap[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         // When I decorate my function
@@ -325,7 +324,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldThrowCircuitBreakerOpenException() {
+    void shouldThrowCircuitBreakerOpenException() {
         // tag::shouldThrowCircuitBreakerOpenException[]
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(2)
@@ -356,7 +355,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() {
+    void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults("anotherTestName");
@@ -382,7 +381,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldExecuteTrySupplierAndReturnWithSuccess() {
+    void shouldExecuteTrySupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
@@ -398,7 +397,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldExecuteEitherSupplierAndReturnWithSuccess() {
+    void shouldExecuteEitherSupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
@@ -415,7 +414,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldExecuteTrySupplierAndReturnWithFailure() {
+    void shouldExecuteTrySupplierAndReturnWithFailure() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
@@ -432,7 +431,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldExecuteTrySupplierAndReturnWithCallNotPermittedException() {
+    void shouldExecuteTrySupplierAndReturnWithCallNotPermittedException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
@@ -447,9 +446,8 @@ public class VavrCircuitBreakerTest {
         then(helloWorldService).should(never()).returnTry();
     }
 
-
     @Test
-    public void shouldExecuteEitherSupplierAndReturnWithFailure() {
+    void shouldExecuteEitherSupplierAndReturnWithFailure() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
@@ -467,7 +465,7 @@ public class VavrCircuitBreakerTest {
     }
 
     @Test
-    public void shouldExecuteEitherSupplierAndReturnWithCallNotPermittedException() {
+    void shouldExecuteEitherSupplierAndReturnWithCallNotPermittedException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();

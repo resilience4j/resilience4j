@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,20 +26,20 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-public class VavrBulkheadTest {
+class VavrBulkheadTest {
     private HelloWorldService helloWorldService;
     private BulkheadConfig config;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -47,7 +47,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedFunction0<String> checkedSupplier = VavrBulkhead
@@ -61,7 +61,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
@@ -77,7 +77,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         VavrBulkhead.decorateCheckedRunnable(bulkhead, helloWorldService::sayHelloWorldWithException)
@@ -88,7 +88,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithException() {
+    void shouldDecorateCheckedRunnableAndReturnWithException() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         CheckedRunnable checkedRunnable = VavrBulkhead.decorateCheckedRunnable(bulkhead, () -> {
             throw new RuntimeException("BAM!");
@@ -102,7 +102,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedConsumerAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedConsumerAndReturnWithSuccess() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         VavrBulkhead.decorateCheckedConsumer(bulkhead,
@@ -114,7 +114,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         CheckedConsumer<String> checkedConsumer = VavrBulkhead
             .decorateCheckedConsumer(bulkhead, (value) -> {
@@ -129,7 +129,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
@@ -145,7 +145,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithException() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithException() throws Throwable {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willThrow(new RuntimeException("BAM!"));
@@ -161,7 +161,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldReturnFailureWithBulkheadFullException() {
+    void shouldReturnFailureWithBulkheadFullException() {
         // tag::bulkheadFullException[]
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -179,7 +179,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldReturnFailureWithRuntimeException() {
+    void shouldReturnFailureWithRuntimeException() {
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.tryAcquirePermission();
@@ -195,7 +195,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() {
+    void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         Bulkhead bulkhead = Bulkhead.of("test", config);
         Bulkhead anotherBulkhead = Bulkhead.of("testAnother", config);
@@ -217,7 +217,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldInvokeMap() {
+    void shouldInvokeMap() {
         // tag::shouldInvokeMap[]
         Bulkhead bulkhead = Bulkhead.of("testName", config);
         // When I decorate my function
@@ -236,7 +236,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateTrySupplierAndReturnWithSuccess() {
+    void shouldDecorateTrySupplierAndReturnWithSuccess() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
 
@@ -248,7 +248,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateTrySupplierAndReturnWithException() {
+    void shouldDecorateTrySupplierAndReturnWithException() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnTry()).willReturn(Try.failure(new RuntimeException("BAM!")));
 
@@ -261,7 +261,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateEitherSupplierAndReturnWithSuccess() {
+    void shouldDecorateEitherSupplierAndReturnWithSuccess() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 
@@ -274,7 +274,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateEitherSupplierAndReturnWithException() {
+    void shouldDecorateEitherSupplierAndReturnWithException() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 
@@ -288,7 +288,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateTrySupplierAndReturnWithBulkheadFullException() {
+    void shouldDecorateTrySupplierAndReturnWithBulkheadFullException() {
         Bulkhead bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
@@ -301,7 +301,7 @@ public class VavrBulkheadTest {
     }
 
     @Test
-    public void shouldDecorateEitherSupplierAndReturnWithBulkheadFullException() {
+    void shouldDecorateEitherSupplierAndReturnWithBulkheadFullException() {
         Bulkhead bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 

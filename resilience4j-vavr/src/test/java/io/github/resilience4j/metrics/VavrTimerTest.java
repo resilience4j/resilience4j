@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -32,21 +32,21 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class VavrTimerTest {
+class VavrTimerTest {
 
     private HelloWorldService helloWorldService;
     private Timer timer;
     private MetricRegistry metricRegistry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         metricRegistry = new MetricRegistry();
         timer = Timer.ofMetricRegistry(VavrTimerTest.class.getName(), metricRegistry);
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldDecorateCheckedSupplier() throws Throwable {
+    void shouldDecorateCheckedSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedFunction0<String> timedSupplier = VavrTimer
             .decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
@@ -63,7 +63,7 @@ public class VavrTimerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         CheckedRunnable timedRunnable = VavrTimer
             .decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
 
@@ -76,7 +76,7 @@ public class VavrTimerTest {
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
         CheckedFunction1<String, String> function = VavrTimer.decorateCheckedFunction(timer,

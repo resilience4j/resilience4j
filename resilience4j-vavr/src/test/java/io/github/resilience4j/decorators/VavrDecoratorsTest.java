@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,17 +42,17 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-public class VavrDecoratorsTest {
+class VavrDecoratorsTest {
     private boolean state = false;
     private HelloWorldService helloWorldService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
+    void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedFunction0<String> decoratedSupplier = VavrDecorators
@@ -71,7 +71,7 @@ public class VavrDecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedSupplier() throws IOException {
+    void testDecorateCheckedSupplier() throws IOException {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedFunction0<String> decoratedSupplier = VavrDecorators
@@ -92,7 +92,7 @@ public class VavrDecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedSupplierWithFallback() throws Throwable {
+    void testDecorateCheckedSupplierWithFallback() throws Throwable {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         circuitBreaker.transitionToOpenState();
 
@@ -111,7 +111,7 @@ public class VavrDecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedRunnable() throws IOException {
+    void testDecorateCheckedRunnable() throws IOException {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedRunnable decoratedRunnable = VavrDecorators
             .ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
@@ -130,7 +130,7 @@ public class VavrDecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedFunction() throws IOException {
+    void testDecorateCheckedFunction() throws IOException {
         given(helloWorldService.returnHelloWorldWithNameWithException("Name"))
             .willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -151,7 +151,7 @@ public class VavrDecoratorsTest {
     }
 
     @Test
-    public void testDecoratorBuilderWithRateLimiter() {
+    void testDecoratorBuilderWithRateLimiter() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(Duration.ofMillis(100))
@@ -188,7 +188,7 @@ public class VavrDecoratorsTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testDecorateCheckedSupplierWithCache() {
+    void testDecorateCheckedSupplierWithCache() {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         given(cache.containsKey("testKey")).willReturn(true);
         given(cache.get("testKey")).willReturn("Hello from cache");

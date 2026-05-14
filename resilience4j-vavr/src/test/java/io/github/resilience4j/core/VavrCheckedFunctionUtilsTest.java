@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,17 +19,18 @@
 package io.github.resilience4j.core;
 
 import io.vavr.CheckedFunction0;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class VavrCheckedFunctionUtilsTest {
+class VavrCheckedFunctionUtilsTest {
 
     @Test
-    public void shouldRecoverFromException() throws Throwable {
+    void shouldRecoverFromException() throws Throwable {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -41,7 +42,7 @@ public class VavrCheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificExceptions() throws Throwable {
+    void shouldRecoverFromSpecificExceptions() throws Throwable {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -56,7 +57,7 @@ public class VavrCheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromResult() throws Throwable {
+    void shouldRecoverFromResult() throws Throwable {
         CheckedFunction0<String> callable = () -> "Wrong Result";
 
         CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.andThen(callable, (result, ex) -> {
@@ -72,7 +73,7 @@ public class VavrCheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromException2() throws Throwable {
+    void shouldRecoverFromException2() throws Throwable {
         CheckedFunction0<String> callable = () -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -89,7 +90,7 @@ public class VavrCheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificResult() throws Throwable {
+    void shouldRecoverFromSpecificResult() throws Throwable {
         CheckedFunction0<String> supplier = () -> "Wrong Result";
 
         CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
@@ -98,9 +99,8 @@ public class VavrCheckedFunctionUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
-
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException() throws Throwable {
+    @Test
+    void shouldRethrowException() {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -108,16 +108,16 @@ public class VavrCheckedFunctionUtilsTest {
             throw new RuntimeException();
         });
 
-        callableWithRecovery.apply();
+        assertThatThrownBy(callableWithRecovery::apply).isInstanceOf(RuntimeException.class);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException2() throws Throwable {
+    @Test
+    void shouldRethrowException2() {
         CheckedFunction0<String> callable = () -> {
             throw new RuntimeException("BAM!");
         };
         CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
 
-        callableWithRecovery.apply();
+        assertThatThrownBy(callableWithRecovery::apply).isInstanceOf(RuntimeException.class);
     }
 }

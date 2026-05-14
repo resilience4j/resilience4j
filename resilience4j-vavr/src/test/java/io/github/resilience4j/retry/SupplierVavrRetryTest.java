@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import io.vavr.API;
 import io.vavr.CheckedFunction0;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static io.vavr.API.$;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,18 +36,18 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class SupplierVavrRetryTest {
+class SupplierVavrRetryTest {
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.setSleepFunction(sleep -> sleptTime += sleep);
     }
 
     @Test
-    public void shouldNotRetryDecoratedTry() {
+    void shouldNotRetryDecoratedTry() {
         given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .maxAttempts(2).build();
@@ -58,7 +58,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnSuccessfullyAfterSecondAttempt() {
+    void shouldReturnSuccessfullyAfterSecondAttempt() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -74,7 +74,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() {
+    void shouldReturnAfterThreeAttempts() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");
         CheckedFunction0<String> retryableSupplier = VavrRetry
@@ -89,7 +89,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttempt() {
+    void shouldReturnAfterOneAttempt() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
@@ -105,7 +105,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+    void shouldReturnAfterOneAttemptAndIgnoreException() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
             .retryOnException(throwable -> API.Match(throwable).of(
@@ -126,7 +126,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecover() {
+    void shouldReturnAfterThreeAttemptsAndRecover() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");
         CheckedFunction0<String> retryableSupplier = VavrRetry
@@ -142,7 +142,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
+    void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world")
@@ -163,7 +163,7 @@ public class SupplierVavrRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    void shouldTakeIntoAccountBackoffFunction() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
             .intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
