@@ -1,6 +1,5 @@
 package io.github.resilience4j.rxjava3;
 
-
 import io.reactivex.rxjava3.core.MaybeObserver;
 
 import static java.util.Objects.requireNonNull;

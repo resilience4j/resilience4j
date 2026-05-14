@@ -38,7 +38,6 @@ public class TimerTransformer<T> implements FlowableTransformer<T, T>, SingleTra
         return new FlowableTimer<>(upstream, timer);
     }
 
-
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
         return new SingleTimer<>(upstream, timer);

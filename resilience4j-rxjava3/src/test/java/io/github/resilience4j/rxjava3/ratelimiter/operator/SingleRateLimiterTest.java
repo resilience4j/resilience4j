@@ -6,7 +6,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.rxjava3.ratelimiter.operator.OverloadException.SpecificOverloadException;
 import io.github.resilience4j.rxjava3.ratelimiter.operator.ResponseWithPotentialOverload.SpecificResponseWithPotentialOverload;
 import io.reactivex.rxjava3.core.Single;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -22,10 +22,10 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit test for {@link SingleRateLimiter}.
  */
-public class SingleRateLimiterTest {
+class SingleRateLimiterTest {
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -36,7 +36,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
@@ -47,7 +47,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -59,7 +59,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitErrorWithRequestNotPermittedException() {
+    void shouldEmitErrorWithRequestNotPermittedException() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
@@ -71,7 +71,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -88,7 +88,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
+    void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -109,7 +109,7 @@ public class SingleRateLimiterTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
+    void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -128,5 +128,4 @@ public class SingleRateLimiterTest {
             .assertComplete();
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(4);
     }
-
 }

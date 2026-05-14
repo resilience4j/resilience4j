@@ -54,7 +54,6 @@ public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>,
         return new FlowableCircuitBreaker<>(upstream, circuitBreaker);
     }
 
-
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
         return new SingleCircuitBreaker<>(upstream, circuitBreaker);
