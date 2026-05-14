@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin, ,Mahmoud Romeh
+ * Copyright 2026 Yevhenii Voievodin, ,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,15 +34,15 @@ import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAU
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedBulkheadMetricsTest {
+class TaggedBulkheadMetricsTest {
 
     private MeterRegistry meterRegistry;
     private Bulkhead bulkhead;
     private BulkheadRegistry bulkheadRegistry;
     private TaggedBulkheadMetrics taggedBulkheadMetrics;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         bulkheadRegistry = BulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");
@@ -56,7 +56,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedRetry() {
+    void shouldAddMetricsForANewlyCreatedRetry() {
         Bulkhead newBulkhead = bulkheadRegistry.bulkhead("backendB");
 
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendB");
@@ -76,7 +76,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(2);
 
@@ -90,7 +90,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
 
@@ -115,7 +115,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void availableConcurrentCallsGaugeIsRegistered() {
+    void availableConcurrentCallsGaugeIsRegistered() {
         Gauge available = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME)
             .gauge();
 
@@ -125,7 +125,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void maxAllowedConcurrentCallsGaugeIsRegistered() {
+    void maxAllowedConcurrentCallsGaugeIsRegistered() {
         Gauge maxAllowed = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauge();
 
@@ -136,7 +136,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void customTagsShouldBeAdded() {
+    void customTagsShouldBeAdded() {
         Bulkhead bulkheadC = bulkheadRegistry.bulkhead("backendC", Map.of("key1", "value1"));
         // record some basic stats
         bulkheadC.tryAcquirePermission();
@@ -149,7 +149,7 @@ public class TaggedBulkheadMetricsTest {
     }
 
     @Test
-    public void customMetricNamesGetApplied() {
+    void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");

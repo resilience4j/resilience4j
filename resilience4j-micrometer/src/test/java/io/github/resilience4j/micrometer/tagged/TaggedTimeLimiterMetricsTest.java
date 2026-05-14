@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 authors
+ * Copyright 2026 authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,15 +35,15 @@ import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMet
 import static io.github.resilience4j.micrometer.tagged.TimeLimiterMetricNames.DEFAULT_TIME_LIMITER_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedTimeLimiterMetricsTest {
+class TaggedTimeLimiterMetricsTest {
 
     private MeterRegistry meterRegistry;
     private TimeLimiter timeLimiter;
     private TimeLimiterRegistry timeLimiterRegistry;
     private TaggedTimeLimiterMetrics taggedTimeLimiterMetrics;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
 
@@ -54,7 +54,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedTimeLimiter() {
+    void shouldAddMetricsForANewlyCreatedTimeLimiter() {
         TimeLimiter newTimeLimiter = timeLimiterRegistry.timeLimiter("backendB");
         newTimeLimiter.onSuccess();
 
@@ -72,7 +72,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         assertThat(meterRegistry.getMeters()).hasSize(3);
 
         assertThat(taggedTimeLimiterMetrics.meterIdMap).containsKeys("backendA");
@@ -84,7 +84,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Counter before = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counter();
         assertThat(before).isNotNull();
         assertThat(before.count()).isZero();
@@ -100,7 +100,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void successfulCounterIsRegistered() {
+    void successfulCounterIsRegistered() {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onSuccess();
 
@@ -110,7 +110,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void failedCounterIsRegistered() {
+    void failedCounterIsRegistered() {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new RuntimeException());
 
@@ -120,7 +120,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void timoutCounterIsRegistered() {
+    void timoutCounterIsRegistered() {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new TimeoutException());
 
@@ -130,7 +130,7 @@ public class TaggedTimeLimiterMetricsTest {
     }
 
     @Test
-    public void customMetricNamesGetApplied() {
+    void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         timeLimiterRegistry.timeLimiter("backendA");

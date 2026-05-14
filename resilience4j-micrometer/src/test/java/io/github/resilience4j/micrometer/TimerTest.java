@@ -1,5 +1,5 @@
 /*
- *  Copyright 2023 Mariusz Kopylec
+ *  Copyright 2026 Mariusz Kopylec
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package io.github.resilience4j.micrometer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -29,10 +29,10 @@ import static java.util.concurrent.CompletableFuture.completedStage;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class TimerTest {
+class TimerTest {
 
     @Test
-    public void shouldCreateDefaultTimer() {
+    void shouldCreateDefaultTimer() {
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = of("timer 1", registry);
 
@@ -45,7 +45,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldCreateCustomTimer() {
+    void shouldCreateCustomTimer() {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
@@ -63,7 +63,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeSuccessfulOperationUsingDefaultTimer() throws Throwable {
+    void shouldTimeSuccessfulOperationUsingDefaultTimer() throws Throwable {
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = of("timer 1", registry);
 
@@ -109,7 +109,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeSuccessfulOperationUsingCustomTimer() throws Throwable {
+    void shouldTimeSuccessfulOperationUsingCustomTimer() throws Throwable {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
@@ -159,7 +159,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeFailedOperationUsingDefaultTimer() throws Throwable {
+    void shouldTimeFailedOperationUsingDefaultTimer() throws Throwable {
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = of("timer 1", registry);
 
@@ -243,7 +243,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeFailedOperationUsingCustomTimer() throws Throwable {
+    void shouldTimeFailedOperationUsingCustomTimer() throws Throwable {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")

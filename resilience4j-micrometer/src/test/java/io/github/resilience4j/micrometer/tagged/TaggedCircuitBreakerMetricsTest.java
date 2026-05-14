@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin,Mahmoud Romeh
+ * Copyright 2026 Yevhenii Voievodin,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.*;
@@ -36,15 +36,15 @@ import static io.github.resilience4j.micrometer.tagged.CircuitBreakerMetricNames
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedCircuitBreakerMetricsTest {
+class TaggedCircuitBreakerMetricsTest {
 
     private MeterRegistry meterRegistry;
     private CircuitBreaker circuitBreaker;
     private CircuitBreakerRegistry circuitBreakerRegistry;
     private TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreakerConfig configWithSlowCallThreshold = CircuitBreakerConfig.custom()
@@ -65,7 +65,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
+    void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
@@ -88,7 +88,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void shouldAddCustomTags() {
+    void shouldAddCustomTags() {
         CircuitBreaker circuitBreakerF = circuitBreakerRegistry.circuitBreaker("backendF", Map.of("key1", "value1"));
         circuitBreakerF.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendF");
@@ -100,7 +100,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(16);
 
@@ -114,7 +114,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void notPermittedCallsCounterReportsCorrespondingValue() {
+    void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(16);
 
@@ -128,7 +128,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void failedCallsGaugeReportsCorrespondingValue() {
+    void failedCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
 
@@ -140,7 +140,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void successfulCallsGaugeReportsCorrespondingValue() {
+    void successfulCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
 
@@ -154,7 +154,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void slowSuccessfulGaugeReportsCorrespondingValue() {
+    void slowSuccessfulGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
         Optional<Gauge> slow = MetricsTestHelper.findMeterByKindAndNameTags(gauges, "successful",
@@ -166,7 +166,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void slowFailedCallsGaugeReportsCorrespondingValue() {
+    void slowFailedCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
         Optional<Gauge> slow = MetricsTestHelper.findMeterByKindAndNameTags(gauges, "failed",
@@ -177,7 +177,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void failureRateGaugeReportsCorrespondingValue() {
+    void failureRateGaugeReportsCorrespondingValue() {
         Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
 
         assertThat(failureRate).isNotNull();
@@ -186,7 +186,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void slowCallRateGaugeReportsCorrespondingValue() {
+    void slowCallRateGaugeReportsCorrespondingValue() {
         Gauge slowCallRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE).gauge();
 
         assertThat(slowCallRate).isNotNull();
@@ -195,7 +195,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void stateGaugeReportsCorrespondingValue() {
+    void stateGaugeReportsCorrespondingValue() {
         Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE).gauge();
 
         assertThat(state.value()).isEqualTo(circuitBreaker.getState().getOrder());
@@ -203,7 +203,7 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void metricsAreRegisteredWithCustomName() {
+    void metricsAreRegisteredWithCustomName() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         circuitBreakerRegistry.circuitBreaker("backendA");

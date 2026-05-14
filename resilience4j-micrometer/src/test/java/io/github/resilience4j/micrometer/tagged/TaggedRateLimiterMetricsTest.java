@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin, Mahmoud Romeh
+ * Copyright 2026 Yevhenii Voievodin, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,15 +33,15 @@ import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DE
 import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedRateLimiterMetricsTest {
+class TaggedRateLimiterMetricsTest {
 
     private MeterRegistry meterRegistry;
     private RateLimiter rateLimiter;
     private RateLimiterRegistry rateLimiterRegistry;
     private TaggedRateLimiterMetrics taggedRateLimiterMetrics;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
 
@@ -52,7 +52,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedRateLimiter() {
+    void shouldAddMetricsForANewlyCreatedRateLimiter() {
         RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendB");
 
         assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendB");
@@ -72,7 +72,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void shouldAddCustomTags() {
+    void shouldAddCustomTags() {
         RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendF", Map.of("key1", "value1"));
         assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendA")).hasSize(2);
@@ -83,7 +83,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(2);
 
@@ -97,7 +97,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauge();
 
@@ -122,7 +122,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void availablePermissionsGaugeIsRegistered() {
+    void availablePermissionsGaugeIsRegistered() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauge();
 
@@ -134,7 +134,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void waitingThreadsGaugeIsRegistered() {
+    void waitingThreadsGaugeIsRegistered() {
         Gauge waitingThreads = meterRegistry.get(DEFAULT_WAITING_THREADS_METRIC_NAME).gauge();
 
         assertThat(waitingThreads).isNotNull();
@@ -144,7 +144,7 @@ public class TaggedRateLimiterMetricsTest {
     }
 
     @Test
-    public void customMetricNamesGetApplied() {
+    void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         rateLimiterRegistry.rateLimiter("backendA");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.*;
@@ -36,15 +36,15 @@ import static io.github.resilience4j.micrometer.tagged.CircuitBreakerMetricNames
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedCircuitBreakerMetricsPublisherTest {
+class TaggedCircuitBreakerMetricsPublisherTest {
 
     private MeterRegistry meterRegistry;
     private CircuitBreaker circuitBreaker;
     private CircuitBreakerRegistry circuitBreakerRegistry;
     private TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         taggedCircuitBreakerMetricsPublisher =
             new TaggedCircuitBreakerMetricsPublisher(meterRegistry);
@@ -66,7 +66,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
+    void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
@@ -89,7 +89,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(16);
 
@@ -103,7 +103,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void notPermittedCallsCounterReportsCorrespondingValue() {
+    void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(16);
 
@@ -117,7 +117,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void failedCallsGaugeReportsCorrespondingValue() {
+    void failedCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
 
@@ -129,7 +129,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void successfulCallsGaugeReportsCorrespondingValue() {
+    void successfulCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
 
@@ -142,7 +142,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void slowSuccessFulCallsGaugeReportsCorrespondingValue() {
+    void slowSuccessFulCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
         Optional<Gauge> slow = MetricsTestHelper.findMeterByKindAndNameTags(gauges, "successful",
@@ -153,7 +153,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void slowFailedCallsGaugeReportsCorrespondingValue() {
+    void slowFailedCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
         Optional<Gauge> slow = MetricsTestHelper.findMeterByKindAndNameTags(gauges, "failed",
@@ -164,7 +164,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void failureRateGaugeReportsCorrespondingValue() {
+    void failureRateGaugeReportsCorrespondingValue() {
         Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
 
         assertThat(failureRate).isNotNull();
@@ -173,7 +173,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void slowCallRateGaugeReportsCorrespondingValue() {
+    void slowCallRateGaugeReportsCorrespondingValue() {
         Gauge slowCallRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE).gauge();
 
         assertThat(slowCallRate).isNotNull();
@@ -182,7 +182,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void stateGaugeReportsCorrespondingValue() {
+    void stateGaugeReportsCorrespondingValue() {
         Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE).gauge();
 
         assertThat(state.value()).isEqualTo(circuitBreaker.getState().getOrder());
@@ -190,7 +190,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void metricsAreRegisteredWithCustomName() {
+    void metricsAreRegisteredWithCustomName() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher = new TaggedCircuitBreakerMetricsPublisher(
             CircuitBreakerMetricNames.custom()
@@ -225,7 +225,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
-    public void testReplaceNewMeter(){
+    void testReplaceNewMeter(){
         CircuitBreaker oldOne = CircuitBreaker.of("backendC", CircuitBreakerConfig.ofDefaults());
         // add meters of old
         taggedCircuitBreakerMetricsPublisher.addMetrics(meterRegistry, oldOne);
@@ -256,6 +256,5 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(newOne.getMetrics().getNumberOfSuccessfulCalls());
-
     }
 }
