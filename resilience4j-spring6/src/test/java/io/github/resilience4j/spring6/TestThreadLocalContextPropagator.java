@@ -6,7 +6,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.spring6.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.*;
+import static io.github.resilience4j.spring6.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.get;
+import static io.github.resilience4j.spring6.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.put;
 
 public class TestThreadLocalContextPropagator<T> implements ContextPropagator<T> {
 
@@ -28,7 +29,7 @@ public class TestThreadLocalContextPropagator<T> implements ContextPropagator<T>
         return (t) -> TestThreadLocalContextHolder.clear();
     }
 
-    public static class TestThreadLocalContextHolder {
+    static class TestThreadLocalContextHolder {
 
         private static final ThreadLocal threadLocal = new ThreadLocal();
 

@@ -4,15 +4,15 @@ import io.github.resilience4j.spring6.TimeLimiterDummyService;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 import java.util.Map;
@@ -20,12 +20,12 @@ import java.util.Map;
 import static io.github.resilience4j.spring6.TestDummyService.BACKEND;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "logging.level.io.github.resilience4j.timelimiter.configure=debug",
         "spring.main.allow-bean-definition-overriding=true"
 })
-public class TimeLimiterInitializationInAspectTest {
+class TimeLimiterInitializationInAspectTest {
 
     @TestConfiguration
     static class TestConfig {
@@ -49,19 +49,19 @@ public class TimeLimiterInitializationInAspectTest {
     @Autowired
     TimeLimiterRegistry registry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         // ensure no time limiters are initialized
         assertThat(registry.getAllTimeLimiters()).isEmpty();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         registry.getAllTimeLimiters().stream().map(TimeLimiter::getName).forEach(registry::remove);
     }
 
     @Test
-    public void testCorrectConfigIsUsedInAspect() throws Exception {
+    void testCorrectConfigIsUsedInAspect() throws Exception {
 
         // Should not time out because the time limit is 3 seconds
         assertThat(testDummyService.success().toCompletableFuture().get())
@@ -69,7 +69,7 @@ public class TimeLimiterInitializationInAspectTest {
     }
 
     @Test
-    public void testTimeLimiterSpelWithoutConfiguration() {
+    void testTimeLimiterSpelWithoutConfiguration() {
         assertThat(testDummyService.spelMono("foo").block()).isEqualTo("foo");
 
         assertThat(registry.getAllTimeLimiters()).hasSize(1).first()
@@ -78,7 +78,7 @@ public class TimeLimiterInitializationInAspectTest {
     }
 
     @Test
-    public void testTimeLimiterSpelWithConfiguration() {
+    void testTimeLimiterSpelWithConfiguration() {
         assertThat(testDummyService.spelMonoWithCfg("foo").block()).isEqualTo("foo");
 
         assertThat(registry.getAllTimeLimiters()).hasSize(1).first()

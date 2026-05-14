@@ -1,8 +1,9 @@
 package io.github.resilience4j.spring6.bulkhead.configure;
 
-import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.*;
-import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
@@ -10,7 +11,9 @@ import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import org.junit.Test;
+import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
+import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -24,10 +27,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * test custom init of bulkhead configuration
  */
-public class BulkHeadConfigurationTest {
+class BulkHeadConfigurationTest {
 
     @Test
-    public void tesFixedThreadPoolBulkHeadRegistry() {
+    void tesFixedThreadPoolBulkHeadRegistry() {
         //Given
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties1.setCoreThreadPoolSize(1);
@@ -69,7 +72,7 @@ public class BulkHeadConfigurationTest {
     }
 
     @Test
-    public void testCreateThreadPoolBulkHeadRegistryWithSharedConfigs() {
+    void testCreateThreadPoolBulkHeadRegistryWithSharedConfigs() {
         //Given
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setCoreThreadPoolSize(1);
@@ -133,7 +136,6 @@ public class BulkHeadConfigurationTest {
             assertThat(ctxPropagators).containsExactlyInAnyOrder(TestThreadLocalContextPropagator.class,
                 TestThreadLocalContextPropagator.class);
 
-
             // Unknown backend should get default config of Registry
             ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
             assertThat(bulkhead3).isNotNull();
@@ -148,9 +150,8 @@ public class BulkHeadConfigurationTest {
         }
     }
 
-
     @Test
-    public void testBulkHeadRegistry() {
+    void testBulkHeadRegistry() {
         //Given
         io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxConcurrentCalls(3);
@@ -187,7 +188,7 @@ public class BulkHeadConfigurationTest {
     }
 
     @Test
-    public void testCreateBulkHeadRegistryWithSharedConfigs() {
+    void testCreateBulkHeadRegistryWithSharedConfigs() {
         //Given
         io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxConcurrentCalls(3);
@@ -251,7 +252,7 @@ public class BulkHeadConfigurationTest {
     }
 
     @Test
-    public void testCreateBulkHeadRegistryWithUnknownConfig() {
+    void testCreateBulkHeadRegistryWithUnknownConfig() {
         BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 
         io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties();
@@ -269,5 +270,4 @@ public class BulkHeadConfigurationTest {
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
-
 }

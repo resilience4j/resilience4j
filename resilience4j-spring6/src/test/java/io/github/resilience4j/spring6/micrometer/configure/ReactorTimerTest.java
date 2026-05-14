@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.spring6.TestApplication;
 import io.github.resilience4j.spring6.micrometer.configure.utils.ReactorTimedService;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
@@ -36,9 +36,9 @@ import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = TestApplication.class)
-public class ReactorTimerTest {
+class ReactorTimerTest {
 
     @Autowired
     private MeterRegistry meterRegistry;
@@ -48,7 +48,7 @@ public class ReactorTimerTest {
     private ReactorTimedService service;
 
     @Test
-    public void shouldTimeMono() {
+    void shouldTimeMono() {
         Timer timer = timerRegistry.timer(MONO_TIMER_NAME);
 
         String result1 = service.succeedMono(123).block(ofSeconds(1));
@@ -73,7 +73,7 @@ public class ReactorTimerTest {
     }
 
     @Test
-    public void shouldTimeFlux() {
+    void shouldTimeFlux() {
         Timer timer = timerRegistry.timer(FLUX_TIMER_NAME);
 
         List<String> result1 = service.succeedFlux(123).collectList().block(ofSeconds(1));

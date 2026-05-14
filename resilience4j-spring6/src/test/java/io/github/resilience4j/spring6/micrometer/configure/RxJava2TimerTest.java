@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.spring6.TestApplication;
 import io.github.resilience4j.spring6.micrometer.configure.utils.RxJava2TimedService;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
@@ -34,9 +34,9 @@ import static io.github.resilience4j.spring6.micrometer.configure.utils.RxJava2T
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = TestApplication.class)
-public class RxJava2TimerTest {
+class RxJava2TimerTest {
 
     @Autowired
     private MeterRegistry meterRegistry;
@@ -46,7 +46,7 @@ public class RxJava2TimerTest {
     private RxJava2TimedService service;
 
     @Test
-    public void shouldTimeCompletable() {
+    void shouldTimeCompletable() {
         Timer timer = timerRegistry.timer(COMPLETABLE_TIMER_NAME);
 
         Throwable result1 = service.succeedCompletable().blockingGet();
@@ -68,7 +68,7 @@ public class RxJava2TimerTest {
     }
 
     @Test
-    public void shouldTimeSingle() {
+    void shouldTimeSingle() {
         Timer timer = timerRegistry.timer(SINGLE_TIMER_NAME);
 
         String result1 = service.succeedSingle(123).blockingGet();
@@ -93,7 +93,7 @@ public class RxJava2TimerTest {
     }
 
     @Test
-    public void shouldTimeMaybe() {
+    void shouldTimeMaybe() {
         Timer timer = timerRegistry.timer(MAYBE_TIMER_NAME);
 
         String result1 = service.succeedMaybe(123).blockingGet();
@@ -118,7 +118,7 @@ public class RxJava2TimerTest {
     }
 
     @Test
-    public void shouldTimeObservable() {
+    void shouldTimeObservable() {
         Timer timer = timerRegistry.timer(OBSERVABLE_TIMER_NAME);
 
         List<String> result1 = service.succeedObservable(123).toList().blockingGet();
@@ -143,7 +143,7 @@ public class RxJava2TimerTest {
     }
 
     @Test
-    public void shouldTimeFlowable() {
+    void shouldTimeFlowable() {
         Timer timer = timerRegistry.timer(FLOWABLE_TIMER_NAME);
 
         List<String> result1 = service.succeedFlowable(123).toList().blockingGet();

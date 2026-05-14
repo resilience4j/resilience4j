@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.spring6.TestApplication;
 import io.github.resilience4j.spring6.micrometer.configure.utils.DefaultTimedService;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.concurrent.ExecutionException;
 
@@ -34,9 +34,9 @@ import static io.github.resilience4j.spring6.micrometer.configure.utils.DefaultT
 import static io.github.resilience4j.spring6.micrometer.configure.utils.DefaultTimedService.COMPLETABLE_STAGE_TIMER_NAME;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = TestApplication.class)
-public class DefaultTimerTest {
+class DefaultTimerTest {
 
     @Autowired
     private MeterRegistry meterRegistry;
@@ -46,7 +46,7 @@ public class DefaultTimerTest {
     private DefaultTimedService service;
 
     @Test
-    public void shouldTimeBasicOperation() {
+    void shouldTimeBasicOperation() {
         Timer timer = timerRegistry.timer(BASIC_OPERATION_TIMER_NAME);
 
         String result1 = service.succeed(123);
@@ -70,7 +70,7 @@ public class DefaultTimerTest {
     }
 
     @Test
-    public void shouldTimeCompletableStage() throws Throwable {
+    void shouldTimeCompletableStage() throws Throwable {
         Timer timer = timerRegistry.timer(COMPLETABLE_STAGE_TIMER_NAME);
 
         String result1 = service.succeedCompletionStage(123).toCompletableFuture().get();

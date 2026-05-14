@@ -11,16 +11,16 @@ import io.github.resilience4j.micrometer.event.TimerEvent;
 import io.github.resilience4j.spring6.micrometer.configure.utils.FixedOnFailureTagResolver;
 import io.github.resilience4j.spring6.micrometer.configure.utils.QualifiedClassNameOnFailureTagResolver;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class TimerConfigurationTest {
+class TimerConfigurationTest {
 
     @Test
-    public void shouldConfigureInstancesUsingDedicatedConfigs() {
+    void shouldConfigureInstancesUsingDedicatedConfigs() {
         InstanceProperties instanceProperties1 = new InstanceProperties()
                 .setMetricNames("resilience4j.timer.operations1")
                 .setOnFailureTagResolver(QualifiedClassNameOnFailureTagResolver.class)
@@ -53,7 +53,7 @@ public class TimerConfigurationTest {
     }
 
     @Test
-    public void shouldConfigureInstancesUsingPredefinedDefaultConfig() {
+    void shouldConfigureInstancesUsingPredefinedDefaultConfig() {
         InstanceProperties instanceProperties1 = new InstanceProperties()
                 .setMetricNames("resilience4j.timer.operations1");
         InstanceProperties instanceProperties2 = new InstanceProperties()
@@ -82,7 +82,7 @@ public class TimerConfigurationTest {
     }
 
     @Test
-    public void shouldConfigureInstancesUsingCustomDefaultConfig() {
+    void shouldConfigureInstancesUsingCustomDefaultConfig() {
         InstanceProperties defaultProperties = new InstanceProperties()
                 .setMetricNames("resilience4j.timer.default")
                 .setOnFailureTagResolver(FixedOnFailureTagResolver.class);
@@ -115,7 +115,7 @@ public class TimerConfigurationTest {
     }
 
     @Test
-    public void shouldConfigureInstancesUsingCustomSharedConfig() {
+    void shouldConfigureInstancesUsingCustomSharedConfig() {
         InstanceProperties sharedProperties = new InstanceProperties()
                 .setMetricNames("resilience4j.timer.shared")
                 .setOnFailureTagResolver(FixedOnFailureTagResolver.class);
@@ -146,7 +146,7 @@ public class TimerConfigurationTest {
     }
 
     @Test
-    public void shouldNotConfigureInstanceUsingUnknownSharedConfig() {
+    void shouldNotConfigureInstanceUsingUnknownSharedConfig() {
         InstanceProperties instanceProperties = new InstanceProperties()
                 .setBaseConfig("unknown");
         TimerConfigurationProperties configurationProperties = new TimerConfigurationProperties();

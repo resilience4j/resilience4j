@@ -132,7 +132,6 @@ public class BulkheadDummyService implements TestDummyService {
         return backend;
     }
 
-
     @Bulkhead(name = "#root.args[0]", fallbackMethod = "#{'recovery'}", type = Bulkhead.Type.THREADPOOL)
     public CompletionStage<String> spelSyncThreadPoolNoCfg(String backend) {
         return CompletableFuture.completedFuture(backend);

@@ -4,28 +4,28 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.spring6.TestDummyService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 
 import static io.github.resilience4j.spring6.TestDummyService.BACKEND;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "logging.level.io.github.resilience4j.ratelimiter.configure=debug",
         "spring.main.allow-bean-definition-overriding=true"
 })
-public class RateLimiterInitializationInAspectTest {
+class RateLimiterInitializationInAspectTest {
 
     @TestConfiguration
     static class TestConfig {
@@ -53,19 +53,19 @@ public class RateLimiterInitializationInAspectTest {
     @Autowired
     RateLimiterRegistry registry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         // ensure no rate limiters are initialized
         assertThat(registry.getAllRateLimiters()).isEmpty();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         registry.getAllRateLimiters().stream().map(RateLimiter::getName).forEach(registry::remove);
     }
 
     @Test
-    public void testCorrectConfigIsUsedInAspect() {
+    void testCorrectConfigIsUsedInAspect() {
 
         // one successful call within 10s
         assertThat(testDummyService.syncSuccess()).isEqualTo("ok");
@@ -73,7 +73,7 @@ public class RateLimiterInitializationInAspectTest {
     }
 
     @Test
-    public void testDefaultConfigurationIsUsedIfNoConfigurationAspect() {
+    void testDefaultConfigurationIsUsedIfNoConfigurationAspect() {
         assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
         assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
         assertThat(registry.getAllRateLimiters()).hasSize(1)
@@ -82,7 +82,7 @@ public class RateLimiterInitializationInAspectTest {
     }
 
     @Test
-    public void testSpecifiedConfigurationIsUsedIfConfigurationAspect() {
+    void testSpecifiedConfigurationIsUsedIfConfigurationAspect() {
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("foo");
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
         assertThat(registry.getAllRateLimiters()).hasSize(1)

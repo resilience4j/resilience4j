@@ -1,19 +1,17 @@
 package io.github.resilience4j.spring6.retry.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.spring6.retry.configure.RetryConfiguration;
-import io.github.resilience4j.spring6.retry.configure.RetryConfigurationProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -25,11 +23,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * test custom init of retry configuration
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RetryConfigurationTest {
+@ExtendWith(MockitoExtension.class)
+class RetryConfigurationTest {
 
     @Test
-    public void testRetryRegistry() {
+    void testRetryRegistry() {
         InstanceProperties instanceProperties1 = new InstanceProperties();
         instanceProperties1.setMaxAttempts(3);
         InstanceProperties instanceProperties2 = new InstanceProperties();
@@ -57,7 +55,7 @@ public class RetryConfigurationTest {
     }
 
     @Test
-    public void testCreateRetryRegistryWithSharedConfigs() {
+    void testCreateRetryRegistryWithSharedConfigs() {
         InstanceProperties defaultProperties = new InstanceProperties();
         defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
@@ -103,7 +101,7 @@ public class RetryConfigurationTest {
     }
 
     @Test
-    public void testCreateRetryRegistryWithUnknownConfig() {
+    void testCreateRetryRegistryWithUnknownConfig() {
         RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
         InstanceProperties instanceProperties = new InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
@@ -121,5 +119,4 @@ public class RetryConfigurationTest {
     private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizerTest() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
-
 }

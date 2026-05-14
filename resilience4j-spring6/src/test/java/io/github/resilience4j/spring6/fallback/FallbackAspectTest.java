@@ -8,24 +8,23 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {TestApplication.class, FallbackAspectTest.TestConfig.class})
-public class FallbackAspectTest {
+class FallbackAspectTest {
 
     @Autowired
     @Qualifier("fallbackTestDummyService")
@@ -36,12 +35,12 @@ public class FallbackAspectTest {
     TestDummyService testDependencyDummyService;
 
     @Test
-    public void testFallbackAspect() {
+    void testFallbackAspect() {
         AssertionsForClassTypes.assertThat(testDummyService.sync()).isEqualTo("aspect");
         AssertionsForClassTypes.assertThat(testDependencyDummyService.sync()).isEqualTo("dependency");
     }
 
-    public static class FallbackTestDummyService extends CircuitBreakerDummyService {
+    static class FallbackTestDummyService extends CircuitBreakerDummyService {
 
         @Override
         @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
@@ -55,7 +54,7 @@ public class FallbackAspectTest {
         }
     }
 
-    public static class FallbackDependencyTestDummyService extends CircuitBreakerDummyService {
+    static class FallbackDependencyTestDummyService extends CircuitBreakerDummyService {
         private final DependencyTestDummyService dependencyTestDummyService;
 
         public FallbackDependencyTestDummyService(DependencyTestDummyService dependencyTestDummyService) {
@@ -74,7 +73,7 @@ public class FallbackAspectTest {
         }
     }
 
-    public static class DependencyTestDummyService {
+    static class DependencyTestDummyService {
         public String test() {
             return "dependency";
         }

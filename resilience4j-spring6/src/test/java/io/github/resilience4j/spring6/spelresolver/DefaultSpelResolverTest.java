@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Kyuhyen Hwang
+ * Copyright 2026 Kyuhyen Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,11 @@
  */
 package io.github.resilience4j.spring6.spelresolver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
-
-import java.lang.reflect.Method;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.github.resilience4j.spring6.DummySpelBean;
+import io.github.resilience4j.spring6.TestApplication;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.EmbeddedValueResolver;
@@ -32,14 +27,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import io.github.resilience4j.spring6.DummySpelBean;
-import io.github.resilience4j.spring6.TestApplication;
+import java.lang.reflect.Method;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
+
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = TestApplication.class, properties = "property=backend")
-public class DefaultSpelResolverTest {
+class DefaultSpelResolverTest {
     private DefaultSpelResolver sut;
 
     @Autowired
@@ -48,14 +47,14 @@ public class DefaultSpelResolverTest {
     @MockBean(name="dummySpelBean")
     DummySpelBean dummySpelBean;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         sut = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), configurableBeanFactory);
         sut.setEmbeddedValueResolver(new EmbeddedValueResolver(configurableBeanFactory));
     }
 
     @Test
-    public void givenNonSpelExpression_whenParse_returnsItself() throws Exception {
+    void givenNonSpelExpression_whenParse_returnsItself() throws Exception {
         String testExpression = "backendA";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -70,7 +69,7 @@ public class DefaultSpelResolverTest {
      * #root.args[0]
      */
     @Test
-    public void testRootArgs() throws Exception {
+    void testRootArgs() throws Exception {
         String testExpression = "#root.args[0]";
         String firstArgument = "test";
 
@@ -86,7 +85,7 @@ public class DefaultSpelResolverTest {
      * #root.methodName
      */
     @Test
-    public void testRootMethodName() throws Exception {
+    void testRootMethodName() throws Exception {
         String testExpression = "#root.methodName";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -101,7 +100,7 @@ public class DefaultSpelResolverTest {
      * #root.className
      */
     @Test
-    public void testRootClassName() throws Exception {
+    void testRootClassName() throws Exception {
         String testExpression = "#root.className";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -116,7 +115,7 @@ public class DefaultSpelResolverTest {
      * #p0
      */
     @Test
-    public void testP0() throws Exception {
+    void testP0() throws Exception {
         String testExpression = "#p0";
         String firstArgument = "test";
 
@@ -132,7 +131,7 @@ public class DefaultSpelResolverTest {
      * #a0
      */
     @Test
-    public void testA0() throws Exception {
+    void testA0() throws Exception {
         String testExpression = "#a0";
         String firstArgument = "test";
 
@@ -148,7 +147,7 @@ public class DefaultSpelResolverTest {
      * #{'recover'}
      */
     @Test
-    public void stringSpelTest() throws Exception {
+    void stringSpelTest() throws Exception {
         String testExpression = "#{'recover'}";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -163,7 +162,7 @@ public class DefaultSpelResolverTest {
      * ${missingProperty:default}
      */
     @Test
-    public void placeholderSpelTest() throws Exception {
+    void placeholderSpelTest() throws Exception {
         String testExpression = "${missingProperty:default}";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -178,7 +177,7 @@ public class DefaultSpelResolverTest {
      * ${property:default}
      */
     @Test
-    public void placeholderSpelTest2() throws Exception {
+    void placeholderSpelTest2() throws Exception {
         String testExpression = "${property:default}";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
@@ -190,7 +189,7 @@ public class DefaultSpelResolverTest {
     }
 
     @Test
-    public void beanMethodSpelTest() throws Exception {
+    void beanMethodSpelTest() throws Exception {
         String testExpression = "@dummySpelBean.getBulkheadName(#parameter)";
         String testMethodArg = "argg";
         String bulkheadName = "sgt. bulko";
@@ -206,7 +205,7 @@ public class DefaultSpelResolverTest {
     }
 
     @Test
-    public void atTest() throws Exception {
+    void atTest() throws Exception {
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -216,7 +215,7 @@ public class DefaultSpelResolverTest {
     }
 
     @Test
-    public void nullTest() throws Exception {
+    void nullTest() throws Exception {
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -226,7 +225,7 @@ public class DefaultSpelResolverTest {
     }
 
     @Test
-    public void emptyStringTest() throws Exception {
+    void emptyStringTest() throws Exception {
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -236,7 +235,7 @@ public class DefaultSpelResolverTest {
     }
 
     @Test
-    public void dollarTest() throws Exception {
+    void dollarTest() throws Exception {
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -249,7 +248,7 @@ public class DefaultSpelResolverTest {
      * #{'one.' + #root.args[0]} - SpEL template with method args context
      */
     @Test
-    public void spelTemplateWithArgsTest() throws Exception {
+    void spelTemplateWithArgsTest() throws Exception {
         String testExpression = "#{'one.' + #root.args[0]}";
         String firstArgument = "two";
 
@@ -265,7 +264,7 @@ public class DefaultSpelResolverTest {
      * #{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)} - SpEL template with bean reference
      */
     @Test
-    public void spelTemplateWithBeanReferenceTest() throws Exception {
+    void spelTemplateWithBeanReferenceTest() throws Exception {
         String testExpression = "#{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)}";
         String testMethodArg = "argg";
         String bulkheadName = "sgt. bulko";
@@ -284,7 +283,7 @@ public class DefaultSpelResolverTest {
      * prefix-#{#root.args[0]}-suffix - SpEL template with literal text and embedded expression
      */
     @Test
-    public void spelTemplateWithMixedLiteralAndExpressionTest() throws Exception {
+    void spelTemplateWithMixedLiteralAndExpressionTest() throws Exception {
         String testExpression = "prefix-#{#root.args[0]}-suffix";
         String firstArgument = "value";
 
@@ -300,7 +299,7 @@ public class DefaultSpelResolverTest {
      * #{#root.args[0]}-#{#root.args[1]} - SpEL template with multiple embedded expressions
      */
     @Test
-    public void spelTemplateWithMultipleEmbeddedExpressionsTest() throws Exception {
+    void spelTemplateWithMultipleEmbeddedExpressionsTest() throws Exception {
         String testExpression = "#{#root.args[0]}-#{#root.args[1]}";
 
         DefaultSpelResolverTest target = new DefaultSpelResolverTest();

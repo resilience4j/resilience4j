@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Kyuhyen Hwang
+ * Copyright 2026 Kyuhyen Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
  */
 package io.github.resilience4j.spring6.bulkhead.configure;
 
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.spring6.TestApplication;
 import io.github.resilience4j.spring6.TestDummyService;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class)
-public class BulkheadAspectSpelResolverTest {
+class BulkheadAspectSpelResolverTest {
     @Autowired
     @Qualifier("bulkheadDummyService")
     TestDummyService testDummyService;
@@ -38,7 +35,7 @@ public class BulkheadAspectSpelResolverTest {
     BulkheadRegistry registry;
 
     @Test
-    public void testSpel() {
+    void testSpel() {
         assertThat(registry.getAllBulkheads().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelSync("SPEL_BACKEND")).isEqualTo("recovered");
         assertThat(registry.getAllBulkheads().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();

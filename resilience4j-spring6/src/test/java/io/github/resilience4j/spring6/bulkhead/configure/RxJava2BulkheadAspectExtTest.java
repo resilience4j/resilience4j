@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 package io.github.resilience4j.spring6.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.spring6.bulkhead.configure.RxJava2BulkheadAspectExt;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -32,8 +31,8 @@ import static org.mockito.Mockito.when;
 /**
  * aspect unit test
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RxJava2BulkheadAspectExtTest {
+@ExtendWith(MockitoExtension.class)
+class RxJava2BulkheadAspectExtTest {
 
     @Mock
     ProceedingJoinPoint proceedingJoinPoint;
@@ -41,15 +40,14 @@ public class RxJava2BulkheadAspectExtTest {
     @InjectMocks
     RxJava2BulkheadAspectExt rxJava2BulkheadAspectExt;
 
-
     @Test
-    public void testCheckTypes() {
+    void testCheckTypes() {
         assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Flowable.class)).isTrue();
         assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Single.class)).isTrue();
     }
 
     @Test
-    public void testReactorTypes() throws Throwable {
+    void testReactorTypes() throws Throwable {
         Bulkhead bulkhead = Bulkhead.ofDefaults("test");
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
@@ -60,6 +58,4 @@ public class RxJava2BulkheadAspectExtTest {
         assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
             .isNotNull();
     }
-
-
 }

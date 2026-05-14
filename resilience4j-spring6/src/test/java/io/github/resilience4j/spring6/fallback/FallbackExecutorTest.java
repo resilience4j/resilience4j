@@ -1,11 +1,9 @@
 package io.github.resilience4j.spring6.fallback;
 
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.spring6.fallback.FallbackDecorators;
-import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -18,7 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class FallbackExecutorTest {
+class FallbackExecutorTest {
     private final SpelResolver spelResolver = mock(SpelResolver.class);
     private final FallbackDecorators fallbackDecorators = mock(FallbackDecorators.class);
     private final ProceedingJoinPoint proceedingJoinPoint = mock(ProceedingJoinPoint.class);
@@ -33,7 +31,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallback() throws Throwable {
+    void testPrimaryMethodExecutionWithFallback() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "getNameValidFallback";
@@ -52,7 +50,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithoutFallback() throws Throwable {
+    void testPrimaryMethodExecutionWithoutFallback() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "";
@@ -70,7 +68,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallbackNotFound() throws Throwable {
+    void testPrimaryMethodExecutionWithFallbackNotFound() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "incorrectFallbackMethodName";
@@ -88,7 +86,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallbackWithIncorrectSignature() throws Throwable {
+    void testPrimaryMethodExecutionWithFallbackWithIncorrectSignature() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "getNameInvalidFallback";
@@ -118,7 +116,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallbackBean() throws Throwable {
+    void testPrimaryMethodExecutionWithFallbackBean() throws Throwable {
         ExternalFallbackBean fallbackBean = new ExternalFallbackBean();
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
@@ -142,7 +140,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallbackMethodNotFound() throws Throwable {
+    void testPrimaryMethodExecutionWithFallbackMethodNotFound() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "myFallbackBean::nonExistentMethod";
@@ -160,7 +158,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithAopProxiedFallbackBean() throws Throwable {
+    void testPrimaryMethodExecutionWithAopProxiedFallbackBean() throws Throwable {
         // CGLIB-proxied bean must be unwrapped via AopProxyUtils.getSingletonTarget
         // so method discovery walks the real class instead of the synthetic subclass.
         ExternalFallbackBean target = new ExternalFallbackBean();
@@ -188,7 +186,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithEmptyFallbackBeanMethod() throws Throwable {
+    void testPrimaryMethodExecutionWithEmptyFallbackBeanMethod() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "myFallbackBean::";
@@ -205,7 +203,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithNonExistentFallbackBean() throws Throwable {
+    void testPrimaryMethodExecutionWithNonExistentFallbackBean() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "nonExistentBean::recover";
@@ -222,7 +220,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithEmptyBeanName() throws Throwable {
+    void testPrimaryMethodExecutionWithEmptyBeanName() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "::recover";
@@ -238,7 +236,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithSpelResolvedFallbackBean() throws Throwable {
+    void testPrimaryMethodExecutionWithSpelResolvedFallbackBean() throws Throwable {
         ExternalFallbackBean fallbackBean = new ExternalFallbackBean();
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
@@ -258,7 +256,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithMultipleSeparators() throws Throwable {
+    void testPrimaryMethodExecutionWithMultipleSeparators() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "bean::method::extra";
@@ -274,7 +272,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testCtorWithBeanFactoryArgResolvesExternalFallback() throws Throwable {
+    void testCtorWithBeanFactoryArgResolvesExternalFallback() throws Throwable {
         ExternalFallbackBean fallbackBean = new ExternalFallbackBean();
         FallbackExecutor executor = new FallbackExecutor(spelResolver, fallbackDecorators, beanFactory);
         Method method = this.getClass().getMethod("getName", String.class);
@@ -294,7 +292,7 @@ public class FallbackExecutorTest {
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithBeanFactoryNullAndSeparator() throws Throwable {
+    void testPrimaryMethodExecutionWithBeanFactoryNullAndSeparator() throws Throwable {
         FallbackExecutor executorWithoutBeanFactory = new FallbackExecutor(spelResolver, fallbackDecorators);
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
@@ -310,7 +308,7 @@ public class FallbackExecutorTest {
         verify(fallbackDecorators, never()).decorate(any(), any());
     }
 
-    public static class ExternalFallbackBean {
+    static class ExternalFallbackBean {
         public String getNameValidFallback(String parameter, Throwable throwable) {
             return "recovered-from-external-bean";
         }

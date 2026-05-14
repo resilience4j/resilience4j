@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 package io.github.resilience4j.spring6.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.spring6.ratelimiter.configure.RxJava2RateLimiterAspectExt;
 import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -31,8 +30,8 @@ import static org.mockito.Mockito.when;
 /**
  * aspect unit test
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RxJava2RateLimiterAspectExtTest {
+@ExtendWith(MockitoExtension.class)
+class RxJava2RateLimiterAspectExtTest {
 
     @Mock
     ProceedingJoinPoint proceedingJoinPoint;
@@ -40,15 +39,14 @@ public class RxJava2RateLimiterAspectExtTest {
     @InjectMocks
     RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
 
-
     @Test
-    public void testCheckTypes() {
+    void testCheckTypes() {
         assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
         assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
     }
 
     @Test
-    public void testReactorTypes() throws Throwable {
+    void testReactorTypes() throws Throwable {
         RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
@@ -75,7 +73,6 @@ public class RxJava2RateLimiterAspectExtTest {
         assertThat(
             rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
             .isNotNull();
-
 
     }
 }
