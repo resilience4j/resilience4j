@@ -3,8 +3,8 @@ package io.github.resilience4j.bulkhead.operator;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Flowable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
@@ -15,17 +15,17 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link FlowableBulkhead} using {@link BulkheadOperator}.
  */
-public class FlowableBulkheadTest {
+class FlowableBulkheadTest {
 
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitAllEvents() {
+    void shouldEmitAllEvents() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Flowable.fromArray("Event 1", "Event 2")
@@ -37,7 +37,7 @@ public class FlowableBulkheadTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Flowable.error(new IOException("BAM!"))
@@ -51,7 +51,7 @@ public class FlowableBulkheadTest {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Flowable.fromArray("Event 1", "Event 2")

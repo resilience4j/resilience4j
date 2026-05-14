@@ -3,8 +3,8 @@ package io.github.resilience4j.ratelimiter.operator;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Maybe;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -17,17 +17,17 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit test for {@link MaybeRateLimiter}.
  */
-public class MaybeRateLimiterTest {
+class MaybeRateLimiterTest {
 
     private RateLimiter rateLimiter;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Maybe.just(1)
@@ -37,7 +37,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Maybe.just(1)
@@ -47,7 +47,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Maybe.error(new IOException("BAM!"))
@@ -59,7 +59,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitErrorWithRequestNotPermittedException() {
+    void shouldEmitErrorWithRequestNotPermittedException() {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Maybe.just(1)

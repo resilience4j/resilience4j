@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 authors
+ *  Copyright 2026 authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package io.github.resilience4j.timelimiter.transformer;
 
-import io.github.resilience4j.TestSchedulerRule;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.TestScheduler;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -35,15 +36,26 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-public class TimeLimiterTransformerMaybeTest {
+class TimeLimiterTransformerMaybeTest {
 
-    @Rule
-    public final TestSchedulerRule testSchedulerRule = new TestSchedulerRule();
-    private final TestScheduler testScheduler = testSchedulerRule.getTestScheduler();
+    private TestScheduler testScheduler;
+
+    @BeforeEach
+    void setUpScheduler() {
+        testScheduler = new TestScheduler();
+        RxJavaPlugins.setIoSchedulerHandler(scheduler -> testScheduler);
+        RxJavaPlugins.setComputationSchedulerHandler(scheduler -> testScheduler);
+        RxJavaPlugins.setNewThreadSchedulerHandler(scheduler -> testScheduler);
+    }
+
+    @AfterEach
+    void resetScheduler() {
+        RxJavaPlugins.reset();
+    }
     private final TimeLimiter timeLimiter = mock(TimeLimiter.class);
 
     @Test
-    public void otherError() {
+    void otherError() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Maybe.error(new RuntimeException())
@@ -58,7 +70,7 @@ public class TimeLimiterTransformerMaybeTest {
     }
 
     @Test
-    public void timeout() {
+    void timeout() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Observable.interval(1, TimeUnit.MINUTES)
@@ -74,7 +86,7 @@ public class TimeLimiterTransformerMaybeTest {
     }
 
     @Test
-    public void timeoutEmpty() {
+    void timeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Maybe.empty()
@@ -90,7 +102,7 @@ public class TimeLimiterTransformerMaybeTest {
     }
 
     @Test
-    public void doNotTimeout() {
+    void doNotTimeout() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
         TestObserver<?> observer = Observable.interval(1, TimeUnit.SECONDS)
@@ -106,7 +118,7 @@ public class TimeLimiterTransformerMaybeTest {
     }
 
     @Test
-    public void doNotTimeoutEmpty() {
+    void doNotTimeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
         TestObserver<?> observer = Maybe.empty()

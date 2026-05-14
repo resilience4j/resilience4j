@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Dan Maas
+ * Copyright 2026 Dan Maas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,28 +22,29 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-public class RetryTransformerTest {
+class RetryTransformerTest {
 
     private HelloWorldService helloWorldService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void returnOnCompleteUsingSingle() throws InterruptedException {
+    void returnOnCompleteUsingSingle() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -75,17 +76,18 @@ public class RetryTransformerTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
-
-    @Test(expected = StackOverflowError.class)
-    public void shouldNotRetryUsingSingleStackOverFlow() {
+    @Test
+    void shouldNotRetryUsingSingleStackOverFlow() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
             .willThrow(new StackOverflowError("BAM!"));
 
-        Single.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(RetryTransformer.of(retry))
-            .test();
+        assertThatThrownBy(() ->
+            Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test())
+            .isInstanceOf(StackOverflowError.class);
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -94,7 +96,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldNotRetryWhenItThrowErrorSingle() {
+    void shouldNotRetryWhenItThrowErrorSingle() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -113,9 +115,8 @@ public class RetryTransformerTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
-
     @Test
-    public void returnOnErrorUsingSingle() throws InterruptedException {
+    void returnOnErrorUsingSingle() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -143,7 +144,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingSingle() {
+    void doNotRetryFromPredicateUsingSingle() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -166,7 +167,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultUsingSingle() throws InterruptedException {
+    void retryOnResultUsingSingle() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -192,7 +193,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingSingle() throws InterruptedException {
+    void retryOnResultFailAfterMaxAttemptsUsingSingle() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -213,7 +214,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingMaybe() throws InterruptedException {
+    void returnOnCompleteUsingMaybe() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -247,7 +248,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnErrorUsingMaybe() throws InterruptedException {
+    void returnOnErrorUsingMaybe() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -275,7 +276,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingMaybe() {
+    void doNotRetryFromPredicateUsingMaybe() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -299,7 +300,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultUsingMaybe() throws InterruptedException {
+    void retryOnResultUsingMaybe() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -325,7 +326,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingMaybe() throws InterruptedException {
+    void retryOnResultFailAfterMaxAttemptsUsingMaybe() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -347,7 +348,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingCompletable() throws InterruptedException {
+    void returnOnCompleteUsingCompletable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -379,7 +380,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnErrorUsingCompletable() throws InterruptedException {
+    void returnOnErrorUsingCompletable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -407,7 +408,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingCompletable() {
+    void doNotRetryFromPredicateUsingCompletable() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -429,7 +430,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingObservable() throws InterruptedException {
+    void returnOnCompleteUsingObservable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -458,7 +459,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnErrorUsingObservable() throws InterruptedException {
+    void returnOnErrorUsingObservable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -487,7 +488,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingObservable() {
+    void doNotRetryFromPredicateUsingObservable() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -510,7 +511,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultUsingObservable() throws InterruptedException {
+    void retryOnResultUsingObservable() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -536,7 +537,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingObservable() throws InterruptedException {
+    void retryOnResultFailAfterMaxAttemptsUsingObservable() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -558,7 +559,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingFlowable() throws InterruptedException {
+    void returnOnCompleteUsingFlowable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -588,7 +589,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnErrorUsingFlowable() throws InterruptedException {
+    void returnOnErrorUsingFlowable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -617,7 +618,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingFlowable() {
+    void doNotRetryFromPredicateUsingFlowable() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -640,7 +641,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultUsingFlowable() throws InterruptedException {
+    void retryOnResultUsingFlowable() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -666,7 +667,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingFlowable() throws InterruptedException {
+    void retryOnResultFailAfterMaxAttemptsUsingFlowable() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
@@ -688,7 +689,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldThrowMaxRetriesExceptionAfterRetriesExhaustedWhenConfigured() throws InterruptedException {
+    void shouldThrowMaxRetriesExceptionAfterRetriesExhaustedWhenConfigured() throws InterruptedException {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(50))
