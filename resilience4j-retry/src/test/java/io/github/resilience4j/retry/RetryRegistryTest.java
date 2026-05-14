@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Dan Maas
+ * Copyright 2026 Dan Maas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.*;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
-public class RetryRegistryTest {
+class RetryRegistryTest {
 
     private RetryRegistry retryRegistry;
 
@@ -39,19 +39,19 @@ public class RetryRegistryTest {
             : Optional.empty();
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         retryRegistry = RetryRegistry.ofDefaults();
     }
 
     @Test
-    public void testCreateWithNullConfig() {
+    void testCreateWithNullConfig() {
         assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null))
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
-    public void shouldInitRegistryTags() {
+    void shouldInitRegistryTags() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
         RetryRegistry registry = RetryRegistry.of(retryConfigs,new NoOpRetryEventConsumer(), Map.of("Tag1Key","Tag1Value"));
@@ -60,7 +60,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void shouldReturnTheCorrectName() {
+    void shouldReturnTheCorrectName() {
         Retry retry = retryRegistry.retry("testName");
 
         assertThat(retry).isNotNull();
@@ -68,7 +68,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void shouldBeTheSameRetry() {
+    void shouldBeTheSameRetry() {
         Retry retry = retryRegistry.retry("testName");
         Retry retry2 = retryRegistry.retry("testName");
 
@@ -77,7 +77,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void shouldBeNotTheSameRetry() {
+    void shouldBeNotTheSameRetry() {
         Retry retry = retryRegistry.retry("testName");
         Retry retry2 = retryRegistry.retry("otherTestName");
 
@@ -86,13 +86,13 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void noTagsByDefault() {
+    void noTagsByDefault() {
         Retry retry = retryRegistry.retry("testName");
         assertThat(retry.getTags()).isEmpty();
     }
 
     @Test
-    public void tagsOfRegistryAddedToInstance() {
+    void tagsOfRegistryAddedToInstance() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
         Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
@@ -103,7 +103,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void tagsAddedToInstance() {
+    void tagsAddedToInstance() {
         Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         Retry retry = retryRegistry.retry("testName", retryTags);
 
@@ -111,7 +111,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void tagsOfRetriesShouldNotBeMixed() {
+    void tagsOfRetriesShouldNotBeMixed() {
         RetryConfig config = RetryConfig.ofDefaults();
         Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         Retry retry = retryRegistry.retry("testName", config, retryTags);
@@ -123,7 +123,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+    void tagsOfInstanceTagsShouldOverrideRegistryTags() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
         Map<String, String> registryTags = Map.of("key1", "value1", "key2", "value2");
@@ -136,7 +136,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void canBuildRetryFromRegistryWithConfig() {
+    void canBuildRetryFromRegistryWithConfig() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
             .waitDuration(Duration.ofSeconds(300)).build();
         Retry retry = retryRegistry.retry("testName", config);
@@ -146,7 +146,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void canBuildRetryFromRegistryWithConfigSupplier() {
+    void canBuildRetryFromRegistryWithConfigSupplier() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
             .waitDuration(Duration.ofSeconds(300)).build();
         Retry retry = retryRegistry.retry("testName", () -> config);
@@ -156,7 +156,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void canBuildRetryRegistryWithConfig() {
+    void canBuildRetryRegistryWithConfig() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
             .waitDuration(Duration.ofSeconds(300)).build();
         retryRegistry = RetryRegistry.of(config);
@@ -167,7 +167,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMap() {
+    void testCreateWithConfigurationMap() {
         Map<String, RetryConfig> configs = new HashMap<>();
         configs.put("default", RetryConfig.ofDefaults());
         configs.put("custom", RetryConfig.ofDefaults());
@@ -179,7 +179,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+    void testCreateWithConfigurationMapWithoutDefaultConfig() {
         Map<String, RetryConfig> configs = new HashMap<>();
         configs.put("custom", RetryConfig.ofDefaults());
 
@@ -190,7 +190,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithSingleRegistryEventConsumer() {
+    void testCreateWithSingleRegistryEventConsumer() {
         RetryRegistry retryRegistry = RetryRegistry
             .of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
 
@@ -199,7 +199,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithMultipleRegistryEventConsumer() {
+    void testCreateWithMultipleRegistryEventConsumer() {
         List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(new NoOpRetryEventConsumer());
         registryEventConsumers.add(new NoOpRetryEventConsumer());
@@ -212,7 +212,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+    void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
         Map<String, RetryConfig> configs = new HashMap<>();
         configs.put("custom", RetryConfig.ofDefaults());
 
@@ -223,7 +223,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+    void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
         Map<String, RetryConfig> configs = new HashMap<>();
         configs.put("custom", RetryConfig.ofDefaults());
         List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
@@ -237,7 +237,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testWithNotExistingConfig() {
+    void testWithNotExistingConfig() {
         RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
 
         assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
@@ -245,7 +245,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testAddConfiguration() {
+    void testAddConfiguration() {
         RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
         retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
 
@@ -269,7 +269,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithDefaultConfig() {
+    void testCreateUsingBuilderWithDefaultConfig() {
         RetryRegistry retryRegistry =
             RetryRegistry.custom().withRetryConfig(RetryConfig.ofDefaults()).build();
         Retry retry = retryRegistry.retry("testName");
@@ -279,7 +279,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithCustomConfig() {
+    void testCreateUsingBuilderWithCustomConfig() {
         int maxAttempts = 1000;
         RetryConfig retryConfig = RetryConfig.custom()
             .maxAttempts(maxAttempts).build();
@@ -293,7 +293,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithoutDefaultConfig() {
+    void testCreateUsingBuilderWithoutDefaultConfig() {
         int maxAttempts = 1000;
         RetryConfig retryConfig = RetryConfig.custom()
             .maxAttempts(maxAttempts).build();
@@ -314,15 +314,16 @@ public class RetryRegistryTest {
             .isEqualTo(maxAttempts);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+    @Test
+    void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
         RetryConfig retryConfig = RetryConfig.custom()
             .maxAttempts(1000).build();
-        RetryRegistry.custom().addRetryConfig("default", retryConfig).build();
+        assertThatThrownBy(() -> RetryRegistry.custom().addRetryConfig("default", retryConfig).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+    void testCreateUsingBuilderWithDefaultAndCustomConfig() {
         RetryConfig retryConfig = RetryConfig.custom()
             .maxAttempts(1000).build();
         RetryConfig customRetryConfig = RetryConfig.custom()
@@ -340,14 +341,14 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithNullConfig() {
+    void testCreateUsingBuilderWithNullConfig() {
         assertThatThrownBy(
             () -> RetryRegistry.custom().withRetryConfig(null).build())
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
-    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+    void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
         RetryRegistry retryRegistry = RetryRegistry.custom()
             .withRetryConfig(RetryConfig.ofDefaults())
             .addRegistryEventConsumer(new NoOpRetryEventConsumer())
@@ -359,7 +360,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithRegistryTags() {
+    void testCreateUsingBuilderWithRegistryTags() {
         Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         RetryRegistry retryRegistry = RetryRegistry.custom()
             .withRetryConfig(RetryConfig.ofDefaults())
@@ -371,7 +372,7 @@ public class RetryRegistryTest {
     }
 
     @Test
-    public void testCreateUsingBuilderWithRegistryStore() {
+    void testCreateUsingBuilderWithRegistryStore() {
         RetryRegistry retryRegistry = RetryRegistry.custom()
             .withRetryConfig(RetryConfig.ofDefaults())
             .withRegistryStore(new InMemoryRegistryStore<>())

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,19 +41,19 @@ import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class ConsumerRetryTest {
+class ConsumerRetryTest {
 
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
-    public void shouldNotRetry() {
+    void shouldNotRetry() {
         Retry retryContext = Retry.ofDefaults("id");
         Consumer<String> consumer = Retry.decorateConsumer(retryContext, helloWorldService::sayHelloWorldWithName);
 
@@ -64,7 +64,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void testDecorateConsumer() {
+    void testDecorateConsumer() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         Retry retry = Retry.ofDefaults("id");
         Consumer<String> consumer = Retry.decorateConsumer(retry, helloWorldService::sayHelloWorldWithName);
@@ -78,7 +78,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void testDecorateConsumerAndInvokeTwice() {
+    void testDecorateConsumerAndInvokeTwice() {
         doThrow(new HelloWorldException())
                 .doNothing()
                 .doThrow(new HelloWorldException())
@@ -98,7 +98,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() throws Throwable {
+    void shouldReturnAfterThreeAttempts() throws Throwable {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithNameWithException("Name");
         Retry retry = Retry.ofDefaults("id");
         CheckedConsumer<String> retryableConsumer = Retry
@@ -113,7 +113,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttempt() {
+    void shouldReturnAfterOneAttempt() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
@@ -129,7 +129,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+    void shouldReturnAfterOneAttemptAndIgnoreException() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         RetryConfig config = RetryConfig.custom()
             .retryOnException(throwable -> Match(throwable).of(
@@ -150,7 +150,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    void shouldTakeIntoAccountBackoffFunction() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         RetryConfig config = RetryConfig
             .custom()
@@ -169,7 +169,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountRetryOnResult() {
+    void shouldTakeIntoAccountRetryOnResult() {
         AtomicInteger value = new AtomicInteger(0);
         final int targetValue = 2;
         RetryConfig config = RetryConfig
@@ -191,7 +191,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecover() throws Throwable{
+    void shouldReturnAfterThreeAttemptsAndRecover() throws Throwable{
 
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         doNothing().when(helloWorldService).sayHelloWorldWithName("RecoverName");
@@ -213,7 +213,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
+    void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
         RetryImpl.sleepFunction = sleep -> {
             throw new InterruptedException("Interrpted!");
         };
@@ -232,7 +232,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldThrowMaxRetriesExceededIfConfigured() {
+    void shouldThrowMaxRetriesExceededIfConfigured() {
         doNothing().when(helloWorldService).sayHelloWorldWithName("Name");
 
         RetryConfig retryConfig = RetryConfig.custom()
@@ -252,7 +252,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldNotThrowMaxRetriesExceededIfCompletedExceptionally() {
+    void shouldNotThrowMaxRetriesExceededIfCompletedExceptionally() {
 
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
 

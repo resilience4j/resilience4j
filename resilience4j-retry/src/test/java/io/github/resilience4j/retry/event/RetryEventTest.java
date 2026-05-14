@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.retry.event;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -26,10 +26,10 @@ import java.time.Duration;
 import static io.github.resilience4j.retry.event.RetryEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RetryEventTest {
+class RetryEventTest {
 
     @Test
-    public void testRetryOnErrorEvent() {
+    void testRetryOnErrorEvent() {
         RetryOnErrorEvent retryOnErrorEvent = new RetryOnErrorEvent("test", 2,
             new IOException("Bla"));
         assertThat(retryOnErrorEvent.getName()).isEqualTo("test");
@@ -41,7 +41,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnErrorEventWithNullLastThrowable() {
+    void testRetryOnErrorEventWithNullLastThrowable() {
         RetryOnErrorEvent retryOnErrorEvent = new RetryOnErrorEvent("test", 2, null);
         assertThat(retryOnErrorEvent.getLastThrowable()).isNull();
         assertThat(retryOnErrorEvent.toString()).contains(
@@ -49,7 +49,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnSuccessEvent() {
+    void testRetryOnSuccessEvent() {
         RetryOnSuccessEvent retryOnSuccessEvent = new RetryOnSuccessEvent("test", 2,
             new IOException("Bla"));
         assertThat(retryOnSuccessEvent.getName()).isEqualTo("test");
@@ -61,7 +61,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnSuccessEventWithNullLastThrowable() {
+    void testRetryOnSuccessEventWithNullLastThrowable() {
         RetryOnSuccessEvent retryOnSuccessEvent = new RetryOnSuccessEvent("test", 2, null);
         assertThat(retryOnSuccessEvent.getLastThrowable()).isNull();
         assertThat(retryOnSuccessEvent.toString()).contains(
@@ -69,7 +69,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnIgnoredErrorEvent() {
+    void testRetryOnIgnoredErrorEvent() {
         RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test",
             new IOException("Bla"));
         assertThat(retryOnIgnoredErrorEvent.getName()).isEqualTo("test");
@@ -81,7 +81,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnIgnoredErrorEventWithNullLastThrowable() {
+    void testRetryOnIgnoredErrorEventWithNullLastThrowable() {
         RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test", null);
         assertThat(retryOnIgnoredErrorEvent.getLastThrowable()).isNull();
         assertThat(retryOnIgnoredErrorEvent.toString()).contains(
@@ -89,7 +89,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnRetryEvent() {
+    void testRetryOnRetryEvent() {
         RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2,
             new IOException("Bla"), 1234L);
         assertThat(retryOnRetryEvent.getName()).isEqualTo("test");
@@ -102,7 +102,7 @@ public class RetryEventTest {
     }
 
     @Test
-    public void testRetryOnRetryEventWithNullLastThrowable() {
+    void testRetryOnRetryEventWithNullLastThrowable() {
         RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2, null, 500L);
         assertThat(retryOnRetryEvent.getLastThrowable()).isNull();
         assertThat(retryOnRetryEvent.toString()).contains(

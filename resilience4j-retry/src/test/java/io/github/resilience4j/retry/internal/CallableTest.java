@@ -5,8 +5,8 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.*;
@@ -20,17 +20,17 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CallableTest {
+class CallableTest {
 
     private HelloWorldService helloWorldService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldPropagateLastExceptionWhenSleepFunctionThrowsException() throws IOException {
+    void shouldPropagateLastExceptionWhenSleepFunctionThrowsException() throws IOException {
         willThrow(new HelloWorldException()).given(helloWorldService).returnHelloWorldWithException();
         RetryConfig config = RetryConfig.custom()
             .intervalFunction((a) -> -1L)
@@ -47,7 +47,7 @@ public class CallableTest {
     }
 
     @Test
-    public void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() throws IOException {
+    void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() throws IOException {
         given(helloWorldService.returnHelloWorldWithException())
                 .willThrow(new HelloWorldException("Exceptional!"));
 
@@ -83,7 +83,7 @@ public class CallableTest {
     }
 
     @Test
-    public void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() throws IOException {
+    void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() throws IOException {
         given(helloWorldService.returnHelloWorldWithException())
                 .willThrow(new HelloWorldException("Exceptional!"));
 

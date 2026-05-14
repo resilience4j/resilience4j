@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.API;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -55,22 +55,22 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class SupplierRetryTest {
+class SupplierRetryTest {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private HelloWorldService helloWorldService;
     private AsyncHelloWorldService helloWorldServiceAsync;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         helloWorldServiceAsync = mock(AsyncHelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
-    public void shouldNotRetry() {
+    void shouldNotRetry() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Retry retry = Retry.ofDefaults("id");
         Supplier<String> supplier = Retry
@@ -84,7 +84,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldNotRetryWithResult() {
+    void shouldNotRetryWithResult() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .retryOnResult(s -> s.contains("tryAgain"))
@@ -100,7 +100,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldOnCompleteCallOnFinish() {
+    void shouldOnCompleteCallOnFinish() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .retryOnResult(s -> s.contains("tryAgain"))
@@ -134,7 +134,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldRetryWithResult() {
+    void shouldRetryWithResult() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .retryOnResult(s -> s.contains("Hello world"))
@@ -150,7 +150,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testDecorateSupplier() {
+    void testDecorateSupplier() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -166,7 +166,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testDecorateSupplierAndInvokeTwice() {
+    void testDecorateSupplierAndInvokeTwice() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world")
@@ -187,7 +187,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testDecorateCallable() throws Exception {
+    void testDecorateCallable() throws Exception {
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -203,7 +203,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testDecorateCallableWithRetryResult() throws Exception {
+    void testDecorateCallableWithRetryResult() throws Exception {
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -222,7 +222,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testExecuteCallable() throws Exception {
+    void testExecuteCallable() throws Exception {
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -236,7 +236,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testExecuteSupplier() {
+    void testExecuteSupplier() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -250,7 +250,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void testExecuteSupplierWithResult() {
+    void testExecuteSupplierWithResult() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -267,7 +267,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnSuccessfullyAfterSecondAttempt() {
+    void shouldReturnSuccessfullyAfterSecondAttempt() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -283,7 +283,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() {
+    void shouldReturnAfterThreeAttempts() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");
         CheckedSupplier<String> retryableSupplier = Retry
@@ -298,7 +298,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttempt() {
+    void shouldReturnAfterOneAttempt() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
@@ -314,7 +314,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+    void shouldReturnAfterOneAttemptAndIgnoreException() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
             .retryOnException(throwable -> API.Match(throwable).of(
@@ -335,7 +335,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecover() {
+    void shouldReturnAfterThreeAttemptsAndRecover() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");
         CheckedSupplier<String> retryableSupplier = Retry
@@ -351,7 +351,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
+    void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
         RetryImpl.sleepFunction = sleep -> {
           throw new InterruptedException("Interrpted!");
         };
@@ -367,7 +367,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldThrowCancellationExceptionWhenInterruptedDuringRetryOnResult() {
+    void shouldThrowCancellationExceptionWhenInterruptedDuringRetryOnResult() {
         CheckedConsumer<Long> previousSleepFunction = RetryImpl.sleepFunction;
         try {
             RetryImpl.sleepFunction = sleep -> {
@@ -394,7 +394,7 @@ public class SupplierRetryTest {
 
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
+    void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world")
@@ -415,7 +415,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    void shouldTakeIntoAccountBackoffFunction() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
             .intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
@@ -433,7 +433,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
+    void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfRetryOnResultAtAsyncStage(1, "Hello world");
     }
 
@@ -460,7 +460,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldUseBackoffBiFunctionWhenRetryWithResult() {
+    void shouldUseBackoffBiFunctionWhenRetryWithResult() {
         given(helloWorldService.returnHelloWorld())
             .willReturn("Await 100")
             .willReturn("Await 200")
@@ -486,7 +486,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldThrowMaxRetriesExceededIfConfigured() {
+    void shouldThrowMaxRetriesExceededIfConfigured() {
         given(helloWorldService.returnHelloWorld())
             .willReturn("retryable response");
 
@@ -507,7 +507,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldNotThrowMaxRetriesExceededIfCompletedExceptionally() {
+    void shouldNotThrowMaxRetriesExceededIfCompletedExceptionally() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
 
@@ -526,7 +526,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldPerformConsumeResultBeforeRetryAttemptOnRetry(){
+    void shouldPerformConsumeResultBeforeRetryAttemptOnRetry(){
         String helloWorldServiceReturnValue = "Hello World!";
         given(helloWorldService.returnHelloWorld()).willReturn(helloWorldServiceReturnValue);
 
@@ -554,7 +554,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldPerformConsumeResultBeforeRetryAttemptOnRetryAsync() {
+    void shouldPerformConsumeResultBeforeRetryAttemptOnRetryAsync() {
         String helloWorldServiceReturnValue = "Hello World!";
         given(helloWorldServiceAsync.returnHelloWorld())
                 .willReturn(completedFuture(helloWorldServiceReturnValue));

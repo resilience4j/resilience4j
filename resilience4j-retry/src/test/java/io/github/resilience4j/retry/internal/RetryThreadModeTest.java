@@ -1,19 +1,38 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.ExecutorServiceFactory;
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -27,40 +46,23 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author kanghyun.yang
  * @since 3.0.0
  */
-@RunWith(Parameterized.class)
-public class RetryThreadModeTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class RetryThreadModeTest {
 
     private static final Duration WAIT_DURATION = Duration.ofMillis(50);
     private ScheduledExecutorService scheduler;
 
-    public RetryThreadModeTest(ThreadType threadType) {
-        super(threadType);
-    }
-
-    @Parameterized.Parameters(name = "{0} thread mode")
-    public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBase.threadModes();
-    }
-
-    @Before
-    public void setUp() {
-        // Reset the scheduler for each test (ThreadModeTestBase handles thread mode setup)
+    @AfterEach
+    void tearDown() {
+        // Clean up scheduler
         if (scheduler != null) {
             scheduler.shutdownNow();
         }
     }
 
-    @After
-    public void tearDown() {
-        // Clean up scheduler (ThreadModeTestBase handles thread mode cleanup)
-        if (scheduler != null) {
-            scheduler.shutdownNow();
-        }
-    }
-
-    @Test
-    public void shouldUseCorrectThreadTypeForAsyncRetry() throws Exception {
-        // Thread mode configured automatically by ThreadModeTestBase
+    @TestTemplate
+    void shouldUseCorrectThreadTypeForAsyncRetry(ThreadType threadType) throws Exception {
+        boolean isVirtual = threadType == ThreadType.VIRTUAL;
 
         // Create scheduler via ExecutorServiceFactory which should use the configured thread type
         scheduler = ExecutorServiceFactory.newSingleThreadScheduledExecutor("retry-" + threadType + "-test");
@@ -78,7 +80,7 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
 
         // Create a supplier that will fail twice then succeed, tracking thread types
         // Use appropriate executor based on thread mode
-        ExecutorService taskExecutor = isVirtualThreadMode() ?
+        ExecutorService taskExecutor = isVirtual ?
             Executors.newVirtualThreadPerTaskExecutor() :
             Executors.newSingleThreadExecutor();
 
@@ -89,7 +91,7 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
                     int currentAttempt = attempts.incrementAndGet();
 
                     // Track if we're running on the expected thread type
-                    boolean expectedThreadType = isVirtualThreadMode() ?
+                    boolean expectedThreadType = isVirtual ?
                         Thread.currentThread().isVirtual() :
                         !Thread.currentThread().isVirtual();
                     if (!expectedThreadType) {
@@ -129,7 +131,7 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
             // Verify the scheduler is using the expected thread type
             CompletableFuture<Boolean> threadTypeFuture = new CompletableFuture<>();
             scheduler.execute(() -> {
-                boolean isExpectedType = isVirtualThreadMode() ?
+                boolean isExpectedType = isVirtual ?
                     Thread.currentThread().isVirtual() :
                     !Thread.currentThread().isVirtual();
                 threadTypeFuture.complete(isExpectedType);
@@ -144,10 +146,9 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
         }
     }
 
-
-    @Test
-    public void shouldHandleHighConcurrencyInBothThreadModes() throws Exception {
-        // Thread mode configured automatically by ThreadModeTestBase
+    @TestTemplate
+    void shouldHandleHighConcurrencyInBothThreadModes(ThreadType threadType) throws Exception {
+        boolean isVirtual = threadType == ThreadType.VIRTUAL;
 
         // Create scheduler via ExecutorServiceFactory which should use the configured thread type
         scheduler = ExecutorServiceFactory.newSingleThreadScheduledExecutor("retry-" + threadType + "-concurrency-test");
@@ -168,7 +169,7 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
         AtomicInteger failureCounter = new AtomicInteger(0);
 
         // Create and execute concurrent tasks using appropriate executor
-        try (ExecutorService executor = isVirtualThreadMode() ?
+        try (ExecutorService executor = isVirtual ?
             Executors.newVirtualThreadPerTaskExecutor() :
             Executors.newFixedThreadPool(10)) {
             for (int i = 0; i < CONCURRENT_TASKS; i++) {
@@ -215,7 +216,7 @@ public class RetryThreadModeTest extends ThreadModeTestBase {
                             retry, scheduler, supplier);
 
                         // Execute and wait for result
-                        String result = decoratedSupplier.get().toCompletableFuture().get(5, TimeUnit.SECONDS);
+                        decoratedSupplier.get().toCompletableFuture().get(5, TimeUnit.SECONDS);
 
                         // Task succeeded
                         successCounter.incrementAndGet();

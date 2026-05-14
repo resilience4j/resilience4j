@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,49 +20,52 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class RetryConfigBuilderTest {
+class RetryConfigBuilderTest {
 
     private static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
 
-    @Test(expected = IllegalArgumentException.class)
-    public void zeroMaxAttemptsShouldFail() {
-        RetryConfig.custom().maxAttempts(0).build();
+    @Test
+    void zeroMaxAttemptsShouldFail() {
+        assertThatThrownBy(() -> RetryConfig.custom().maxAttempts(0).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void zeroWaitInterval() {
+    void zeroWaitInterval() {
         final RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
         assertThat(config.getIntervalBiFunction().apply(1, null)).isZero();
     }
 
     @Test
-    public void waitIntervalUnderTenMillisShouldSucceed() {
+    void waitIntervalUnderTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
         assertThat(config.getIntervalBiFunction().apply(1, null)).isEqualTo(5L);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void waitIntervalUnderZeroShouldFail() {
-        RetryConfig.custom().waitDuration(Duration.ofMillis(-1)).build();
+    @Test
+    void waitIntervalUnderZeroShouldFail() {
+        assertThatThrownBy(() -> RetryConfig.custom().waitDuration(Duration.ofMillis(-1)).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void waitIntervalOfTenMillisShouldSucceed() {
+    void waitIntervalOfTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
         assertThat(config).isNotNull();
     }
 
     @Test
-    public void testCreateFromConfigurationWithNoPredicateCalculations() {
+    void testCreateFromConfigurationWithNoPredicateCalculations() {
         RetryConfig config = RetryConfig
             .from(RetryConfig.custom().retryOnException(e -> e instanceof IllegalArgumentException)
                 .build()).build();
@@ -72,7 +75,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void testCreateFromConfigurationShouldCopyIntervalBiFunction() {
+    void testCreateFromConfigurationShouldCopyIntervalBiFunction() {
         IntervalBiFunction<Object> biFunction = IntervalBiFunction.ofIntervalFunction(IntervalFunction.ofDefaults());
         RetryConfig config = RetryConfig
             .from(RetryConfig.custom()
@@ -84,7 +87,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void testCreateFromConfigurationShouldUseIntervalFunction() {
+    void testCreateFromConfigurationShouldUseIntervalFunction() {
         RetryConfig config = RetryConfig
             .from(RetryConfig.custom()
                 .intervalFunction(IntervalFunction.of(100L))
@@ -95,7 +98,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void testCreateFromDefaultConfigurationShouldUseIntervalFunction() {
+    void testCreateFromDefaultConfigurationShouldUseIntervalFunction() {
         RetryConfig baseConfig = RetryConfig.ofDefaults();
         RetryConfig retryConfig = RetryConfig.from(baseConfig)
             .intervalFunction(IntervalFunction.of(100L))
@@ -107,7 +110,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void testConsumeResultBeforeRetryAttemptCanBeConfigured(){
+    void testConsumeResultBeforeRetryAttemptCanBeConfigured(){
         BiConsumer<Integer, String> biConsumer = (attempt, resultObject) -> {};
         RetryConfig.Builder<String> builder = RetryConfig.custom();
         RetryConfig retryConfig = builder.consumeResultBeforeRetryAttempt(biConsumer).build();
@@ -118,13 +121,13 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void waitIntervalOverTenMillisShouldSucceed() {
+    void waitIntervalOverTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofSeconds(10)).build();
         assertThat(config).isNotNull();
     }
 
     @Test()
-    public void shouldUseIgnoreExceptionToBuildPredicate() {
+    void shouldUseIgnoreExceptionToBuildPredicate() {
         RetryConfig retryConfig = RetryConfig.custom()
             .ignoreExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
@@ -142,7 +145,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test()
-    public void shouldUseRecordExceptionToBuildPredicate() {
+    void shouldUseRecordExceptionToBuildPredicate() {
         RetryConfig retryConfig = RetryConfig.custom()
             .retryExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
@@ -160,7 +163,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test()
-    public void shouldUseIgnoreExceptionOverRecordToBuildPredicate() {
+    void shouldUseIgnoreExceptionOverRecordToBuildPredicate() {
         RetryConfig retryConfig = RetryConfig.custom()
             .retryExceptions(RuntimeException.class, ExtendsExtendsException.class)
             .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class)
@@ -180,7 +183,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test()
-    public void shouldUseBothRecordToBuildPredicate() {
+    void shouldUseBothRecordToBuildPredicate() {
         RetryConfig retryConfig = RetryConfig.custom()
             .retryOnException(TEST_PREDICATE) //1
             .retryExceptions(RuntimeException.class, ExtendsExtendsException.class) //2
@@ -206,7 +209,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test()
-    public void shouldBuilderCreateConfigEveryTime() {
+    void shouldBuilderCreateConfigEveryTime() {
         final RetryConfig.Builder<Object> builder = RetryConfig.custom();
         builder.maxAttempts(5);
         final RetryConfig config1 = builder.build();
@@ -217,7 +220,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test()
-    public void intervalFunctionClearIntervalBiFunction() {
+    void intervalFunctionClearIntervalBiFunction() {
         IntervalBiFunction<Object> biFunction = (attempt, either) -> 100L;
         IntervalFunction function = IntervalFunction.ofDefaults();
         RetryConfig config = RetryConfig.custom().intervalBiFunction(biFunction)
@@ -229,7 +232,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void intervalBiFunctionClearIntervalFunction() {
+    void intervalBiFunctionClearIntervalFunction() {
         IntervalBiFunction<Object> biFunction = (attempt, either) -> 100L;
         IntervalFunction function = IntervalFunction.ofDefaults();
         RetryConfig config = RetryConfig.custom().intervalFunction(function)
@@ -242,7 +245,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void shouldUseDefaultIntervalFunction() {
+    void shouldUseDefaultIntervalFunction() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
 
         assertThat(retryConfig.getIntervalFunction()).isNotNull();
@@ -251,7 +254,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void shouldUseSetIntervalFunction() {
+    void shouldUseSetIntervalFunction() {
         RetryConfig retryConfig = RetryConfig.custom()
             .intervalFunction(IntervalFunction.of(100L))
             .build();
@@ -262,7 +265,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void shouldUseSetIntervalBiFunction() {
+    void shouldUseSetIntervalBiFunction() {
         RetryConfig retryConfig = RetryConfig.custom()
             .intervalBiFunction(IntervalBiFunction.ofIntervalFunction(IntervalFunction.of(105L)))
             .build();

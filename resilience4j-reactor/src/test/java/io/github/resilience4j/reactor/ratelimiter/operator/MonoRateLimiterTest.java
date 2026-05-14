@@ -89,7 +89,6 @@ public class MonoRateLimiterTest {
             .verify(Duration.ofMillis(150));
     }
 
-
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
@@ -176,5 +175,4 @@ public class MonoRateLimiterTest {
             .verifyComplete();
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(4);
     }
-
 }

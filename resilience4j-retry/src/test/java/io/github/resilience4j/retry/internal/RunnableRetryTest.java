@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,19 +39,19 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class RunnableRetryTest {
+class RunnableRetryTest {
 
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
-    public void shouldNotRetry() {
+    void shouldNotRetry() {
         Retry retryContext = Retry.ofDefaults("id");
         Runnable runnable = Retry.decorateRunnable(retryContext, helloWorldService::sayHelloWorld);
 
@@ -62,7 +62,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void testDecorateRunnable() {
+    void testDecorateRunnable() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         Runnable runnable = Retry.decorateRunnable(retry, helloWorldService::sayHelloWorld);
@@ -76,7 +76,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void testExecuteRunnable() {
+    void testExecuteRunnable() {
         Retry retry = Retry.ofDefaults("id");
 
         retry.executeRunnable(helloWorldService::sayHelloWorld);
@@ -86,7 +86,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() {
+    void shouldReturnAfterThreeAttempts() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         CheckedRunnable retryableRunnable = Retry
@@ -101,7 +101,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttempt() {
+    void shouldReturnAfterOneAttempt() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
@@ -117,7 +117,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+    void shouldReturnAfterOneAttemptAndIgnoreException() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom()
             .retryOnException(throwable -> Match(throwable).of(
@@ -138,7 +138,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    void shouldTakeIntoAccountBackoffFunction() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig
             .custom()
@@ -157,7 +157,7 @@ public class RunnableRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountRetryOnResult() {
+    void shouldTakeIntoAccountRetryOnResult() {
         AtomicInteger value = new AtomicInteger(0);
         final int targetValue = 2;
         RetryConfig config = RetryConfig

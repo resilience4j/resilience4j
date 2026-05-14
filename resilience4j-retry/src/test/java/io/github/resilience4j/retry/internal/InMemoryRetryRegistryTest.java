@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020 KrnSaurabh
+ *  Copyright 2026 KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ package io.github.resilience4j.retry.internal;
 import io.github.resilience4j.core.registry.*;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,10 +30,10 @@ import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class InMemoryRetryRegistryTest {
+class InMemoryRetryRegistryTest {
 
     @Test
-    public void shouldCreateRetryRegistryWithRegistryStore() {
+    void shouldCreateRetryRegistryWithRegistryStore() {
         RegistryEventConsumer<Retry> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);

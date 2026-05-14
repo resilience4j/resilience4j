@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,23 +35,24 @@ import java.util.function.Supplier;
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CompletionStageRetryTest {
+class CompletionStageRetryTest {
 
     private AsyncHelloWorldService helloWorldService;
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(AsyncHelloWorldService.class);
     }
 
     @Test
-    public void shouldNotRetry() {
+    void shouldNotRetry() {
         given(helloWorldService.returnHelloWorld())
             .willReturn(completedFuture("Hello world"));
         Retry retryContext = Retry.ofDefaults("id");
@@ -67,7 +68,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldNotRetryWhenReturnVoid() {
+    void shouldNotRetryWhenReturnVoid() {
         given(helloWorldService.sayHelloWorld())
             .willReturn(completedFuture(null));
         Retry retryContext = Retry.ofDefaults("id");
@@ -82,7 +83,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldNotRetryWithThatResult() {
+    void shouldNotRetryWithThatResult() {
         given(helloWorldService.returnHelloWorld())
             .willReturn(completedFuture("Hello world"));
         final RetryConfig retryConfig = RetryConfig.<String>custom()
@@ -102,28 +103,29 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
+    void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(1, "Hello world");
     }
 
     @Test
-    public void shouldRetryTowAttemptsInCaseOResultRetryMatchAtSyncStage() {
+    void shouldRetryTowAttemptsInCaseOResultRetryMatchAtSyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(2, "Hello world");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldRethrowExceptionInCaseOfExceptionAtSyncStage() {
+    @Test
+    void shouldRethrowExceptionInCaseOfExceptionAtSyncStage() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new IllegalArgumentException("BAM!"));
         Retry retry = Retry.ofDefaults("id");
 
-        retry.executeCompletionStage(
+        assertThatThrownBy(() -> retry.executeCompletionStage(
             scheduler,
-            () -> helloWorldService.returnHelloWorld());
+            () -> helloWorldService.returnHelloWorld()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
+    void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
         CompletableFuture<String> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new HelloWorldException());
         given(helloWorldService.returnHelloWorld())
@@ -142,7 +144,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldThrowOnceMaxAttemptsReachedIfConfigured() {
+    void shouldThrowOnceMaxAttemptsReachedIfConfigured() {
         given(helloWorldService.returnHelloWorld())
             .willReturn(CompletableFuture.completedFuture("invalid response"));
         RetryConfig retryConfig = RetryConfig.<String>custom()
@@ -168,7 +170,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() {
+    void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() {
         given(helloWorldService.returnHelloWorld())
                 .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
 
@@ -206,7 +208,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() {
+    void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() {
         given(helloWorldService.returnHelloWorld())
                 .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
 
@@ -245,17 +247,17 @@ public class CompletionStageRetryTest {
 
 
     @Test
-    public void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtAsyncStage() {
+    void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtAsyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(1);
     }
 
     @Test
-    public void shouldCompleteFutureAfterTwoAttemptsInCaseOfExceptionAtAsyncStage() {
+    void shouldCompleteFutureAfterTwoAttemptsInCaseOfExceptionAtAsyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(2);
     }
 
     @Test
-    public void shouldCompleteFutureAfterThreeAttemptsInCaseOfExceptionAtAsyncStage() {
+    void shouldCompleteFutureAfterThreeAttemptsInCaseOfExceptionAtAsyncStage() {
         shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(3);
     }
 
@@ -305,7 +307,7 @@ public class CompletionStageRetryTest {
     }
 
     @Test
-    public void shouldCompleteExceptionallyWhenRetryOnExPredicateThrows() {
+    void shouldCompleteExceptionallyWhenRetryOnExPredicateThrows() {
         given(helloWorldService.returnHelloWorld())
             .willReturn(CompletableFuture.failedFuture(new HelloWorldException()));
         final RetryConfig retryConfig = RetryConfig.custom()

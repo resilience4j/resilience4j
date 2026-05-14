@@ -1,17 +1,14 @@
 package io.github.resilience4j.retry;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class MaxRetriesExceededTest {
-
+class MaxRetriesExceededTest {
 
     @Test
-    public void errorMessageShouldReportedRight() {
+    void errorMessageShouldReportedRight() {
         MaxRetriesExceeded maxRetriesExceeded = new MaxRetriesExceeded("test max retries");
-        assertEquals(maxRetriesExceeded.getMessage(), "test max retries");
-
+        assertThat(maxRetriesExceeded.getMessage()).isEqualTo("test max retries");
     }
-
 }

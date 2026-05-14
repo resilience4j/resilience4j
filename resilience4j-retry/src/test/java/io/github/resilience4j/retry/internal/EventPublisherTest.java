@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016: Robert Winkler
+ *  Copyright 2026: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,19 +42,19 @@ import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class EventPublisherTest {
+class EventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.setSleepFunction(sleep -> sleptTime += sleep);
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() {
+    void shouldReturnAfterThreeAttempts() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
@@ -74,7 +74,7 @@ public class EventPublisherTest {
     }
 
     @Test
-    public void asyncShouldReturnAfterThreeAttempts() {
+    void asyncShouldReturnAfterThreeAttempts() {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         String retryMessage = "hello world";
         willReturn(retryMessage).given(helloWorldService).returnHelloWorld();
@@ -104,7 +104,7 @@ public class EventPublisherTest {
     }
 
     @Test
-    public void shouldReturnAfterTwoAttempts() {
+    void shouldReturnAfterTwoAttempts() {
         willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService)
             .sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
@@ -124,7 +124,7 @@ public class EventPublisherTest {
     }
 
     @Test
-    public void shouldIgnoreError() {
+    void shouldIgnoreError() {
         willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService)
             .sayHelloWorld();
         RetryConfig config = RetryConfig.custom()

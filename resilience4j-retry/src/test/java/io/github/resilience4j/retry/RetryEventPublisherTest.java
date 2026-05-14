@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ package io.github.resilience4j.retry;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import static io.vavr.API.*;
@@ -33,21 +33,21 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class RetryEventPublisherTest {
+class RetryEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private Logger logger;
     private Retry retry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         logger = mock(Logger.class);
         retry = Retry.ofDefaults("testName");
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         Retry.EventPublisher eventPublisher = retry.getEventPublisher();
         Retry.EventPublisher eventPublisher2 = retry.getEventPublisher();
 
@@ -55,7 +55,7 @@ public class RetryEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnSuccessEvent() {
+    void shouldConsumeOnSuccessEvent() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -69,7 +69,7 @@ public class RetryEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnRetryEvent() {
+    void shouldConsumeOnRetryEvent() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
         retry.getEventPublisher().onRetry(
@@ -82,7 +82,7 @@ public class RetryEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnErrorEvent() {
+    void shouldConsumeOnErrorEvent() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         retry.getEventPublisher().onError(
             event -> logger.info(event.getEventType().toString()));
@@ -94,7 +94,7 @@ public class RetryEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeIgnoredErrorEvent() {
+    void shouldConsumeIgnoredErrorEvent() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
         RetryConfig retryConfig = RetryConfig.custom()

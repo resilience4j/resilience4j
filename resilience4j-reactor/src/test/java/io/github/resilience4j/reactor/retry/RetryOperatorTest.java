@@ -81,7 +81,6 @@ public class RetryOperatorTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
-
     @Test(expected = StackOverflowError.class)
     public void shouldNotRetryUsingMonoStackOverFlow() {
         RetryConfig config = retryConfig();
@@ -116,7 +115,6 @@ public class RetryOperatorTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
-
 
     @Test
     public void returnOnErrorUsingMono() {
