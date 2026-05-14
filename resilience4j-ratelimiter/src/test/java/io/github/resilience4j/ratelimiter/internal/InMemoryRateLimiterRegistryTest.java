@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,10 +23,8 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -36,23 +34,21 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.*;
 
-public class InMemoryRateLimiterRegistryTest {
+class InMemoryRateLimiterRegistryTest {
 
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
     private RateLimiterConfig config;
 
-
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
@@ -61,7 +57,7 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
-    public void rateLimiterPositive() throws Exception {
+    void rateLimiterPositive() {
         RateLimiterRegistry registry = RateLimiterRegistry.of(config);
         RateLimiter firstRateLimiter = registry.rateLimiter("test");
         RateLimiter anotherLimit = registry.rateLimiter("test1");
@@ -73,7 +69,7 @@ public class InMemoryRateLimiterRegistryTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void rateLimiterPositiveWithSupplier() throws Exception {
+    void rateLimiterPositiveWithSupplier() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
         Supplier<RateLimiterConfig> rateLimiterConfigSupplier = mock(Supplier.class);
         when(rateLimiterConfigSupplier.get())
@@ -91,56 +87,54 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
-    public void rateLimiterConfigIsNull() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-        new InMemoryRateLimiterRegistry((RateLimiterConfig) null);
+    void rateLimiterConfigIsNull() {
+        assertThatThrownBy(() -> new InMemoryRateLimiterRegistry((RateLimiterConfig) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(CONFIG_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void rateLimiterNewWithNullName() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void rateLimiterNewWithNullName() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        registry.rateLimiter(null);
+        assertThatThrownBy(() -> registry.rateLimiter(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void rateLimiterNewWithNullNonDefaultConfig() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
+    void rateLimiterNewWithNullNonDefaultConfig() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        RateLimiterConfig rateLimiterConfig = null;
-        registry.rateLimiter("name", rateLimiterConfig);
+        assertThatThrownBy(() -> registry.rateLimiter("name", (RateLimiterConfig) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(CONFIG_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void rateLimiterNewWithNullNameAndNonDefaultConfig() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void rateLimiterNewWithNullNameAndNonDefaultConfig() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        registry.rateLimiter(null, config);
+        assertThatThrownBy(() -> registry.rateLimiter(null, config))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void rateLimiterNewWithNullNameAndConfigSupplier() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void rateLimiterNewWithNullNameAndConfigSupplier() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        registry.rateLimiter(null, () -> config);
+        assertThatThrownBy(() -> registry.rateLimiter(null, () -> config))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void rateLimiterNewWithNullConfigSupplier() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("Supplier must not be null");
+    void rateLimiterNewWithNullConfigSupplier() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        Supplier<RateLimiterConfig> rateLimiterConfigSupplier = null;
-        registry.rateLimiter("name", rateLimiterConfigSupplier);
+        assertThatThrownBy(() -> registry.rateLimiter("name", (Supplier<RateLimiterConfig>) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("Supplier must not be null");
     }
 
     @Test
-    public void rateLimiterGetAllRateLimiters() {
+    void rateLimiterGetAllRateLimiters() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
         final RateLimiter rateLimiter = registry.rateLimiter("foo");
 
@@ -149,7 +143,7 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
-    public void shouldCreateRateLimiterRegistryWithRegistryStore() {
+    void shouldCreateRateLimiterRegistryWithRegistryStore() {
         RegistryEventConsumer<RateLimiter> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);

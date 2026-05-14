@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,19 +19,15 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.functions.Either;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.internal.matchers.ThrowableCauseMatcher;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.isA;
 
-
-public class RateLimiterConfigTest {
+class RateLimiterConfigTest {
 
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
@@ -39,14 +35,10 @@ public class RateLimiterConfigTest {
     private static final Predicate<Either<? extends Throwable, ?>> DRAIN_CONDITION_CHECKER = result -> false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NEGATIVE = "TimeoutDuration must not be negative";
-    private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "RefreshPeriod must not be null";
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
+    private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
 
     @Test
-    public void builderPositive() throws Exception {
+    void builderPositive() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
@@ -61,70 +53,68 @@ public class RateLimiterConfigTest {
     }
 
     @Test
-    public void builderTimeoutIsNull() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
-        RateLimiterConfig.custom()
-            .timeoutDuration(null);
+    void builderTimeoutIsNull() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom().timeoutDuration(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void builderTimeoutIsNegative() throws Exception {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NEGATIVE);
-        RateLimiterConfig.custom()
-            .timeoutDuration(Duration.ofNanos(-1));
+    void builderTimeoutIsNegative() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom().timeoutDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(TIMEOUT_DURATION_MUST_NOT_BE_NEGATIVE);
     }
 
     @Test
-    public void builderRefreshPeriodIsNull() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
-        RateLimiterConfig.custom()
-            .limitRefreshPeriod(null);
+    void builderRefreshPeriodIsNull() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom().limitRefreshPeriod(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void builderRefreshPeriodTooShort() throws Exception {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("RefreshPeriod is too short");
-        RateLimiterConfig.custom()
+    void builderRefreshPeriodTooShort() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(Duration.ZERO)
             .limitForPeriod(LIMIT)
-            .build();
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("RefreshPeriod is too short");
     }
+
     @Test
-    public void builderRefreshPeriodNegative() throws Exception {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("RefreshPeriod is too short");
-        RateLimiterConfig.custom()
+    void builderRefreshPeriodNegative() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(Duration.ofNanos(-1))
             .limitForPeriod(LIMIT)
-            .build();
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("RefreshPeriod is too short");
     }
 
     @Test
-    public void builderLimitIsLessThanOne() throws Exception {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("LimitForPeriod should be greater than 0");
-        RateLimiterConfig.custom()
-            .limitForPeriod(0);
-    }
-    @Test
-    public void buildTimeoutDurationIsNotWithinLimits() {
-        exception.expect(ThrowableCauseMatcher.hasCause(isA(ArithmeticException.class)));
-        exception.expectMessage("TimeoutDuration too large");
-        RateLimiterConfig.custom()
-            .timeoutDuration(Duration.ofSeconds(Long.MAX_VALUE));
+    void builderLimitIsLessThanOne() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom().limitForPeriod(0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("LimitForPeriod should be greater than 0");
     }
 
     @Test
-    public void buildLimitRefreshPeriodIsNotWithinLimits() {
-        exception.expect(ThrowableCauseMatcher.hasCause(isA(ArithmeticException.class)));
-        exception.expectMessage("LimitRefreshPeriod too large");
-        RateLimiterConfig.custom()
-            .limitRefreshPeriod(Duration.ofSeconds(Long.MAX_VALUE));
+    void buildTimeoutDurationIsNotWithinLimits() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom()
+            .timeoutDuration(Duration.ofSeconds(Long.MAX_VALUE)))
+            .hasMessageContaining("TimeoutDuration too large")
+            .hasCauseInstanceOf(ArithmeticException.class);
+    }
+
+    @Test
+    void buildLimitRefreshPeriodIsNotWithinLimits() {
+        assertThatThrownBy(() -> RateLimiterConfig.custom()
+            .limitRefreshPeriod(Duration.ofSeconds(Long.MAX_VALUE)))
+            .hasMessageContaining("LimitRefreshPeriod too large")
+            .hasCauseInstanceOf(ArithmeticException.class);
     }
 }
