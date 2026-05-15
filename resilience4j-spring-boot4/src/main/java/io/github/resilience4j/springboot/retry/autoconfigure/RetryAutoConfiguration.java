@@ -34,6 +34,7 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.springboot.retry.monitoring.endpoint.RetryEndpoint;
 import io.github.resilience4j.springboot.retry.monitoring.endpoint.RetryEventsEndpoint;
+import io.github.resilience4j.springboot.scheduled.threadpool.autoconfigure.ContextAwareScheduledThreadPoolAutoConfiguration;
 import io.github.resilience4j.springboot.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,6 +51,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 
 /**
@@ -123,7 +125,7 @@ public class RetryAutoConfiguration {
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier(ContextAwareScheduledThreadPoolAutoConfiguration.EXECUTOR_NAME) ScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return retryConfiguration
             .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,

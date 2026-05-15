@@ -21,7 +21,6 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -44,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -90,9 +90,9 @@ public class TimeLimiterConfiguration {
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier("resilience4jTaskExecutor") ScheduledThreadPoolExecutor scheduledThreadPoolExecutor
     ) {
-        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
+        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackExecutor, spelResolver, scheduledThreadPoolExecutor);
     }
 
     @Bean
