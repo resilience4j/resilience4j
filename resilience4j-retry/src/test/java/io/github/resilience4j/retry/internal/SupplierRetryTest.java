@@ -394,6 +394,32 @@ public class SupplierRetryTest {
 
 
     @Test
+    public void shouldThrowInterruptedExceptionWhenInterruptedDuringRetryOnError() {
+        CheckedConsumer<Long> previousSleepFunction = RetryImpl.sleepFunction;
+        try {
+            RetryImpl.sleepFunction = sleep -> {
+                throw new InterruptedException("Interrupted!");
+            };
+
+            RetryConfig retryConfig = RetryConfig.<String>custom()
+                .maxAttempts(3)
+                .build();
+            Retry retry = Retry.of("id", retryConfig);
+
+            given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
+            CheckedSupplier<String> decorated = Retry.decorateCheckedSupplier(retry,
+                helloWorldService::returnHelloWorld);
+
+            assertThatThrownBy(decorated::get)
+                .isInstanceOf(InterruptedException.class);
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            RetryImpl.sleepFunction = previousSleepFunction;
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
