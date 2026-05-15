@@ -30,6 +30,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
+
 public class ReactorOperatorFallbackDecoratorTest {
 
     private HelloWorldService helloWorldService;
@@ -162,5 +163,6 @@ public class ReactorOperatorFallbackDecoratorTest {
 
         verify(circuitBreaker, never()).onResult(anyLong(), any(TimeUnit.class), any());
     }
+
 
 }
