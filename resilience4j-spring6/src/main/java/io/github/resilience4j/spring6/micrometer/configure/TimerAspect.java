@@ -65,18 +65,15 @@ public class TimerAspect implements Ordered {
         this.spelResolver = spelResolver;
     }
 
-    @Pointcut(value = "@within(timer) || @annotation(timer)", argNames = "timer")
-    public void matchAnnotatedClassOrMethod(Timer timer) {
-        // a marker method
+    @Pointcut(value = "@within(io.github.resilience4j.micrometer.annotation.Timer) || @annotation(io.github.resilience4j.micrometer.annotation.Timer)")
+    public void matchAnnotatedClassOrMethod() {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(timerAnnotation)", argNames = "proceedingJoinPoint, timerAnnotation")
-    public Object timerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Timer timerAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object timerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (timerAnnotation == null) {
-            timerAnnotation = getTimerAnnotation(proceedingJoinPoint);
-        }
+        Timer timerAnnotation = getTimerAnnotation(proceedingJoinPoint);
         if (timerAnnotation == null) {
             return proceedingJoinPoint.proceed();
         }

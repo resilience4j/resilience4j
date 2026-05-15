@@ -87,18 +87,15 @@ public class CircuitBreakerAspect implements Ordered {
         this.spelResolver = spelResolver;
     }
 
-    @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
-    public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
+    @Pointcut(value = "@within(io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker) || @annotation(io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker)")
+    public void matchAnnotatedClassOrMethod() {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
-    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (circuitBreakerAnnotation == null) {
-            circuitBreakerAnnotation = getCircuitBreakerAnnotation(proceedingJoinPoint);
-        }
+        CircuitBreaker circuitBreakerAnnotation = getCircuitBreakerAnnotation(proceedingJoinPoint);
         if (circuitBreakerAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }

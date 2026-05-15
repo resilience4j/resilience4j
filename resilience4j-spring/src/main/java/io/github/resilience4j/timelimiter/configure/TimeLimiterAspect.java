@@ -67,19 +67,15 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
-    @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
-    public void matchAnnotatedClassOrMethod(TimeLimiter timeLimiter) {
-        // a marker method
+    @Pointcut(value = "@within(io.github.resilience4j.timelimiter.annotation.TimeLimiter) || @annotation(io.github.resilience4j.timelimiter.annotation.TimeLimiter)")
+    public void matchAnnotatedClassOrMethod() {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(timeLimiterAnnotation)", argNames = "proceedingJoinPoint, timeLimiterAnnotation")
-    public Object timeLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable TimeLimiter timeLimiterAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object timeLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (timeLimiterAnnotation == null) {
-            timeLimiterAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
-        }
+        TimeLimiter timeLimiterAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
         if(timeLimiterAnnotation == null) {
             return proceedingJoinPoint.proceed();
         }
