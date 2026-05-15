@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,20 @@ import io.github.resilience4j.springboot.circuitbreaker.IgnoredException;
 import io.github.resilience4j.springboot.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import io.github.resilience4j.springboot.service.test.retry.ReactiveRetryDummyService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class RetryAutoConfigurationRxJavaTest {
+class RetryAutoConfigurationRxJavaTest {
 
     @Autowired
     RetryRegistry retryRegistry;
@@ -62,7 +59,7 @@ public class RetryAutoConfigurationRxJavaTest {
      * RetryReactiveDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
-    public void testRetryAutoConfigurationRxJava2() throws IOException {
+    void testRetryAutoConfigurationRxJava2() throws IOException {
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
         RetryEventsEndpointResponse retryEventListBefore = getRetryEventsBody(
@@ -121,5 +118,4 @@ public class RetryAutoConfigurationRxJavaTest {
     private RetryEventsEndpointResponse getRetryEventsBody(String s) {
         return restTemplate.getForEntity(s, RetryEventsEndpointResponse.class).getBody();
     }
-
 }

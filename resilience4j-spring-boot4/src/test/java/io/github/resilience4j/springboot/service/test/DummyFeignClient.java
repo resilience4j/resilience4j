@@ -1,6 +1,5 @@
 package io.github.resilience4j.springboot.service.test;
 
-
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,5 +12,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface DummyFeignClient {
 
     @GetMapping(path = "/sample/{error}")
-    void doSomething(@PathVariable(name = "error") String error);
+    public void doSomething(@PathVariable(name = "error") String error);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 lespinsideg, Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 lespinsideg, Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,32 @@
  */
 package io.github.resilience4j.springboot.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.util.ReflectionTestUtils.getField;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import io.github.resilience4j.springboot.TestThreadLocalContextPropagator;
+import io.github.resilience4j.springboot.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
+import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.springboot.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
+import io.github.resilience4j.springboot.service.test.BeanContextPropagator;
+import io.github.resilience4j.springboot.service.test.DummyFeignClient;
+import io.github.resilience4j.springboot.service.test.TestApplication;
+import io.github.resilience4j.springboot.service.test.bulkhead.BulkheadDummyService;
+import io.github.resilience4j.springboot.service.test.bulkhead.BulkheadReactiveDummyService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Duration;
 import java.util.Map;
@@ -26,45 +50,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import io.github.resilience4j.springboot.TestThreadLocalContextPropagator;
-import io.github.resilience4j.springboot.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
-import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadProperties;
-import io.github.resilience4j.springboot.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
-import io.github.resilience4j.springboot.service.test.BeanContextPropagator;
-import io.github.resilience4j.springboot.service.test.DummyFeignClient;
-import io.github.resilience4j.springboot.service.test.TestApplication;
-import io.github.resilience4j.springboot.service.test.bulkhead.BulkheadDummyService;
-import io.github.resilience4j.springboot.service.test.bulkhead.BulkheadReactiveDummyService;
-
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class BulkheadAutoConfigurationTest {
+class BulkheadAutoConfigurationTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    @RegisterExtension
+    static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(8090))
+            .build();
     @Autowired
     private BulkheadRegistry bulkheadRegistry;
     @Autowired
@@ -87,7 +85,7 @@ public class BulkheadAutoConfigurationTest {
     private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer;
 
     @Test
-    public void testThreadPoolBulkheadCustomizer() {
+    void testThreadPoolBulkheadCustomizer() {
         Map<String, ThreadPoolBulkheadConfigCustomizer> customizerMap = (Map<String, ThreadPoolBulkheadConfigCustomizer>) getField(
             compositeThreadPoolBulkheadCustomizer, "customizerMap");
         assertThat(customizerMap).isNotNull().hasSize(1).containsKeys("backendC");
@@ -116,7 +114,7 @@ public class BulkheadAutoConfigurationTest {
     }
 
     @Test
-    public void testBulkheadCustomizer() {
+    void testBulkheadCustomizer() {
         Map<String, BulkheadConfigCustomizer> customizerMap = (Map<String, BulkheadConfigCustomizer>) getField(
             compositeBulkheadCustomizer, "customizerMap");
         assertThat(customizerMap).isNotNull().hasSize(2).containsKeys("backendCustomizer", "backendD");
@@ -137,8 +135,8 @@ public class BulkheadAutoConfigurationTest {
      * same as @Bulkhead alone works with any normal service class
      */
     @Test
-    public void testFeignClient() throws InterruptedException {
-        WireMock.stubFor(WireMock
+    void testFeignClient() throws InterruptedException {
+        wireMockServer.stubFor(WireMock
             .get(WireMock.urlEqualTo("/sample/"))
             .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call"))
         );
@@ -167,7 +165,7 @@ public class BulkheadAutoConfigurationTest {
      * BulkheadDummyService is invoked and that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    public void testBulkheadAutoConfigurationThreadPool() throws InterruptedException, ExecutionException {
+    void testBulkheadAutoConfigurationThreadPool() throws InterruptedException, ExecutionException {
 
         assertThat(threadPoolBulkheadRegistry).isNotNull();
         assertThat(threadPoolBulkheadProperties).isNotNull();
@@ -200,7 +198,7 @@ public class BulkheadAutoConfigurationTest {
      * transfer context from ThreadLocal
      */
     @Test
-    public void testBulkheadAutoConfigurationThreadPoolContextPropagation()
+    void testBulkheadAutoConfigurationThreadPoolContextPropagation()
         throws InterruptedException, TimeoutException, ExecutionException {
         assertThat(threadPoolBulkheadRegistry).isNotNull();
         assertThat(threadPoolBulkheadProperties).isNotNull();
@@ -225,13 +223,12 @@ public class BulkheadAutoConfigurationTest {
         assertThat(value).isEqualTo("SurviveThreadBoundary");
     }
 
-
     /**
      * The test verifies that a Bulkhead instance is created and configured properly when the
      * BulkheadDummyService is invoked and that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    public void testBulkheadAutoConfiguration() {
+    void testBulkheadAutoConfiguration() {
 
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
@@ -264,7 +261,7 @@ public class BulkheadAutoConfigurationTest {
      * calls.
      */
     @Test
-    public void testBulkheadAutoConfigurationRxJava2() throws InterruptedException {
+    void testBulkheadAutoConfigurationRxJava2() throws InterruptedException {
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
 
@@ -290,14 +287,13 @@ public class BulkheadAutoConfigurationTest {
         assertThat(rejected).hasValue(0);
     }
 
-
     /**
      * The test verifies that a Bulkhead instance is created and configured properly when the
      * BulkheadReactiveDummyService is invoked and that the Bulkhead records permitted and rejected
      * calls.
      */
     @Test
-    public void testBulkheadAutoConfigurationReactor() {
+    void testBulkheadAutoConfigurationReactor() {
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
 

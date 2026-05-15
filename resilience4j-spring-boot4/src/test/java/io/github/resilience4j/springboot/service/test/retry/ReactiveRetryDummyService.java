@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.springboot.service.test.retry;
 
-
 import io.reactivex.Flowable;
 import reactor.core.publisher.Flux;
 
@@ -24,7 +23,7 @@ import reactor.core.publisher.Flux;
  */
 public interface ReactiveRetryDummyService {
 
-    String BACKEND_C = "retryBackendC";
+    public String BACKEND_C = "retryBackendC";
 
     Flux<String> doSomethingFlux(boolean throwException);
 

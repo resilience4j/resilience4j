@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ingyu Hwang, Artur Havliukovskyi
+ * Copyright 2026 Ingyu Hwang, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,15 @@ package io.github.resilience4j.springboot;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.springboot.service.test.TestApplication;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class,
     properties = {
         "resilience4j.bulkhead.metrics.legacy.enabled=true",
@@ -40,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "resilience4j.retry.metrics.legacy.enabled=true",
         "resilience4j.timelimiter.metrics.legacy.enabled=true"
     })
-public class LegacyMetricsAutoConfigurationTest {
+class LegacyMetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     List<MetricsPublisher<?>> metricsPublishers = new ArrayList<>();
@@ -64,38 +61,37 @@ public class LegacyMetricsAutoConfigurationTest {
     TaggedTimeLimiterMetrics taggedTimeLimiterMetrics;
 
     @Test
-    public void newMetricsPublisherIsNotBound() {
+    void newMetricsPublisherIsNotBound() {
         assertThat(metricsPublishers).isEmpty();
     }
 
     @Test
-    public void legacyCircuitBreakerBinderIsBound() {
+    void legacyCircuitBreakerBinderIsBound() {
         assertThat(taggedCircuitBreakerMetrics).isNotNull();
     }
 
     @Test
-    public void legacyBulkheadBinderIsBound() {
+    void legacyBulkheadBinderIsBound() {
         assertThat(taggedBulkheadMetrics).isNotNull();
     }
 
     @Test
-    public void legacyThreadPoolBulkheadBinderIsBound() {
+    void legacyThreadPoolBulkheadBinderIsBound() {
         assertThat(taggedThreadPoolBulkheadMetrics).isNotNull();
     }
 
     @Test
-    public void legacyRateLimiterBinderIsBound() {
+    void legacyRateLimiterBinderIsBound() {
         assertThat(taggedRateLimiterMetrics).isNotNull();
     }
 
     @Test
-    public void legacyRetryBinderIsBound() {
+    void legacyRetryBinderIsBound() {
         assertThat(taggedRetryMetrics).isNotNull();
     }
 
     @Test
-    public void legacyTimeLimiterBinderIsBound() {
+    void legacyTimeLimiterBinderIsBound() {
         assertThat(taggedTimeLimiterMetrics).isNotNull();
     }
-
 }

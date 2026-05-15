@@ -1,6 +1,5 @@
 package io.github.resilience4j.springboot.service.test.ratelimiter;
 
-
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +11,8 @@ import static io.github.resilience4j.springboot.service.test.ratelimiter.RateLim
 @RateLimiter(name = RATE_LIMITER_FEIGN_CLIENT_NAME)
 public interface RateLimiterDummyFeignClient {
 
-    String RATE_LIMITER_FEIGN_CLIENT_NAME = "rateLimiterDummyFeignClient";
+    public String RATE_LIMITER_FEIGN_CLIENT_NAME = "rateLimiterDummyFeignClient";
 
     @GetMapping(path = "/limit/{error}")
-    void doSomething(@PathVariable(name = "error") String error);
+    public void doSomething(@PathVariable(name = "error") String error);
 }

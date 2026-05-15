@@ -2,9 +2,9 @@ package io.github.resilience4j.springboot.ratelimiter.monitoring.health;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import org.junit.Test;
+import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.health.actuate.endpoint.SimpleStatusAggregator;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.Status;
@@ -21,10 +21,10 @@ import static org.mockito.Mockito.when;
 /**
  * @author bstorozhuk
  */
-public class RateLimitersHealthIndicatorTest {
+class RateLimitersHealthIndicatorTest {
 
     @Test
-    public void health() throws Exception {
+    void health() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
         AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(
@@ -79,7 +79,7 @@ public class RateLimitersHealthIndicatorTest {
     }
 
     @Test
-    public void healthIndicatorMaxImpactCanBeOverridden() throws Exception {
+    void healthIndicatorMaxImpactCanBeOverridden() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
         AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(AtomicRateLimiter.AtomicRateLimiterMetrics.class);

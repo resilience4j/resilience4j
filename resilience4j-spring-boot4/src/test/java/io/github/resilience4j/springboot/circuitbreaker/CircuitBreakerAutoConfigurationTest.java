@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Robert Winkler, Artur Havliukovskyi
+ * Copyright 2026 Robert Winkler, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,47 +15,47 @@
  */
 package io.github.resilience4j.springboot.circuitbreaker;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.springboot.service.test.DummyService;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @AutoConfigureTestRestTemplate
-public class CircuitBreakerAutoConfigurationTest {
+class CircuitBreakerAutoConfigurationTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    @RegisterExtension
+    static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(8090))
+            .build();
     @Autowired
     CircuitBreakerRegistry circuitBreakerRegistry;
     @Autowired
@@ -67,13 +67,12 @@ public class CircuitBreakerAutoConfigurationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the
      * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
     @Test
-    public void testCircuitBreakerAutoConfiguration() throws IOException {
+    void testCircuitBreakerAutoConfiguration() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);

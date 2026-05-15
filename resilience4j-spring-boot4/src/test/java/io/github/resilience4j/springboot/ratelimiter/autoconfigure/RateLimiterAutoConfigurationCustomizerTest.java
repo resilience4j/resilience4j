@@ -1,9 +1,9 @@
 package io.github.resilience4j.springboot.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  * where N is index of the config. This way when asserting value {@code 200} it is guaranteed to be coming from instance properties.
  */
-public class RateLimiterAutoConfigurationCustomizerTest {
+class RateLimiterAutoConfigurationCustomizerTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(RateLimiterAutoConfiguration.class))
         .withPropertyValues(
@@ -38,7 +38,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
         );
 
     @Test
-    public void testUserConfigShouldBeAbleToProvideCustomizers() {
+    void testUserConfigShouldBeAbleToProvideCustomizers() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -78,7 +78,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersShouldOverrideProperties() {
+    void testCustomizersShouldOverrideProperties() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -100,7 +100,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersAreAppliedOnConfigs() {
+    void testCustomizersAreAppliedOnConfigs() {
         // Given
         contextRunner.withUserConfiguration(ConfigCustomizerConfiguration.class)
             .withPropertyValues(
@@ -129,7 +129,6 @@ public class RateLimiterAutoConfigurationCustomizerTest {
                 // from default config customizer
                 assertThat(backendWithoutSharedConfig.getTimeoutDuration()).isEqualTo(Duration.ofMillis(1000));
 
-
                 RateLimiterConfig backendWithSharedConfig = registry.rateLimiter("backendWithSharedConfig").getRateLimiterConfig();
                 // from shared config customizer
                 assertThat(backendWithSharedConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(2000));
@@ -149,7 +148,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class CustomizerConfiguration {
+    static class CustomizerConfiguration {
         @Bean
         public RateLimiterConfigCustomizer backendWithoutSharedConfigCustomizer() {
             return RateLimiterConfigCustomizer.of("backendWithoutSharedConfig",
@@ -173,7 +172,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class ConfigCustomizerConfiguration {
+    static class ConfigCustomizerConfiguration {
         @Bean
         public RateLimiterConfigCustomizer defaultCustomizer() {
             return RateLimiterConfigCustomizer.of("default",

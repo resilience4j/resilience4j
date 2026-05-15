@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Import;
 import java.time.Duration;
 import java.util.List;
 
-
 /**
  * @author bstorozhuk
  */
@@ -28,7 +27,7 @@ import java.util.List;
 @Import(FeignAutoConfiguration.class)
 public class TestApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(TestApplication.class, args);
     }
 
@@ -69,7 +68,6 @@ public class TestApplication {
         return RetryConfigCustomizer.of("retryBackendD",
                 builder -> builder.maxAttempts(4));
     }
-
 
     @Bean
     public TimeLimiterConfigCustomizer testTimeLimiterCustomizer() {

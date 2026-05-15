@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,37 @@
  */
 package io.github.resilience4j.springboot.bulkhead.autoconfigure;
 
-import io.github.resilience4j.springboot.TestUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.spring6.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.spring6.bulkhead.configure.BulkheadAspectExt;
-import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.spring6.bulkhead.configure.BulkheadAspect;
+import io.github.resilience4j.spring6.bulkhead.configure.BulkheadAspectExt;
+import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.github.resilience4j.springboot.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     BulkheadConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
     BulkheadAutoConfiguration.class,
 })
 @EnableConfigurationProperties(BulkheadProperties.class)
-public class BulkheadConfigurationOnMissingBeanTest {
+class BulkheadConfigurationOnMissingBeanTest {
 
     @Autowired
     private ConfigWithOverrides configWithOverrides;
@@ -60,20 +60,19 @@ public class BulkheadConfigurationOnMissingBeanTest {
     private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
     @Test
-    public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
+    void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
         TestUtils.assertAnnotations(BulkheadConfiguration.class, BulkheadAutoConfiguration.class);
     }
 
     @Test
-    public void testAllBulkHeadConfigurationBeansOverridden() {
-        assertEquals(bulkheadRegistry, configWithOverrides.bulkheadRegistry);
-        assertEquals(bulkheadAspect, configWithOverrides.bulkheadAspect);
-        assertEquals(bulkheadEventEventConsumerRegistry,
-            configWithOverrides.bulkheadEventEventConsumerRegistry);
+    void testAllBulkHeadConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.bulkheadRegistry).isEqualTo(bulkheadRegistry);
+        assertThat(configWithOverrides.bulkheadAspect).isEqualTo(bulkheadAspect);
+        assertThat(configWithOverrides.bulkheadEventEventConsumerRegistry).isEqualTo(bulkheadEventEventConsumerRegistry);
     }
 
     @Configuration
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         private BulkheadRegistry bulkheadRegistry;
 

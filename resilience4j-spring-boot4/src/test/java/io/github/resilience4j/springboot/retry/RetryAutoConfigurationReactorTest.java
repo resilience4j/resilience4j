@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,28 @@
  */
 package io.github.resilience4j.springboot.retry;
 
-import io.github.resilience4j.springboot.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.springboot.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.spring6.retry.configure.RetryAspect;
+import io.github.resilience4j.springboot.circuitbreaker.IgnoredException;
+import io.github.resilience4j.springboot.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import io.github.resilience4j.springboot.service.test.retry.ReactiveRetryDummyService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class RetryAutoConfigurationReactorTest {
+class RetryAutoConfigurationReactorTest {
 
     @Autowired
     RetryRegistry retryRegistry;
@@ -61,7 +58,7 @@ public class RetryAutoConfigurationReactorTest {
      * RetryReactiveDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
-    public void testRetryAutoConfigurationReactor() throws IOException {
+    void testRetryAutoConfigurationReactor() throws IOException {
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
 
@@ -111,5 +108,4 @@ public class RetryAutoConfigurationReactorTest {
     private RetryEventsEndpointResponse retryEventListBody(String url) {
         return restTemplate.getForEntity(url, RetryEventsEndpointResponse.class).getBody();
     }
-
 }

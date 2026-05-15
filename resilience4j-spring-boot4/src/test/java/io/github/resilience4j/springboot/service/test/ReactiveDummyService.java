@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.springboot.service.test;
 
-
 import io.reactivex.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,7 +26,7 @@ import java.io.IOException;
  */
 public interface ReactiveDummyService {
 
-    String BACKEND = "backendB";
+    public String BACKEND = "backendB";
 
     Flux<String> doSomethingFlux(boolean throwException) throws IOException;
 
@@ -39,7 +38,7 @@ public interface ReactiveDummyService {
 
     Single<String> doSomethingSingle(boolean throwException) throws IOException;
 
-    Completable doSomethingCompletable(boolean throwException) throws IOException;
+    public Completable doSomethingCompletable(boolean throwException) throws IOException;
 
     Observable<String> doSomethingObservable(boolean throwException) throws IOException;
 }

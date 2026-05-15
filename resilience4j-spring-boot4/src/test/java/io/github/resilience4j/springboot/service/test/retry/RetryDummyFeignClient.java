@@ -1,6 +1,5 @@
 package io.github.resilience4j.springboot.service.test.retry;
 
-
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +11,8 @@ import static io.github.resilience4j.springboot.service.test.retry.RetryDummyFei
 @Retry(name = RETRY_DUMMY_FEIGN_CLIENT_NAME)
 public interface RetryDummyFeignClient {
 
-    String RETRY_DUMMY_FEIGN_CLIENT_NAME = "retryDummyFeignClient";
+    public String RETRY_DUMMY_FEIGN_CLIENT_NAME = "retryDummyFeignClient";
 
     @GetMapping(path = "/retry/{error}")
-    void doSomething(@PathVariable(name = "error") String error);
+    public void doSomething(@PathVariable(name = "error") String error);
 }

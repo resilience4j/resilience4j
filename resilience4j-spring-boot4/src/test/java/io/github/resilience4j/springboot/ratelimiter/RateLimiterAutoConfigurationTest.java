@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Bohdan Storozhuk, Artur Havliukovskyi
+ * Copyright 2026 Bohdan Storozhuk, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,46 +16,46 @@
 package io.github.resilience4j.springboot.ratelimiter;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterProperties;
-import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterAspect;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterProperties;
 import io.github.resilience4j.springboot.service.test.DummyService;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import io.github.resilience4j.springboot.service.test.ratelimiter.RateLimiterDummyFeignClient;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.github.resilience4j.springboot.service.test.ratelimiter.RateLimiterDummyFeignClient.RATE_LIMITER_FEIGN_CLIENT_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class RateLimiterAutoConfigurationTest {
+class RateLimiterAutoConfigurationTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    @RegisterExtension
+    static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(8090))
+            .build();
     @Autowired
     private RateLimiterRegistry rateLimiterRegistry;
     @Autowired
@@ -75,12 +75,12 @@ public class RateLimiterAutoConfigurationTest {
      * same as @Bulkhead alone works with any normal service class
      */
     @Test
-    public void testFeignClient() {
-        WireMock.stubFor(WireMock
+    void testFeignClient() {
+        wireMockServer.stubFor(WireMock
             .get(WireMock.urlEqualTo("/limit/"))
             .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call"))
         );
-        WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/limit\\/error.*$"))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/limit\\/error.*$"))
             .willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
 
         assertThat(rateLimiterRegistry).isNotNull();
@@ -147,7 +147,7 @@ public class RateLimiterAutoConfigurationTest {
      * DummyService is invoked and that the RateLimiter records successful and failed calls.
      */
     @Test
-    public void testRateLimiterAutoConfiguration() throws IOException {
+    void testRateLimiterAutoConfiguration() throws IOException {
         assertThat(rateLimiterRegistry).isNotNull();
         assertThat(rateLimiterProperties).isNotNull();
 

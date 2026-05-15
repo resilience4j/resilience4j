@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Yevhenii Voievodin, Artur Havliukovskyi
+ * Copyright 2026 Yevhenii Voievodin, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,16 @@
  */
 package io.github.resilience4j.springboot;
 
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedTimeLimiterMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.springboot.service.test.TestApplication;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
-public class MetricsAutoConfigurationTest {
+class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
@@ -53,27 +45,27 @@ public class MetricsAutoConfigurationTest {
     TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher;
 
     @Test
-    public void newCircuitBreakerPublisherIsBound() {
+    void newCircuitBreakerPublisherIsBound() {
         assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newBulkheadPublisherIsBound() {
+    void newBulkheadPublisherIsBound() {
         assertThat(taggedBulkheadMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newThreadPoolBulkheadPublisherIsBound() {
+    void newThreadPoolBulkheadPublisherIsBound() {
         assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newRateLimiterPublisherIsBound() {
+    void newRateLimiterPublisherIsBound() {
         assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newRetryPublisherIsBound() {
+    void newRetryPublisherIsBound() {
         assertThat(taggedRetryMetricsPublisher).isNotNull();
     }
 

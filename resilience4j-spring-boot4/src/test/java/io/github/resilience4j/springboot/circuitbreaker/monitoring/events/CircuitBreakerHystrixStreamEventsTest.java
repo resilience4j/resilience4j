@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Vijay Ram, Artur Havliukovskyi
+ * Copyright 2026 Vijay Ram, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,12 @@
  */
 package io.github.resilience4j.springboot.circuitbreaker.monitoring.events;
 
-
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.springboot.service.test.DummyService;
 import io.github.resilience4j.springboot.service.test.TestApplication;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -30,7 +28,6 @@ import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTest
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -44,14 +41,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author vijayram
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 @AutoConfigureWebTestClient(timeout="36000")
-@Ignore
-public class CircuitBreakerHystrixStreamEventsTest {
+@Disabled
+class CircuitBreakerHystrixStreamEventsTest {
 
-    public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrixstreamcircuitbreakerevents";
-    public static final String ACTUATOR_CIRCUITBREAKEREVENTS = "/actuator/circuitbreakerevents";
+    static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrixstreamcircuitbreakerevents";
+    static final String ACTUATOR_CIRCUITBREAKEREVENTS = "/actuator/circuitbreakerevents";
 
     @LocalServerPort
     int randomServerPort;
@@ -62,8 +58,8 @@ public class CircuitBreakerHystrixStreamEventsTest {
 
     private WebClient webStreamClient;
 
-    @Before
-    public void setup(){
+    @BeforeEach
+    void setup(){
         webStreamClient = WebClient.create("http://localhost:" + randomServerPort);
     }
 
@@ -72,7 +68,7 @@ public class CircuitBreakerHystrixStreamEventsTest {
     };
 
     @Test
-    public void streamAllEvents() throws IOException, InterruptedException {
+    void streamAllEvents() throws IOException, InterruptedException {
         int noOfEvents =2;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
@@ -84,7 +80,7 @@ public class CircuitBreakerHystrixStreamEventsTest {
     }
 
     @Test
-    public void streamEventsbyName() throws IOException, InterruptedException {
+    void streamEventsbyName() throws IOException, InterruptedException {
         int noOfEvents =2;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
@@ -96,7 +92,7 @@ public class CircuitBreakerHystrixStreamEventsTest {
     }
 
     @Test
-    public void streamEventsbyNameAndType() throws IOException, InterruptedException {
+    void streamEventsbyNameAndType() throws IOException, InterruptedException {
         int noOfSuccessfulEvents =1;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA/SUCCESS");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");

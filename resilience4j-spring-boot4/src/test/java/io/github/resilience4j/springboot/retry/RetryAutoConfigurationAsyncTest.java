@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,25 @@
  */
 package io.github.resilience4j.springboot.retry;
 
-import io.github.resilience4j.springboot.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.springboot.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.spring6.retry.configure.RetryAspect;
+import io.github.resilience4j.springboot.circuitbreaker.IgnoredException;
+import io.github.resilience4j.springboot.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.springboot.service.test.TestApplication;
-import io.github.resilience4j.springboot.service.test.retry.RetryDummyService;
 import io.github.resilience4j.springboot.service.test.retry.ReactiveRetryDummyService;
 import io.github.resilience4j.springboot.service.test.retry.RetryDummyFeignClient;
+import io.github.resilience4j.springboot.service.test.retry.RetryDummyService;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -44,11 +42,10 @@ import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class RetryAutoConfigurationAsyncTest {
+class RetryAutoConfigurationAsyncTest {
 
     @Autowired
     RetryRegistry retryRegistry;
@@ -70,7 +67,7 @@ public class RetryAutoConfigurationAsyncTest {
      * RetryDummyService is invoked and that the Async Retry logic is properly handled
      */
     @Test
-    public void testRetryAutoConfigurationAsync() throws Throwable {
+    void testRetryAutoConfigurationAsync() throws Throwable {
         assertThat(retryRegistry).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
@@ -121,7 +118,7 @@ public class RetryAutoConfigurationAsyncTest {
     }
 
     @Test
-    public void testRetryAutoConfigurationAsyncWithMDCContext() throws Throwable {
+    void testRetryAutoConfigurationAsyncWithMDCContext() throws Throwable {
         assertThat(retryRegistry).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
@@ -178,7 +175,7 @@ public class RetryAutoConfigurationAsyncTest {
     }
 
     @Test
-    public void testRetryAutoConfigurationAsyncWithContextPropagator() throws Throwable {
+    void testRetryAutoConfigurationAsyncWithContextPropagator() throws Throwable {
         assertThat(retryRegistry).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
@@ -235,7 +232,6 @@ public class RetryAutoConfigurationAsyncTest {
     private RetryEventsEndpointResponse retryEvents(String s) {
         return restTemplate.getForEntity(s, RetryEventsEndpointResponse.class).getBody();
     }
-
 
     private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds)
         throws Throwable {

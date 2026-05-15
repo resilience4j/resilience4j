@@ -6,13 +6,11 @@ import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import io.github.resilience4j.springboot.service.test.micrometer.FixedOnFailureTagResolver;
 import io.github.resilience4j.springboot.service.test.micrometer.QualifiedClassNameOnFailureTagResolver;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
@@ -20,10 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = TestApplication.class)
 @AutoConfigureTestRestTemplate
-public class TimerAutoConfigurationTest {
+class TimerAutoConfigurationTest {
 
     @Autowired
     private TestRestTemplate httpClient;
@@ -31,7 +28,7 @@ public class TimerAutoConfigurationTest {
     private TimerRegistry registry;
 
     @Test
-    public void shouldConfigureTimersUsingConfigurationProperties() {
+    void shouldConfigureTimersUsingConfigurationProperties() {
         Timer timer = registry.timer("backend");
         assertThat(timer).isNotNull();
         assertThat(timer.getTimerConfig().getMetricNames()).isEqualTo("resilience4j.timer.calls");

@@ -1,9 +1,9 @@
 package io.github.resilience4j.springboot.timelimiter.autoconfigure;
 
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  * where N is index of the config. This way when asserting value {@code 200} it is guaranteed to be coming from instance properties.
  */
-public class TimeLimiterAutoConfigurationCustomizerTest {
+class TimeLimiterAutoConfigurationCustomizerTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(TimeLimiterAutoConfiguration.class))
         .withPropertyValues(
@@ -36,7 +36,7 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
         );
 
     @Test
-    public void testUserConfigShouldBeAbleToProvideCustomizers() {
+    void testUserConfigShouldBeAbleToProvideCustomizers() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -70,7 +70,7 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersShouldOverrideProperties() {
+    void testCustomizersShouldOverrideProperties() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -90,7 +90,7 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersAreAppliedOnConfigs() {
+    void testCustomizersAreAppliedOnConfigs() {
         // Given
         contextRunner.withUserConfiguration(ConfigCustomizerConfiguration.class)
             .withPropertyValues(
@@ -115,7 +115,6 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
                 // from instance config
                 assertThat(backendWithoutSharedConfig.shouldCancelRunningFuture()).isEqualTo(false);
 
-
                 TimeLimiterConfig backendWithSharedConfig = registry.timeLimiter("backendWithSharedConfig").getTimeLimiterConfig();
                 // from shared config customizer
                 assertThat(backendWithSharedConfig.getTimeoutDuration()).isEqualTo(Duration.ofMillis(2000));
@@ -131,7 +130,7 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class CustomizerConfiguration {
+    static class CustomizerConfiguration {
         @Bean
         public TimeLimiterConfigCustomizer backendWithoutSharedConfigCustomizer() {
             return TimeLimiterConfigCustomizer.of("backendWithoutSharedConfig",
@@ -155,7 +154,7 @@ public class TimeLimiterAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class ConfigCustomizerConfiguration {
+    static class ConfigCustomizerConfiguration {
         @Bean
         public TimeLimiterConfigCustomizer defaultCustomizer() {
             return TimeLimiterConfigCustomizer.of("default",

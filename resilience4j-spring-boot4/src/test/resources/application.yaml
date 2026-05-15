@@ -99,7 +99,6 @@ resilience4j.circuitbreaker:
       slidingWindowSize: 18
       permittedNumberOfCallsInHalfOpenState: 6
 
-
 resilience4j.ratelimiter:
   tags:
     tag1: tag1Value
@@ -227,7 +226,6 @@ resilience4j.micrometer.timer:
     backendI:
       baseConfig: shared
       metricNames: resilience4j.timer.callsI
-
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'

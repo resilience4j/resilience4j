@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Mahmoud Romeh, Artur Havliukovskyi
+ * Copyright 2026 Mahmoud Romeh, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +17,33 @@ package io.github.resilience4j.springboot;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConfiguration;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfigurationProperties;
+import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.spring6.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.spring6.fallback.FallbackDecorators;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
 import io.github.resilience4j.spring6.retry.configure.RetryConfigurationProperties;
 import io.github.resilience4j.spring6.spelresolver.DefaultSpelResolver;
+import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfigurationProperties;
+import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConfiguration;
+import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
+import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
 import io.github.resilience4j.springboot.retry.autoconfigure.RetryAutoConfiguration;
 import io.github.resilience4j.springboot.timelimiter.autoconfigure.TimeLimiterAutoConfiguration;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfigurationProperties;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -58,10 +58,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * @author romeh
  */
-public class SpringBootCommonTest {
+class SpringBootCommonTest {
 
     @Test
-    public void testBulkHeadCommonConfig() {
+    void testBulkHeadCommonConfig() {
         BulkheadAutoConfiguration bulkheadAutoConfiguration = new BulkheadAutoConfiguration();
         assertThat(bulkheadAutoConfiguration
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
@@ -90,7 +90,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testCircuitBreakerCommonConfig() {
+    void testCircuitBreakerCommonConfig() {
         CircuitBreakerAutoConfiguration circuitBreakerAutoConfiguration = new CircuitBreakerAutoConfiguration(
             new CircuitBreakerConfigurationProperties());
         assertThat(circuitBreakerAutoConfiguration.reactorCircuitBreakerAspect()).isNotNull();
@@ -109,7 +109,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testRetryCommonConfig() {
+    void testRetryCommonConfig() {
         RetryAutoConfiguration retryAutoConfiguration = new RetryAutoConfiguration();
         assertThat(retryAutoConfiguration.reactorRetryAspectExt()).isNotNull();
         assertThat(retryAutoConfiguration.rxJava2RetryAspectExt()).isNotNull();
@@ -129,7 +129,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testRateLimiterCommonConfig() {
+    void testRateLimiterCommonConfig() {
         RateLimiterAutoConfiguration rateLimiterAutoConfiguration = new RateLimiterAutoConfiguration();
         assertThat(rateLimiterAutoConfiguration.reactorRateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterAutoConfiguration.rxJava2RateLimiterAspectExt()).isNotNull();
@@ -151,7 +151,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testTimeLimiterCommonConfig() {
+    void testTimeLimiterCommonConfig() {
         TimeLimiterAutoConfiguration timeLimiterAutoConfiguration = new TimeLimiterAutoConfiguration();
         assertThat(timeLimiterAutoConfiguration.reactorTimeLimiterAspectExt()).isNotNull();
         assertThat(timeLimiterAutoConfiguration.rxJava2TimeLimiterAspectExt()).isNotNull();

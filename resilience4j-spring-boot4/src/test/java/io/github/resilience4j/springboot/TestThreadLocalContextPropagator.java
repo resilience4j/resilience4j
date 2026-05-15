@@ -6,7 +6,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.springboot.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.*;
+import static io.github.resilience4j.springboot.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.get;
+import static io.github.resilience4j.springboot.TestThreadLocalContextPropagator.TestThreadLocalContextHolder.put;
 
 public class TestThreadLocalContextPropagator<T> implements ContextPropagator<T> {
 

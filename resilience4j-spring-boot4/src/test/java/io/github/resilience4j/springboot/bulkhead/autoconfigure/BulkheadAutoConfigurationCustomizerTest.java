@@ -3,7 +3,7 @@ package io.github.resilience4j.springboot.bulkhead.autoconfigure;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  * where N is index of the config. This way when asserting value {@code 200} it is guaranteed to be coming from instance properties.
  */
-public class BulkheadAutoConfigurationCustomizerTest {
+class BulkheadAutoConfigurationCustomizerTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(BulkheadAutoConfiguration.class))
         .withPropertyValues(
@@ -38,7 +38,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
         );
 
     @Test
-    public void testUserConfigShouldBeAbleToProvideCustomizers() {
+    void testUserConfigShouldBeAbleToProvideCustomizers() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -78,7 +78,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersShouldOverrideProperties() {
+    void testCustomizersShouldOverrideProperties() {
         // Given
         contextRunner.withUserConfiguration(CustomizerConfiguration.class)
             .withPropertyValues(
@@ -100,7 +100,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
     }
 
     @Test
-    public void testCustomizersAreAppliedOnConfigs() {
+    void testCustomizersAreAppliedOnConfigs() {
         // Given
         contextRunner.withUserConfiguration(ConfigCustomizerConfiguration.class)
             .withPropertyValues(
@@ -129,7 +129,6 @@ public class BulkheadAutoConfigurationCustomizerTest {
                 // from default config customizer
                 assertThat(backendWithoutSharedConfig.getMaxConcurrentCalls()).isEqualTo(1000);
 
-
                 BulkheadConfig backendWithSharedConfig = registry.bulkhead("backendWithSharedConfig").getBulkheadConfig();
                 // from shared config customizer
                 assertThat(backendWithSharedConfig.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(2000));
@@ -149,7 +148,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class CustomizerConfiguration {
+    static class CustomizerConfiguration {
         @Bean
         public BulkheadConfigCustomizer backendWithoutSharedConfigCustomizer() {
             return BulkheadConfigCustomizer.of("backendWithoutSharedConfig",
@@ -173,7 +172,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
     }
 
     @Configuration
-    public static class ConfigCustomizerConfiguration {
+    static class ConfigCustomizerConfiguration {
         @Bean
         public BulkheadConfigCustomizer defaultCustomizer() {
             return BulkheadConfigCustomizer.of("default",

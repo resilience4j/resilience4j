@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ingyu Hwang, Artur Havliukovskyi
+ * Copyright 2026 Ingyu Hwang, Artur Havliukovskyi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBre
 import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterRefreshScopedRegistryAutoConfiguration;
-import io.github.resilience4j.springboot.retry.autoconfigure.RetryRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.retry.autoconfigure.RetryAutoConfiguration;
-import io.github.resilience4j.springboot.timelimiter.autoconfigure.TimeLimiterRefreshScopedRegistryAutoConfiguration;
+import io.github.resilience4j.springboot.retry.autoconfigure.RetryRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.timelimiter.autoconfigure.TimeLimiterAutoConfiguration;
+import io.github.resilience4j.springboot.timelimiter.autoconfigure.TimeLimiterRefreshScopedRegistryAutoConfiguration;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
@@ -37,12 +37,12 @@ import org.springframework.core.type.MethodMetadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RefreshScopedAutoConfigurationTest {
+class RefreshScopedAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
     @Test
-    public void refreshScopedBulkheadRegistry() {
+    void refreshScopedBulkheadRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
                 BulkheadRefreshScopedRegistryAutoConfiguration.class,
@@ -55,7 +55,7 @@ public class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
-    public void refreshScopedCircuitBreakerRegistry() {
+    void refreshScopedCircuitBreakerRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
                 CircuitBreakerRefreshScopedRegistryAutoConfiguration.class,
@@ -65,7 +65,7 @@ public class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
-    public void refreshScopedRateLimiterRegistry() {
+    void refreshScopedRateLimiterRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
                 RateLimiterRefreshScopedRegistryAutoConfiguration.class,
@@ -75,7 +75,7 @@ public class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
-    public void refreshScopedRetryRegistry() {
+    void refreshScopedRetryRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
                 RetryRefreshScopedRegistryAutoConfiguration.class,
@@ -85,7 +85,7 @@ public class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
-    public void refreshScopedTimeLimiterRegistry() {
+    void refreshScopedTimeLimiterRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
                 TimeLimiterRefreshScopedRegistryAutoConfiguration.class,
@@ -95,7 +95,7 @@ public class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
-    public void registriesNotRefreshableIfDisabled() {
+    void registriesNotRefreshableIfDisabled() {
         contextRunner
                 .withConfiguration(AutoConfigurations.of(
                     BulkheadRefreshScopedRegistryAutoConfiguration.class,
