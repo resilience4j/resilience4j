@@ -3,8 +3,8 @@ package io.github.resilience4j.bulkhead.operator;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Completable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
@@ -15,17 +15,17 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link CompletableBulkhead} using {@link BulkheadOperator}.
  */
-public class CompletableBulkheadTest {
+class CompletableBulkheadTest {
 
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldComplete() {
+    void shouldComplete() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Completable.complete()
@@ -38,7 +38,7 @@ public class CompletableBulkheadTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Completable.error(new IOException("BAM!"))
@@ -52,7 +52,7 @@ public class CompletableBulkheadTest {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Completable.complete()

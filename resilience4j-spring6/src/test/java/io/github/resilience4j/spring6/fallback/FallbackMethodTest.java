@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Kyuhyen Hwang , Mahmoud Romih
+ * Copyright 2026 Kyuhyen Hwang , Mahmoud Romih
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.spring6.fallback;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SuppressWarnings("unused")
-public class FallbackMethodTest {
+class FallbackMethodTest {
 
     @Test
-    public void fallbackRuntimeExceptionTest() throws Throwable {
+    void fallbackRuntimeExceptionTest() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -37,7 +37,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void fallbackFuture() throws Throwable {
+    void fallbackFuture() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testFutureMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -47,7 +47,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void fallbackGlobalExceptionWithSameMethodReturnType() throws Throwable {
+    void fallbackGlobalExceptionWithSameMethodReturnType() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -57,7 +57,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void fallbackGlobalExceptionWithSameMethodReturnTypeAndMultipleParameters() throws Throwable {
+    void fallbackGlobalExceptionWithSameMethodReturnTypeAndMultipleParameters() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("multipleParameterTestMethod", String.class, String.class);
 
@@ -69,7 +69,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void fallbackClosestSuperclassExceptionTest() throws Throwable {
+    void fallbackClosestSuperclassExceptionTest() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -79,7 +79,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void shouldThrowUnrecoverableThrowable() throws Throwable {
+    void shouldThrowUnrecoverableThrowable() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -90,7 +90,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void shouldCallPrivateFallbackMethod() throws Throwable {
+    void shouldCallPrivateFallbackMethod() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -100,7 +100,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void mismatchReturnType_shouldThrowNoSuchMethodException() throws Throwable {
+    void mismatchReturnType_shouldThrowNoSuchMethodException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -112,7 +112,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void shouldFailIf2FallBackMethodsHandleSameException() throws Throwable {
+    void shouldFailIf2FallBackMethodsHandleSameException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         assertThatThrownBy(() -> FallbackMethod
@@ -123,7 +123,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void notFoundFallbackMethod_shouldThrowsNoSuchMethodException() throws Throwable {
+    void notFoundFallbackMethod_shouldThrowsNoSuchMethodException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         assertThatThrownBy(
@@ -134,7 +134,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void rethrownFallbackMethodRuntimeExceptionShouldNotBeWrapped() throws Throwable {
+    void rethrownFallbackMethodRuntimeExceptionShouldNotBeWrapped() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
@@ -144,7 +144,7 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void rethrownFallbackMethodCheckedExceptionShouldNotBeWrapped() throws Throwable {
+    void rethrownFallbackMethodCheckedExceptionShouldNotBeWrapped() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Mariusz Kopylec
+ * Copyright 2026 Mariusz Kopylec
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,16 @@ import io.github.resilience4j.micrometer.TimerConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.reactivex.Completable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.github.resilience4j.micrometer.TimerAssertions.thenFailureTimed;
 import static io.github.resilience4j.micrometer.TimerAssertions.thenSuccessTimed;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class CompletableTimerTest {
+class CompletableTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulCompletable() {
+    void shouldTimeSuccessfulCompletable() {
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = Timer.of("timer 1", registry);
         Throwable result = Completable.complete()
@@ -41,7 +41,7 @@ public class CompletableTimerTest {
     }
 
     @Test
-    public void shouldTimeFailedCompletable() {
+    void shouldTimeFailedCompletable() {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()

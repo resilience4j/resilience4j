@@ -2,25 +2,22 @@ package io.github.resilience4j.timelimiter.internal;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.spy;
 
-@RunWith(MockitoJUnitRunner.class)
-public class TimeLimiterImplTest {
+class TimeLimiterImplTest {
 
     private static final String NAME = "name";
     private TimeLimiterConfig timeLimiterConfig;
     private TimeLimiter timeLimiter;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         timeLimiterConfig = TimeLimiterConfig.custom()
             .timeoutDuration(Duration.ZERO)
             .build();
@@ -29,12 +26,12 @@ public class TimeLimiterImplTest {
     }
 
     @Test
-    public void configPropagation() {
+    void configPropagation() {
         then(timeLimiter.getTimeLimiterConfig()).isEqualTo(timeLimiterConfig);
     }
 
     @Test
-    public void namePropagation() {
+    void namePropagation() {
         then(timeLimiter.getName()).isEqualTo(NAME);
     }
 }

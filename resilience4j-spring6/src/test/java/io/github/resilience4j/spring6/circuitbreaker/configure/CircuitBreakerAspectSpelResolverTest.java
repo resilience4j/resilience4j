@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Kyuhyen Hwang
+ * Copyright 2026 Kyuhyen Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 package io.github.resilience4j.spring6.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.spring6.TestApplication;
 import io.github.resilience4j.spring6.TestDummyService;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = TestApplication.class)
-public class CircuitBreakerAspectSpelResolverTest {
+class CircuitBreakerAspectSpelResolverTest {
     @Autowired
     @Qualifier("circuitBreakerDummyService")
     TestDummyService testDummyService;
@@ -38,7 +38,7 @@ public class CircuitBreakerAspectSpelResolverTest {
     CircuitBreakerRegistry registry;
 
     @Test
-    public void testSpel() {
+    void testSpel() {
         assertThat(registry.getAllCircuitBreakers().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelSync("SPEL_BACKEND")).isEqualTo("recovered");
         assertThat(registry.getAllCircuitBreakers().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();

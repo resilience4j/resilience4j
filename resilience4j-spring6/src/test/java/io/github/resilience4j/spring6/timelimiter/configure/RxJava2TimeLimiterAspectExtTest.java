@@ -1,22 +1,20 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
-import io.github.resilience4j.spring6.timelimiter.configure.IllegalReturnTypeException;
-import io.github.resilience4j.spring6.timelimiter.configure.RxJava2TimeLimiterAspectExt;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RxJava2TimeLimiterAspectExtTest {
+@ExtendWith(MockitoExtension.class)
+class RxJava2TimeLimiterAspectExtTest {
     @Mock
     ProceedingJoinPoint proceedingJoinPoint;
 
@@ -24,7 +22,7 @@ public class RxJava2TimeLimiterAspectExtTest {
     RxJava2TimeLimiterAspectExt rxJava2TimeLimiterAspectExt;
 
     @Test
-    public void testCheckTypes() {
+    void testCheckTypes() {
         assertThat(rxJava2TimeLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
         assertThat(rxJava2TimeLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
         assertThat(rxJava2TimeLimiterAspectExt.canHandleReturnType(Observable.class)).isTrue();
@@ -33,7 +31,7 @@ public class RxJava2TimeLimiterAspectExtTest {
     }
 
     @Test
-    public void testRxJava2Types() throws Throwable {
+    void testRxJava2Types() throws Throwable {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
@@ -53,7 +51,7 @@ public class RxJava2TimeLimiterAspectExtTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWithNotRxJava2Type() throws Throwable{
+    void shouldThrowIllegalArgumentExceptionWithNotRxJava2Type() throws Throwable{
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
         when(proceedingJoinPoint.proceed()).thenReturn("NOT RXJAVA2 TYPE");
 
@@ -66,5 +64,4 @@ public class RxJava2TimeLimiterAspectExtTest {
                     "java.lang.String testMethod has unsupported by @TimeLimiter return type. RxJava2 expects Flowable/Single/...");
         }
     }
-
 }

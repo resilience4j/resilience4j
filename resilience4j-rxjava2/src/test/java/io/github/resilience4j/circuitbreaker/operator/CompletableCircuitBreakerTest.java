@@ -1,25 +1,30 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Completable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link CompletableCircuitBreaker}.
  */
-public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
+class CompletableCircuitBreakerTest {
+
+    private final CircuitBreaker circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
 
     @Test
-    public void shouldSubscribeToCompletable() {
+    void shouldSubscribeToCompletable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -36,7 +41,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateAndMarkError() {
+    void shouldPropagateAndMarkError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -54,7 +59,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCallNotPermittedException() {
+    void shouldEmitErrorWithCallNotPermittedException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Completable.complete()

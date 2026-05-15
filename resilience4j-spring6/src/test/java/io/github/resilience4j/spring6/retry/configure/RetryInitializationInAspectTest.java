@@ -4,26 +4,26 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.spring6.TestDummyService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static io.github.resilience4j.spring6.TestDummyService.BACKEND;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = {
         "logging.level.io.github.resilience4j.retry.configure=debug",
         "spring.main.allow-bean-definition-overriding=true"
 })
-public class RetryInitializationInAspectTest {
+class RetryInitializationInAspectTest {
 
     @TestConfiguration
     static class TestConfig {
@@ -50,25 +50,25 @@ public class RetryInitializationInAspectTest {
     @Autowired
     RetryRegistry registry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         // ensure no retries are initialized
         assertThat(registry.getAllRetries()).isEmpty();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         registry.getAllRetries().stream().map(Retry::getName).forEach(registry::remove);
     }
 
     @Test
-    public void testCorrectConfigIsUsedInAspect() {
+    void testCorrectConfigIsUsedInAspect() {
 
         assertThat(testDummyService.syncSuccess()).isEqualTo("ok");
     }
 
     @Test
-    public void testSpelWithoutConfiguration() {
+    void testSpelWithoutConfiguration() {
         assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
 
         assertThat(registry.getAllRetries()).hasSize(1).first()
@@ -77,7 +77,7 @@ public class RetryInitializationInAspectTest {
     }
 
     @Test
-    public void testSpelWithConfiguration() {
+    void testSpelWithConfiguration() {
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("foo");
 
         assertThat(registry.getAllRetries()).hasSize(1).first()

@@ -3,8 +3,8 @@ package io.github.resilience4j.ratelimiter.operator;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -17,17 +17,17 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit test for {@link CompletableRateLimiter}.
  */
-public class CompletableRateLimiterTest {
+class CompletableRateLimiterTest {
 
     private RateLimiter rateLimiter;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitCompleted() {
+    void shouldEmitCompleted() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.complete()
@@ -37,7 +37,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Completable.complete()
@@ -47,7 +47,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.error(new IOException("BAM!"))
@@ -59,7 +59,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitErrorWithRequestNotPermittedException() {
+    void shouldEmitErrorWithRequestNotPermittedException() {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Completable.complete()

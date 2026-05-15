@@ -1,25 +1,28 @@
 package io.github.resilience4j.spring6.bulkhead.configure;
 
-import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.*;
-import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextPropagator;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
+import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 import java.util.List;
@@ -31,9 +34,9 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {BulkheadBuilderCustomizerTest.Config.class})
-public class BulkheadBuilderCustomizerTest {
+class BulkheadBuilderCustomizerTest {
 
     @Autowired
     private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
@@ -49,9 +52,8 @@ public class BulkheadBuilderCustomizerTest {
     @Qualifier("compositeThreadPoolBulkheadCustomizer")
     private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer;
 
-
     @Test
-    public void testThreadPoolBulkheadCustomizer() {
+    void testThreadPoolBulkheadCustomizer() {
 
         assertThat(threadPoolBulkheadRegistry).isNotNull();
         assertThat(compositeThreadPoolBulkheadCustomizer).isNotNull();
@@ -102,7 +104,7 @@ public class BulkheadBuilderCustomizerTest {
     }
 
     @Test
-    public void testBulkheadCustomizer() {
+    void testBulkheadCustomizer() {
 
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(compositeBulkheadCustomizer).isNotNull();
@@ -129,11 +131,9 @@ public class BulkheadBuilderCustomizerTest {
 
     }
 
-
     @Configuration
     @Import({ThreadPoolBulkheadConfiguration.class, BulkheadConfiguration.class})
     static class Config {
-
 
         @Bean
         public EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry() {
@@ -223,7 +223,7 @@ public class BulkheadBuilderCustomizerTest {
         }
     }
 
-    public static class BeanContextPropagator implements ContextPropagator<String> {
+    static class BeanContextPropagator implements ContextPropagator<String> {
 
         @Override
         public Supplier<Optional<String>> retrieve() {

@@ -1,8 +1,10 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.Single;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -11,16 +13,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link SingleCircuitBreaker}.
  */
-public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
+class SingleCircuitBreakerTest {
+
+    private final CircuitBreaker circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
+    private final HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
     @Test
-    public void shouldSubscribeToSingleJust() {
+    void shouldSubscribeToSingleJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -36,7 +40,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldSubscribeToMonoFromCallableMultipleTimes() {
+    void shouldSubscribeToMonoFromCallableMultipleTimes() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
@@ -55,7 +59,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldNotSubscribeToSingleFromCallable() {
+    void shouldNotSubscribeToSingleFromCallable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
@@ -73,7 +77,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -91,7 +95,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCallNotPermittedException() {
+    void shouldEmitErrorWithCallNotPermittedException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Single.just(1)
@@ -107,7 +111,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    void shouldReleasePermissionOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)

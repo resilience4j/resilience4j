@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,48 +18,46 @@ package io.github.resilience4j.spring6.retry.configure;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
-import io.github.resilience4j.spring6.fallback.FallbackExecutor;
-import io.github.resilience4j.spring6.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spring6.fallback.FallbackExecutor;
+import io.github.resilience4j.spring6.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.spelresolver.configure.SpelResolverConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     RetryConfigurationSpringTest.ConfigWithOverrides.class
 })
-public class RetryConfigurationSpringTest {
+class RetryConfigurationSpringTest {
 
     @Autowired
     private ConfigWithOverrides configWithOverrides;
 
-
     @Test
-    public void testAllCircuitBreakerConfigurationBeansOverridden() {
-        assertNotNull(configWithOverrides.retryRegistry);
-        assertNotNull(configWithOverrides.retryAspect);
-        assertNotNull(configWithOverrides.retryEventEventConsumerRegistry);
-        assertNotNull(configWithOverrides.retryConfigurationProperties);
-        assertTrue(configWithOverrides.retryConfigurationProperties().getConfigs().size() == 1);
+    void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.retryRegistry).isNotNull();
+        assertThat(configWithOverrides.retryAspect).isNotNull();
+        assertThat(configWithOverrides.retryEventEventConsumerRegistry).isNotNull();
+        assertThat(configWithOverrides.retryConfigurationProperties).isNotNull();
+        assertThat(configWithOverrides.retryConfigurationProperties().getConfigs()).hasSize(1);
     }
 
     @Configuration
     @Import({FallbackConfiguration.class, SpelResolverConfiguration.class})
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         private RetryRegistry retryRegistry;
 
@@ -112,5 +110,4 @@ public class RetryConfigurationSpringTest {
 
         }
     }
-
 }

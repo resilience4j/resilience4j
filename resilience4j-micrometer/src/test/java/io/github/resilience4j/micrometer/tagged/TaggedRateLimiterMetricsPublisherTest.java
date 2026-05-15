@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,26 +23,26 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedRateLimiterMetricsPublisherTest {
+class TaggedRateLimiterMetricsPublisherTest {
 
     private MeterRegistry meterRegistry;
     private RateLimiter rateLimiter;
     private RateLimiterRegistry rateLimiterRegistry;
     private TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         taggedRateLimiterMetricsPublisher = new TaggedRateLimiterMetricsPublisher(meterRegistry);
         rateLimiterRegistry = RateLimiterRegistry
@@ -52,7 +52,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedRateLimiter() {
+    void shouldAddMetricsForANewlyCreatedRateLimiter() {
         RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendB");
 
         assertThat(taggedRateLimiterMetricsPublisher.meterIdMap)
@@ -73,7 +73,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(2);
 
@@ -87,7 +87,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauge();
 
@@ -112,7 +112,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void availablePermissionsGaugeIsRegistered() {
+    void availablePermissionsGaugeIsRegistered() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauge();
 
@@ -124,7 +124,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void waitingThreadsGaugeIsRegistered() {
+    void waitingThreadsGaugeIsRegistered() {
         Gauge waitingThreads = meterRegistry.get(DEFAULT_WAITING_THREADS_METRIC_NAME).gauge();
 
         assertThat(waitingThreads).isNotNull();
@@ -134,7 +134,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void customMetricNamesGetApplied() {
+    void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher = new TaggedRateLimiterMetricsPublisher(
             RateLimiterMetricNames.custom()
@@ -159,7 +159,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     }
 
     @Test
-    public void testReplaceNewMeter() {
+    void testReplaceNewMeter() {
         RateLimiter oldOne = RateLimiter.of("backendC", RateLimiterConfig.ofDefaults());
         // add meters of old
         taggedRateLimiterMetricsPublisher.addMetrics(meterRegistry, oldOne);

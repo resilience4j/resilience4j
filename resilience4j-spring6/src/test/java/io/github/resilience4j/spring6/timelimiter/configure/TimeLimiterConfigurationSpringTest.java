@@ -7,45 +7,41 @@ import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
         TimeLimiterConfigurationSpringTest.ConfigWithOverrides.class
 })
-public class TimeLimiterConfigurationSpringTest {
+class TimeLimiterConfigurationSpringTest {
 
     @Autowired
     private ConfigWithOverrides configWithOverrides;
 
-
-
-
     @Test
-    public void testAllCircuitBreakerConfigurationBeansOverridden() {
-        assertNotNull(configWithOverrides.timeLimiterRegistry);
-        assertNotNull(configWithOverrides.timeLimiterAspect);
-        assertNotNull(configWithOverrides.timeLimiterEventEventConsumerRegistry);
-        assertNotNull(configWithOverrides.timeLimiterConfigurationProperties);
-        assertEquals(1, configWithOverrides.timeLimiterConfigurationProperties.getConfigs().size());
+    void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.timeLimiterRegistry).isNotNull();
+        assertThat(configWithOverrides.timeLimiterAspect).isNotNull();
+        assertThat(configWithOverrides.timeLimiterEventEventConsumerRegistry).isNotNull();
+        assertThat(configWithOverrides.timeLimiterConfigurationProperties).isNotNull();
+        assertThat(configWithOverrides.timeLimiterConfigurationProperties.getConfigs()).hasSize(1);
     }
-
 
     @Configuration
     @ComponentScan({"io.github.resilience4j.spring6.timelimiter","io.github.resilience4j.spring6.fallback", "io.github.resilience4j.spring6.spelresolver"})
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         private TimeLimiterRegistry timeLimiterRegistry;
 
@@ -97,5 +93,4 @@ public class TimeLimiterConfigurationSpringTest {
 
         }
     }
-
 }

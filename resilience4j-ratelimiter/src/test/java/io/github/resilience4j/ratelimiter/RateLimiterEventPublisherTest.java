@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -30,7 +30,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class RateLimiterEventPublisherTest {
+class RateLimiterEventPublisherTest {
 
     private static final int LIMIT = 1;
     private static final Duration TIMEOUT = Duration.ZERO;
@@ -39,8 +39,8 @@ public class RateLimiterEventPublisherTest {
     private RateLimiter rateLimiter;
     private Logger logger;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
@@ -51,7 +51,7 @@ public class RateLimiterEventPublisherTest {
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         RateLimiter.EventPublisher eventPublisher = rateLimiter.getEventPublisher();
         RateLimiter.EventPublisher eventPublisher2 = rateLimiter.getEventPublisher();
 
@@ -60,7 +60,7 @@ public class RateLimiterEventPublisherTest {
 
 
     @Test
-    public void shouldConsumeOnSuccessEvent() throws Throwable {
+    void shouldConsumeOnSuccessEvent() {
         rateLimiter.getEventPublisher().onSuccess(
             event -> logger.info(event.getEventType().toString()));
 
@@ -71,7 +71,7 @@ public class RateLimiterEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnFailureEvent() throws Throwable {
+    void shouldConsumeOnFailureEvent() {
         rateLimiter.getEventPublisher().onFailure(
             event -> logger.info(event.getEventType().toString()));
         rateLimiter.executeSupplier(() -> "Hello world");

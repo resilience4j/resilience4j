@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.function.Predicate;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 
 
 @SuppressWarnings("unchecked")
-public class RateLimiterWithConditionalDrainTest {
+class RateLimiterWithConditionalDrainTest {
 
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
@@ -44,8 +44,8 @@ public class RateLimiterWithConditionalDrainTest {
     private Predicate<Either<? extends Throwable, ?>> drainConditionChecker;
     private RateLimiter limit;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         drainConditionChecker = mock(Predicate.class);
         RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
@@ -59,7 +59,7 @@ public class RateLimiterWithConditionalDrainTest {
     }
 
     @Test
-    public void decorateCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
+    void decorateCheckedSupplierAndApplyWithDrainConditionNotMet() {
         CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
         CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
@@ -73,7 +73,7 @@ public class RateLimiterWithConditionalDrainTest {
     }
 
     @Test
-    public void decorateFailingCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
+    void decorateFailingCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
         CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
         when(supplier.get()).thenThrow(RuntimeException.class);
         CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
@@ -88,7 +88,7 @@ public class RateLimiterWithConditionalDrainTest {
     }
 
     @Test
-    public void decorateCheckedSupplierAndApplyWithDrainConditionMet() throws Throwable {
+    void decorateCheckedSupplierAndApplyWithDrainConditionMet() {
         CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
         CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);

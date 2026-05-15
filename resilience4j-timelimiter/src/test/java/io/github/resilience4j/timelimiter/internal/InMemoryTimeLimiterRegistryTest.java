@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 authors
+ *  Copyright 2026 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,32 +21,31 @@ package io.github.resilience4j.timelimiter.internal;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-public class InMemoryTimeLimiterRegistryTest {
+class InMemoryTimeLimiterRegistryTest {
 
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
     private TimeLimiterConfig config;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         config = TimeLimiterConfig.ofDefaults();
     }
 
     @Test
-    public void timeLimiterPositive() {
+    void timeLimiterPositive() {
         TimeLimiterRegistry registry = TimeLimiterRegistry.of(config);
 
         TimeLimiter firstTimeLimiter = registry.timeLimiter("test");
@@ -59,15 +58,15 @@ public class InMemoryTimeLimiterRegistryTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void timeLimiterPositiveWithSupplier() {
+    void timeLimiterPositiveWithSupplier() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
         Supplier<TimeLimiterConfig> timeLimiterConfigSupplier = mock(Supplier.class);
         given(timeLimiterConfigSupplier.get()).willReturn(config);
 
         TimeLimiter firstTimeLimiter = registry.timeLimiter("test", timeLimiterConfigSupplier);
-        verify(timeLimiterConfigSupplier, times(1)).get();
+        verify(timeLimiterConfigSupplier).get();
         TimeLimiter sameAsFirst = registry.timeLimiter("test", timeLimiterConfigSupplier);
-        verify(timeLimiterConfigSupplier, times(1)).get();
+        verify(timeLimiterConfigSupplier).get();
         TimeLimiter anotherLimit = registry.timeLimiter("test1", timeLimiterConfigSupplier);
         verify(timeLimiterConfigSupplier, times(2)).get();
 
@@ -76,66 +75,59 @@ public class InMemoryTimeLimiterRegistryTest {
     }
 
     @Test
-    public void timeLimiterConfigIsNull() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-
-        new InMemoryTimeLimiterRegistry((TimeLimiterConfig) null);
+    void timeLimiterConfigIsNull() {
+        assertThatThrownBy(() -> new InMemoryTimeLimiterRegistry((TimeLimiterConfig) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(CONFIG_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void timeLimiterNewWithNullName() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void timeLimiterNewWithNullName() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
-
-        registry.timeLimiter(null);
+        assertThatThrownBy(() -> registry.timeLimiter(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void timeLimiterNewWithNullNonDefaultConfig() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
+    void timeLimiterNewWithNullNonDefaultConfig() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
-
-        registry.timeLimiter("name", (TimeLimiterConfig) null);
+        assertThatThrownBy(() -> registry.timeLimiter("name", (TimeLimiterConfig) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(CONFIG_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void timeLimiterNewWithNullNameAndNonDefaultConfig() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void timeLimiterNewWithNullNameAndNonDefaultConfig() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
-
-        registry.timeLimiter(null, config);
+        assertThatThrownBy(() -> registry.timeLimiter(null, config))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void timeLimiterNewWithNullNameAndConfigSupplier() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+    void timeLimiterNewWithNullNameAndConfigSupplier() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
-
-        registry.timeLimiter(null, () -> config);
+        assertThatThrownBy(() -> registry.timeLimiter(null, () -> config))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void timeLimiterNewWithNullConfigSupplier() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("Supplier must not be null");
+    void timeLimiterNewWithNullConfigSupplier() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
-
-        registry.timeLimiter("name", (Supplier<TimeLimiterConfig>) null);
+        assertThatThrownBy(() -> registry.timeLimiter("name", (Supplier<TimeLimiterConfig>) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("Supplier must not be null");
     }
 
     @Test
-    public void timeLimiterGetAllTimeLimiters() {
+    void timeLimiterGetAllTimeLimiters() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
 
         final TimeLimiter timeLimiter = registry.timeLimiter("foo");
 
-        then(registry.getAllTimeLimiters().size()).isEqualTo(1);
+        then(registry.getAllTimeLimiters()).hasSize(1);
         then(registry.getAllTimeLimiters()).contains(timeLimiter);
     }
-
 }

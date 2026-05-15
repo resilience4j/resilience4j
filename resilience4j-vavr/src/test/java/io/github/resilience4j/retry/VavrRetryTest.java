@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import io.vavr.CheckedRunnable;
 import io.vavr.Predicates;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
@@ -37,19 +37,19 @@ import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class VavrRetryTest {
+class VavrRetryTest {
 
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.setSleepFunction(sleep -> sleptTime += sleep);
     }
 
     @Test
-    public void shouldReturnAfterThreeAttempts() {
+    void shouldReturnAfterThreeAttempts() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         CheckedRunnable retryableRunnable = VavrRetry
@@ -64,7 +64,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttempt() {
+    void shouldReturnAfterOneAttempt() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
@@ -80,7 +80,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+    void shouldReturnAfterOneAttemptAndIgnoreException() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom()
             .retryOnException(throwable -> Match(throwable).of(
@@ -101,7 +101,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    void shouldTakeIntoAccountBackoffFunction() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig
             .custom()
@@ -120,7 +120,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldNotRetryDecoratedEither() {
+    void shouldNotRetryDecoratedEither() {
         given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .maxAttempts(2).build();
@@ -134,7 +134,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldRetryDecoratedTry() {
+    void shouldRetryDecoratedTry() {
         given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .retryOnResult(s -> s.contains("Hello world"))
@@ -148,7 +148,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldRetryDecoratedEither() {
+    void shouldRetryDecoratedEither() {
         given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .retryOnResult(s -> s.contains("Hello world"))
@@ -163,7 +163,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldFailToRetryDecoratedTry() {
+    void shouldFailToRetryDecoratedTry() {
         given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .maxAttempts(2).build();
@@ -177,7 +177,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldFailToRetryDecoratedEither() {
+    void shouldFailToRetryDecoratedEither() {
         given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .maxAttempts(2).build();
@@ -192,7 +192,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionOfDecoratedTry() {
+    void shouldIgnoreExceptionOfDecoratedTry() {
         given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .ignoreExceptions(HelloWorldException.class)
@@ -207,7 +207,7 @@ public class VavrRetryTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionOfDecoratedEither() {
+    void shouldIgnoreExceptionOfDecoratedEither() {
         given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
         final RetryConfig tryAgain = RetryConfig.<String>custom()
             .ignoreExceptions(HelloWorldException.class)

@@ -1,14 +1,14 @@
 package io.github.resilience4j.ratelimiter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RequestNotPermittedExceptionTest {
+class RequestNotPermittedExceptionTest {
 
     @Test
-    public void shouldReturnCorrectMessageWhenStateIsOpen() {
+    void shouldReturnCorrectMessageWhenStateIsOpen() {
         RateLimiter rateLimiter = RateLimiter.ofDefaults("testName");
         final RequestNotPermitted requestNotPermitted = createRequestNotPermitted(rateLimiter);
         assertThat(requestNotPermitted.getMessage())

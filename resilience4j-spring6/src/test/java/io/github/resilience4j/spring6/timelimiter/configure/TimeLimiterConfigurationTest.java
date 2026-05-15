@@ -1,18 +1,5 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.time.Duration;
-import java.util.Collections;
-
-import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfiguration;
-import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfigurationProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -21,12 +8,22 @@ import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class TimeLimiterConfigurationTest {
+import java.time.Duration;
+import java.util.Collections;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@ExtendWith(MockitoExtension.class)
+class TimeLimiterConfigurationTest {
 
     @Test
-    public void testTimeLimiterRegistry() {
+    void testTimeLimiterRegistry() {
 
         // Given
         io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
@@ -61,7 +58,7 @@ public class TimeLimiterConfigurationTest {
     }
 
     @Test
-    public void testCreateTimeLimiterRegistryWithSharedConfigs() {
+    void testCreateTimeLimiterRegistryWithSharedConfigs() {
         // Given
         io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setTimeoutDuration(Duration.ofSeconds(3));
@@ -116,7 +113,7 @@ public class TimeLimiterConfigurationTest {
     }
 
     @Test
-    public void testCreateTimeLimiterRegistryWithUnknownConfig() {
+    void testCreateTimeLimiterRegistryWithUnknownConfig() {
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
 
         io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
@@ -135,5 +132,4 @@ public class TimeLimiterConfigurationTest {
     private CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizerTestInstance() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
-
 }

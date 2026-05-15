@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,17 +28,17 @@ import java.time.Duration;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-public class MonoBulkheadTest {
+class MonoBulkheadTest {
 
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -51,7 +51,7 @@ public class MonoBulkheadTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -65,7 +65,7 @@ public class MonoBulkheadTest {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -79,7 +79,7 @@ public class MonoBulkheadTest {
     }
 
     @Test
-    public void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -91,7 +91,7 @@ public class MonoBulkheadTest {
     }
 
     @Test
-    public void shouldReleaseBulkheadSemaphoreOnCancel() {
+    void shouldReleaseBulkheadSemaphoreOnCancel() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -106,7 +106,7 @@ public class MonoBulkheadTest {
     }
 
     @Test
-    public void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
+    void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
         doThrow(new RuntimeException("BAM!")).when(bulkhead).onComplete();
 

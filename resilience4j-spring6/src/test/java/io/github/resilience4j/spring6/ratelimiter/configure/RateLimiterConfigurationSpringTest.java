@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,46 +17,44 @@ package io.github.resilience4j.spring6.ratelimiter.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     RateLimiterConfigurationSpringTest.ConfigWithOverrides.class
 })
-public class RateLimiterConfigurationSpringTest {
+class RateLimiterConfigurationSpringTest {
 
     @Autowired
     private ConfigWithOverrides configWithOverrides;
 
-
     @Test
-    public void testAllCircuitBreakerConfigurationBeansOverridden() {
-        assertNotNull(configWithOverrides.rateLimiterRegistry);
-        assertNotNull(configWithOverrides.rateLimiterAspect);
-        assertNotNull(configWithOverrides.rateLimiterEventEventConsumerRegistry);
-        assertNotNull(configWithOverrides.rateLimiterConfigurationProperties);
-        assertTrue(configWithOverrides.rateLimiterConfigurationProperties.getConfigs().size() == 1);
+    void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.rateLimiterRegistry).isNotNull();
+        assertThat(configWithOverrides.rateLimiterAspect).isNotNull();
+        assertThat(configWithOverrides.rateLimiterEventEventConsumerRegistry).isNotNull();
+        assertThat(configWithOverrides.rateLimiterConfigurationProperties).isNotNull();
+        assertThat(configWithOverrides.rateLimiterConfigurationProperties.getConfigs()).hasSize(1);
     }
 
     @Configuration
     @ComponentScan({"io.github.resilience4j.spring6.ratelimiter", "io.github.resilience4j.spring6.fallback", "io.github.resilience4j.spring6.spelresolver"})
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         private RateLimiterRegistry rateLimiterRegistry;
 
@@ -108,5 +106,4 @@ public class RateLimiterConfigurationSpringTest {
 
         }
     }
-
 }

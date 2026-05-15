@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,56 +15,55 @@
  */
 package io.github.resilience4j.spring6.bulkhead.configure;
 
-import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
 })
-public class BulkHeadConfigurationSpringTest {
+class BulkHeadConfigurationSpringTest {
 
     @Autowired
     private ConfigWithOverrides configWithOverrides;
 
     @Test
-    public void testAllCircuitBreakerConfigurationBeansOverridden() {
-        assertNotNull(configWithOverrides.bulkheadRegistry);
-        assertNotNull(configWithOverrides.bulkheadAspect);
-        assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
-        assertNotNull(configWithOverrides.threadPoolBulkheadConfigurationProperties);
-        assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
-        assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
-        assertTrue(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
+    void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.bulkheadRegistry).isNotNull();
+        assertThat(configWithOverrides.bulkheadAspect).isNotNull();
+        assertThat(configWithOverrides.bulkheadConfigurationProperties).isNotNull();
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties).isNotNull();
+        assertThat(configWithOverrides.bulkheadEventEventConsumerRegistry).isNotNull();
+        assertThat(configWithOverrides.threadPoolBulkheadRegistry).isNotNull();
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
         assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()).isNotNull();
         assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators().length).isEqualTo(1);
-        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()[0], TestThreadLocalContextPropagator.class);
-        assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()[0]).isEqualTo(TestThreadLocalContextPropagator.class);
+        assertThat(configWithOverrides.bulkheadConfigurationProperties.getConfigs()).hasSize(1);
     }
 
     @Configuration
     @ComponentScan({"io.github.resilience4j.spring6.bulkhead", "io.github.resilience4j.spring6.fallback", "io.github.resilience4j.spring6.spelresolver"})
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         private BulkheadRegistry bulkheadRegistry;
 

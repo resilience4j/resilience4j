@@ -9,11 +9,9 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitB
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfiguration;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 
@@ -24,11 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * test custom init of circuit breaker registry
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CircuitBreakerConfigurationTest {
+@ExtendWith(MockitoExtension.class)
+class CircuitBreakerConfigurationTest {
 
     @Test
-    public void testCreateCircuitBreakerRegistry() {
+    void testCreateCircuitBreakerRegistry() {
         InstanceProperties instanceProperties1 = new InstanceProperties();
         instanceProperties1.setSlidingWindowSize(1000);
         InstanceProperties instanceProperties2 = new InstanceProperties();
@@ -61,7 +59,7 @@ public class CircuitBreakerConfigurationTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
+    void testCreateCircuitBreakerRegistryWithSharedConfigs() {
         InstanceProperties defaultProperties = new InstanceProperties();
         defaultProperties.setSlidingWindowSize(1000);
         defaultProperties.setPermittedNumberOfCallsInHalfOpenState(100);
@@ -118,7 +116,7 @@ public class CircuitBreakerConfigurationTest {
     }
 
     @Test
-    public void testCreateCircuitBreakerRegistryWithUnknownConfig() {
+    void testCreateCircuitBreakerRegistryWithUnknownConfig() {
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
         InstanceProperties instanceProperties = new InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
@@ -138,5 +136,4 @@ public class CircuitBreakerConfigurationTest {
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizerTestInstance() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
-
 }

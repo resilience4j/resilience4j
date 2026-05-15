@@ -1,5 +1,4 @@
 package io.github.resilience4j.spring6.fallback;
 
-class RethrowException extends RuntimeException {
-
+public class RethrowException extends RuntimeException {
 }

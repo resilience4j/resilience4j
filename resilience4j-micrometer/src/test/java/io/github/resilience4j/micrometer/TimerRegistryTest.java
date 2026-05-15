@@ -1,5 +1,5 @@
 /*
- *  Copyright 2023 Mariusz Kopylec
+ *  Copyright 2026 Mariusz Kopylec
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,10 +34,10 @@ import static io.github.resilience4j.micrometer.TimerRegistry.ofDefaults;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class TimerRegistryTest {
+class TimerRegistryTest {
 
     @Test
-    public void shouldCreateDefaultTimerRegistry() {
+    void shouldCreateDefaultTimerRegistry() {
         TimerRegistry registry = ofDefaults(new SimpleMeterRegistry());
 
         then(registry.getDefaultConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
@@ -47,7 +47,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldCreateCustomTimerRegistry() {
+    void shouldCreateCustomTimerRegistry() {
         TimerConfig defaultConfig = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
@@ -63,7 +63,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldCreateTimersFromRegistry() {
+    void shouldCreateTimersFromRegistry() {
         TimerConfig defaultConfig = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
@@ -83,7 +83,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldCreateTimerWithCustomTagsFromRegistry() {
+    void shouldCreateTimerWithCustomTagsFromRegistry() {
         TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), Collections.emptyList(), Map.of("tag1", "ignored value"), new SimpleMeterRegistry());
 
         Timer timer = registry.timer("some operation", Map.of("tag1", "primary value", "tag2", "value2"));
@@ -91,7 +91,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldCreateTimerWithCustomConfigFromRegistry() {
+    void shouldCreateTimerWithCustomConfigFromRegistry() {
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
@@ -102,7 +102,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldAddEventConsumerToRegistry() {
+    void shouldAddEventConsumerToRegistry() {
         TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), List.of(new NoOpTimerEventConsumer()), emptyMap(), new SimpleMeterRegistry());
 
         then(getEventProcessor(registry.getEventPublisher())).hasValueSatisfying(processor ->
@@ -111,7 +111,7 @@ public class TimerRegistryTest {
     }
 
     @Test
-    public void shouldAddTimerConfigToRegistry() {
+    void shouldAddTimerConfigToRegistry() {
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();

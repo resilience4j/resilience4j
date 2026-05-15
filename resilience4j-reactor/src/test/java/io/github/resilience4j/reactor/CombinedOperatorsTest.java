@@ -13,7 +13,7 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-public class CombinedOperatorsTest {
+class CombinedOperatorsTest {
 
     private final RateLimiter rateLimiter = RateLimiter.of("test",
         RateLimiterConfig.custom().limitForPeriod(5).timeoutDuration(Duration.ZERO)
@@ -42,7 +42,7 @@ public class CombinedOperatorsTest {
             BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitDuration(Duration.ZERO).build());
 
     @Test
-    public void shouldEmitEvents() {
+    void shouldEmitEvents() {
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
                 .transformDeferred(BulkheadOperator.of(bulkhead))
@@ -54,7 +54,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldEmitEventsWithRetry() {
+    void shouldEmitEventsWithRetry() {
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
                 .transformDeferred(retryOperator)
@@ -67,7 +67,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         StepVerifier.create(
             Mono.just("Event 1")
                 .transformDeferred(BulkheadOperator.of(bulkhead))
@@ -78,7 +78,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldEmitEventWithRetry() {
+    void shouldEmitEventWithRetry() {
         StepVerifier.create(
             Mono.just("Event 1")
                 .transformDeferred(retryOperator)
@@ -90,7 +90,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
                 .transformDeferred(BulkheadOperator.of(bulkhead))
@@ -101,7 +101,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
@@ -113,7 +113,7 @@ public class CombinedOperatorsTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+    void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)

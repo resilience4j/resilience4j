@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 authors
+ *  Copyright 2026 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.vavr.control.Try;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -30,15 +29,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-
-public class TimeLimiterEventPublisherTest {
+class TimeLimiterEventPublisherTest {
 
     private static final Duration NEVER = Duration.ZERO;
 
     private Logger logger = mock(Logger.class);
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
 
         TimeLimiter.EventPublisher eventPublisher = timeLimiter.getEventPublisher();
@@ -48,7 +46,7 @@ public class TimeLimiterEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnSuccessEvent() throws Exception {
+    void shouldConsumeOnSuccessEvent() throws Exception {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
             .onSuccess(event -> logger.info(event.getEventType().toString()));
@@ -62,20 +60,23 @@ public class TimeLimiterEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnTimeoutEvent() {
+    void shouldConsumeOnTimeoutEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
             .onTimeout(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
             CompletableFuture.supplyAsync(this::timeout);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        try {
+            timeLimiter.decorateFutureSupplier(futureSupplier).call();
+        } catch (Exception ignored) {
+        }
 
         then(logger).should().info("TIMEOUT");
     }
 
     @Test
-    public void shouldConsumeOnErrorEvent() {
+    void shouldConsumeOnErrorEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
         timeLimiter.getEventPublisher()
             .onError(event -> logger
@@ -83,7 +84,10 @@ public class TimeLimiterEventPublisherTest {
         Supplier<CompletableFuture<String>> futureSupplier = () ->
             CompletableFuture.supplyAsync(this::fail);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        try {
+            timeLimiter.decorateFutureSupplier(futureSupplier).call();
+        } catch (Exception ignored) {
+        }
 
         then(logger).should().info("ERROR java.lang.RuntimeException");
     }

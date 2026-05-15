@@ -3,18 +3,18 @@ package io.github.resilience4j.spring6.timelimiter.configure;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.reactivex.rxjava3.core.*;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RxJava3TimeLimiterAspectExtTest {
+@ExtendWith(MockitoExtension.class)
+class RxJava3TimeLimiterAspectExtTest {
     @Mock
     ProceedingJoinPoint proceedingJoinPoint;
 
@@ -22,7 +22,7 @@ public class RxJava3TimeLimiterAspectExtTest {
     RxJava3TimeLimiterAspectExt rxJava3TimeLimiterAspectExt;
 
     @Test
-    public void testCheckTypes() {
+    void testCheckTypes() {
         assertThat(rxJava3TimeLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
         assertThat(rxJava3TimeLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
         assertThat(rxJava3TimeLimiterAspectExt.canHandleReturnType(Observable.class)).isTrue();
@@ -31,7 +31,7 @@ public class RxJava3TimeLimiterAspectExtTest {
     }
 
     @Test
-    public void testRxJava3Types() throws Throwable {
+    void testRxJava3Types() throws Throwable {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
@@ -51,7 +51,7 @@ public class RxJava3TimeLimiterAspectExtTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWithNotRxJava3Type() throws Throwable{
+    void shouldThrowIllegalArgumentExceptionWithNotRxJava3Type() throws Throwable{
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
         when(proceedingJoinPoint.proceed()).thenReturn("NOT RXJAVA3 TYPE");
 
@@ -64,5 +64,4 @@ public class RxJava3TimeLimiterAspectExtTest {
                     "java.lang.String testMethod has unsupported by @TimeLimiter return type. RxJava3 expects Flowable/Single/...");
         }
     }
-
 }

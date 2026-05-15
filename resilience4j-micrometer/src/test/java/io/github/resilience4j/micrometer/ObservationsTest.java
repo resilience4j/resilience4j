@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017: Robert Winkler
+ *  Copyright 2026: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.micrometer;
 
-import com.jayway.awaitility.Awaitility;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -27,24 +26,25 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class ObservationsTest {
+class ObservationsTest {
 
     private HelloWorldService helloWorldService;
 
@@ -52,15 +52,15 @@ public class ObservationsTest {
 
     private Observation observation;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         observationRegistry = TestObservationRegistry.create();
         observation = Observations.ofObservationRegistry(ObservationsTest.class.getName(), observationRegistry);
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldDecorateCheckedSupplier() throws Throwable {
+    void shouldDecorateCheckedSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedSupplier<String> timedSupplier = Observations
             .decorateCheckedSupplier(observation, helloWorldService::returnHelloWorldWithException);
@@ -73,7 +73,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldDecorateCallable() throws Throwable {
+    void shouldDecorateCallable() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         Callable<String> timedSupplier = Observations
             .decorateCallable(observation, helloWorldService::returnHelloWorldWithException);
@@ -86,7 +86,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldExecuteCallable() throws Throwable {
+    void shouldExecuteCallable() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         String value = Observations
@@ -97,9 +97,8 @@ public class ObservationsTest {
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
-
     @Test
-    public void shouldDecorateRunnable() throws Throwable {
+    void shouldDecorateRunnable() {
         Runnable timedRunnable = Observations.decorateRunnable(observation, helloWorldService::sayHelloWorld);
 
         timedRunnable.run();
@@ -109,7 +108,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldExecuteRunnable() throws Throwable {
+    void shouldExecuteRunnable() {
         Observations.executeRunnable(observation, helloWorldService::sayHelloWorld);
 
         assertThatObservationWasStartedAndFinishedWithoutErrors();
@@ -117,7 +116,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldExecuteCompletionStageSupplier() throws Throwable {
+    void shouldExecuteCompletionStageSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<CompletionStage<String>> completionStageSupplier =
             () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
@@ -127,14 +126,12 @@ public class ObservationsTest {
         String value = stringCompletionStage.toCompletableFuture().get();
         assertThat(value).isEqualTo("Hello world");
         await().atMost(1, SECONDS)
-            .until(() -> {
-                assertThatObservationWasStartedAndFinishedWithoutErrors();
-            });
+            .untilAsserted(this::assertThatObservationWasStartedAndFinishedWithoutErrors);
         then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
-    public void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() throws Throwable {
+    void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() {
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
             throw new HelloWorldException();
         };
@@ -151,9 +148,8 @@ public class ObservationsTest {
             .isInstanceOf(HelloWorldException.class);
     }
 
-
     @Test
-    public void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
+    void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Supplier<CompletionStage<String>> completionStageSupplier =
             () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
@@ -164,7 +160,7 @@ public class ObservationsTest {
             .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
         Awaitility.await()
-            .until(() -> assertThat(observationRegistry)
+            .untilAsserted(() -> assertThat(observationRegistry)
                 .hasSingleObservationThat()
                 .hasNameEqualTo(ObservationsTest.class.getName())
                 .hasBeenStarted()
@@ -174,9 +170,8 @@ public class ObservationsTest {
         then(helloWorldService).should().returnHelloWorld();
     }
 
-
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         CheckedRunnable timedRunnable = Observations
             .decorateCheckedRunnable(observation, helloWorldService::sayHelloWorldWithException);
 
@@ -187,7 +182,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
+    void shouldDecorateSupplierAndReturnWithException() {
         given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
         Supplier<String> supplier = Observations
             .decorateSupplier(observation, helloWorldService::returnHelloWorld);
@@ -208,7 +203,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldDecorateSupplier() throws Throwable {
+    void shouldDecorateSupplier() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<String> timedSupplier = Observations
             .decorateSupplier(observation, helloWorldService::returnHelloWorld);
@@ -220,7 +215,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldExecuteSupplier() throws Throwable {
+    void shouldExecuteSupplier() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world")
             .willThrow(new IllegalArgumentException("BAM!"));
 
@@ -234,9 +229,8 @@ public class ObservationsTest {
         then(helloWorldService).should().returnHelloWorld();
     }
 
-
     @Test
-    public void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateFunctionAndReturnWithSuccess() {
         given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
         Function<String, String> function = Observations
             .decorateFunction(observation, helloWorldService::returnHelloWorldWithName);
@@ -249,7 +243,7 @@ public class ObservationsTest {
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
         CheckedFunction<String, String> function = Observations.decorateCheckedFunction(observation,

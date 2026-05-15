@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Dan Maas
+ * Copyright 2026 Dan Maas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -32,27 +32,28 @@ import java.io.IOException;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class RetryOperatorTest {
+class RetryOperatorTest {
 
     private HelloWorldService helloWorldService;
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         //BlockHound.install(new ReactorIntegration());
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void returnOnCompleteUsingMono() {
+    void returnOnCompleteUsingMono() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
@@ -81,24 +82,25 @@ public class RetryOperatorTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
-
-    @Test(expected = StackOverflowError.class)
-    public void shouldNotRetryUsingMonoStackOverFlow() {
+    @Test
+    void shouldNotRetryUsingMonoStackOverFlow() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
         given(helloWorldService.returnHelloWorld())
             .willThrow(new StackOverflowError("BAM!"));
 
-        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .transformDeferred(retryOperator))
-            .expectSubscription()
-            .expectError(StackOverflowError.class)
-            .verify(Duration.ofSeconds(1));
+        assertThatThrownBy(() ->
+            StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+                .transformDeferred(retryOperator))
+                .expectSubscription()
+                .expectError(StackOverflowError.class)
+                .verify(Duration.ofSeconds(1)))
+            .isInstanceOf(StackOverflowError.class);
     }
 
     @Test
-    public void shouldNotRetryWhenItThrowErrorMono() {
+    void shouldNotRetryWhenItThrowErrorMono() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
@@ -117,9 +119,8 @@ public class RetryOperatorTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
-
     @Test
-    public void returnOnErrorUsingMono() {
+    void returnOnErrorUsingMono() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
@@ -145,7 +146,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void doNotRetryFromPredicateUsingMono() {
+    void doNotRetryFromPredicateUsingMono() {
         RetryConfig config = RetryConfig.custom()
             .retryOnException(t -> t instanceof IOException)
             .waitDuration(Duration.ofMillis(50))
@@ -167,7 +168,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultUsingMono() {
+    void retryOnResultUsingMono() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -191,7 +192,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingMono() {
+    void retryOnResultFailAfterMaxAttemptsUsingMono() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -211,7 +212,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsWithExceptionUsingMono() {
+    void retryOnResultFailAfterMaxAttemptsWithExceptionUsingMono() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -232,7 +233,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void shouldFailWithExceptionFlux() {
+    void shouldFailWithExceptionFlux() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryOperator<Object> retryOperator = RetryOperator.of(retry);
@@ -251,7 +252,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultUsingFlux() {
+    void retryOnResultUsingFlux() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -272,7 +273,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsUsingFlux() {
+    void retryOnResultFailAfterMaxAttemptsUsingFlux() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -292,7 +293,7 @@ public class RetryOperatorTest {
     }
 
     @Test
-    public void retryOnResultFailAfterMaxAttemptsWithExceptionUsingFlux() {
+    void retryOnResultFailAfterMaxAttemptsWithExceptionUsingFlux() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 authors
+ * Copyright 2026 authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.spring6.fallback;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * https://github.com/resilience4j/resilience4j/issues/653
  */
 @SuppressWarnings("unused")
-public class FallbackMethodParentTest {
+class FallbackMethodParentTest {
 
     public String testMethod(String parameter) {
         return "test";
@@ -42,7 +42,7 @@ public class FallbackMethodParentTest {
     }
 
     @Test
-    public void fallbackIgnoringParentMethod() throws Throwable {
+    void fallbackIgnoringParentMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -54,7 +54,7 @@ public class FallbackMethodParentTest {
     }
 
     @Test
-    public void fallbackIgnoringInterfaceMethod() throws Throwable {
+    void fallbackIgnoringInterfaceMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -66,7 +66,7 @@ public class FallbackMethodParentTest {
     }
 
     @Test
-    public void fallbackNotIgnoringInterfaceMethod() throws Throwable {
+    void fallbackNotIgnoringInterfaceMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
@@ -78,7 +78,7 @@ public class FallbackMethodParentTest {
     }
 
     @Test
-    public void dontFallbackAmbiguousMethod() throws Throwable {
+    void dontFallbackAmbiguousMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 

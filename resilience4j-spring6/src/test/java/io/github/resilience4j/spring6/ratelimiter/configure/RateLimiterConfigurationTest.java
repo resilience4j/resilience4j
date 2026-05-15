@@ -8,11 +8,9 @@ import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfiguration;
-import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -24,11 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * test custom init of rate limiter configuration
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RateLimiterConfigurationTest {
+@ExtendWith(MockitoExtension.class)
+class RateLimiterConfigurationTest {
 
     @Test
-    public void testRateLimiterRegistry() {
+    void testRateLimiterRegistry() {
         io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties1.setLimitForPeriod(2);
         instanceProperties1.setSubscribeForEvents(true);
@@ -59,7 +57,7 @@ public class RateLimiterConfigurationTest {
     }
 
     @Test
-    public void testCreateRateLimiterRegistryWithSharedConfigs() {
+    void testCreateRateLimiterRegistryWithSharedConfigs() {
         //Given
         io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setLimitForPeriod(3);
@@ -125,7 +123,7 @@ public class RateLimiterConfigurationTest {
     }
 
     @Test
-    public void testCreateRateLimiterRegistryWithUnknownConfig() {
+    void testCreateRateLimiterRegistryWithUnknownConfig() {
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
         io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
@@ -144,5 +142,4 @@ public class RateLimiterConfigurationTest {
     public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizerTest() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
-
 }

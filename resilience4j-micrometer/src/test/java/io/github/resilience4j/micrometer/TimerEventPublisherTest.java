@@ -1,5 +1,5 @@
 /*
- *  Copyright 2023 Mariusz Kopylec
+ *  Copyright 2026 Mariusz Kopylec
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,25 +19,18 @@ import io.github.resilience4j.micrometer.event.TimerOnFailureEvent;
 import io.github.resilience4j.micrometer.event.TimerOnStartEvent;
 import io.github.resilience4j.micrometer.event.TimerOnSuccessEvent;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.resilience4j.micrometer.event.TimerEvent.Type.*;
-import static java.time.ZonedDateTime.now;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.rules.ExpectedException.none;
 
-public class TimerEventPublisherTest {
-
-    @Rule
-    public ExpectedException expectedException = none();
+class TimerEventPublisherTest {
 
     @Test
-    public void shouldHandleOnStartEvent() {
+    void shouldHandleOnStartEvent() {
         AtomicReference<TimerOnStartEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onStart(consumedEvent::set);
@@ -48,7 +41,7 @@ public class TimerEventPublisherTest {
     }
 
     @Test
-    public void shouldHandleOnSuccessEvent() {
+    void shouldHandleOnSuccessEvent() {
         AtomicReference<TimerOnSuccessEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onSuccess(consumedEvent::set);
@@ -66,15 +59,14 @@ public class TimerEventPublisherTest {
     }
 
     @Test
-    public void shouldHandleOnFailureEvent() {
-        expectedException.expect(RuntimeException.class);
-
+    void shouldHandleOnFailureEvent() {
         AtomicReference<TimerOnFailureEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onFailure(consumedEvent::set);
-        timer.executeSupplier(() -> {
+
+        assertThatThrownBy(() -> timer.executeSupplier(() -> {
             throw new RuntimeException();
-        });
+        })).isInstanceOf(RuntimeException.class);
 
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(FAILURE);

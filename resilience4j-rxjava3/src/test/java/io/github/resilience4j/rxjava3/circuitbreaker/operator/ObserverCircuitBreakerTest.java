@@ -1,8 +1,10 @@
 package io.github.resilience4j.rxjava3.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.rxjava3.core.Observable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -11,15 +13,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link ObserverCircuitBreaker}.
  */
-public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
+class ObserverCircuitBreakerTest {
+
+    private final CircuitBreaker circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
 
     @Test
-    public void shouldSubscribeToObservableJust() {
+    void shouldSubscribeToObservableJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -35,7 +39,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -52,7 +56,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCallNotPermittedException() {
+    void shouldEmitErrorWithCallNotPermittedException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Observable.just("Event 1", "Event 2")
@@ -67,7 +71,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    void shouldReleasePermissionOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Observable.just(1)

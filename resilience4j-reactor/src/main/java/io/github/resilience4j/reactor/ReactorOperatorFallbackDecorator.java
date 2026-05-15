@@ -26,7 +26,6 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
 
     private final Map<Class<? extends Throwable>, Publisher<T>> FALLBACK_PUBLISHER_CACHE = new HashMap<>();
 
-
     private ReactorOperatorFallbackDecorator(Class<? extends Throwable> throwableType, Publisher<T> fallback) {
         FALLBACK_PUBLISHER_CACHE.put(throwableType, fallback);
     }
@@ -100,7 +99,6 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
     public Function<Publisher<T>, Publisher<T>> decorate(UnaryOperator<Publisher<T>> operator) {
         return compose(operator);
     }
-
 
     /**
      * a convenience method that initializes a default retry fallback behavior (after {@link MaxRetriesExceededException} is thrown

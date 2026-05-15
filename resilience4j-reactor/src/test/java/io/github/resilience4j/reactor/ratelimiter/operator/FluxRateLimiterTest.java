@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.reactor.ratelimiter.operator.OverloadException.SpecificOverloadException;
 import io.github.resilience4j.reactor.ratelimiter.operator.ResponseWithPotentialOverload.SpecificResponseWithPotentialOverload;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -36,17 +36,17 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 
-public class FluxRateLimiterTest {
+class FluxRateLimiterTest {
 
     private RateLimiter rateLimiter;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
@@ -58,7 +58,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldReservePermissionWithCustomPermits() {
+    void shouldReservePermissionWithCustomPermits() {
         given(rateLimiter.reservePermission(10)).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
@@ -72,7 +72,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofMillis(50).toNanos());
 
         StepVerifier.create(
@@ -84,7 +84,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(rateLimiter.reservePermission(1)).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
@@ -97,7 +97,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitRequestNotPermittedException() {
+    void shouldEmitRequestNotPermittedException() {
         given(rateLimiter.reservePermission(1)).willReturn(-1L);
 
         StepVerifier.create(
@@ -109,7 +109,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
         given(rateLimiter.reservePermission(1)).willReturn(-1L);
 
         StepVerifier.create(
@@ -121,7 +121,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -139,7 +139,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
+    void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -161,7 +161,7 @@ public class FluxRateLimiterTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
+    void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))

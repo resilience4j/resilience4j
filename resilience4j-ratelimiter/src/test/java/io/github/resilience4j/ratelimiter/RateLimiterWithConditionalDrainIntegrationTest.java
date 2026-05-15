@@ -1,6 +1,6 @@
 package io.github.resilience4j.ratelimiter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.function.Supplier;
@@ -10,10 +10,10 @@ import static io.github.resilience4j.core.ResultUtils.isSuccessfulAndReturned;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-public class RateLimiterWithConditionalDrainIntegrationTest {
+class RateLimiterWithConditionalDrainIntegrationTest {
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter limiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -32,7 +32,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
+    void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
         RateLimiter limiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -52,7 +52,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
+    void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
         RateLimiter limiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))

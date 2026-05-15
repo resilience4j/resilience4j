@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,17 +30,17 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-public class FluxCircuitBreakerTest {
+class FluxCircuitBreakerTest {
 
     private CircuitBreaker circuitBreaker;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldSubscribeToFluxJust() {
+    void shouldSubscribeToFluxJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -58,7 +58,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -75,7 +75,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateErrorWhenErrorNotOnSubscribe() {
+    void shouldPropagateErrorWhenErrorNotOnSubscribe() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -92,7 +92,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldSubscribeToMonoJustTwice() {
+    void shouldSubscribeToMonoJustTwice() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -110,7 +110,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCircuitBreakerOpenException() {
+    void shouldEmitErrorWithCircuitBreakerOpenException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -125,7 +125,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+    void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -140,7 +140,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -155,7 +155,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    void shouldReleasePermissionOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -173,7 +173,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeOnSuccessOnCancelWhenEventWasEmitted() {
+    void shouldInvokeOnSuccessOnCancelWhenEventWasEmitted() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);

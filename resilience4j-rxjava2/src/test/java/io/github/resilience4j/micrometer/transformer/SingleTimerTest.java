@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Mariusz Kopylec
+ * Copyright 2026 Mariusz Kopylec
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,17 @@ import io.github.resilience4j.micrometer.TimerConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.reactivex.Single;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.github.resilience4j.micrometer.TimerAssertions.thenFailureTimed;
 import static io.github.resilience4j.micrometer.TimerAssertions.thenSuccessTimed;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class SingleTimerTest {
+class SingleTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulSingle() {
+    void shouldTimeSuccessfulSingle() {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = Timer.of("timer 1", registry);
@@ -43,7 +43,7 @@ public class SingleTimerTest {
     }
 
     @Test
-    public void shouldTimeFailedSingle() {
+    void shouldTimeFailedSingle() {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()

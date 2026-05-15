@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,25 @@ import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedRetryMetricsPublisherTest {
+class TaggedRetryMetricsPublisherTest {
 
     private MeterRegistry meterRegistry;
     private Retry retry;
     private RetryRegistry retryRegistry;
     private TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         taggedRetryMetricsPublisher = new TaggedRetryMetricsPublisher(meterRegistry);
         retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), taggedRetryMetricsPublisher);
@@ -53,7 +53,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedRetry() {
+    void shouldAddMetricsForANewlyCreatedRetry() {
         Retry newRetry = retryRegistry.retry("backendB");
 
         assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendA", "backendB");
@@ -74,7 +74,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(4);
 
@@ -88,7 +88,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS).functionCounters();
         Optional<FunctionCounter> successfulWithoutRetry = MetricsTestHelper.findMeterByKindAndNameTags(counters,
             "successful_without_retry", retry.getName());
@@ -110,7 +110,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void successfulWithoutRetryCallsGaugeReportsCorrespondingValue() {
+    void successfulWithoutRetryCallsGaugeReportsCorrespondingValue() {
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
             .functionCounters();
 
@@ -122,7 +122,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void successfulWithRetryCallsGaugeReportsCorrespondingValue() {
+    void successfulWithRetryCallsGaugeReportsCorrespondingValue() {
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
             .functionCounters();
 
@@ -134,7 +134,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void failedWithoutRetryCallsGaugeReportsCorrespondingValue() {
+    void failedWithoutRetryCallsGaugeReportsCorrespondingValue() {
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
             .functionCounters();
 
@@ -146,7 +146,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void failedWithRetryCallsGaugeReportsCorrespondingValue() {
+    void failedWithRetryCallsGaugeReportsCorrespondingValue() {
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS).
             functionCounters();
 
@@ -159,7 +159,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void metricsAreRegisteredWithCustomNames() {
+    void metricsAreRegisteredWithCustomNames() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedRetryMetricsPublisher taggedRetryMetricsPublisher = new TaggedRetryMetricsPublisher(
             RetryMetricNames.custom()
@@ -179,7 +179,7 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
-    public void testReplaceNewMeter() {
+    void testReplaceNewMeter() {
         Retry oldOne = Retry.of("backendC", RetryConfig.ofDefaults());
         // add meters of old
         taggedRetryMetricsPublisher.addMetrics(meterRegistry, oldOne);
@@ -195,7 +195,6 @@ public class TaggedRetryMetricsPublisherTest {
         assertThat(successfulWithoutRetry).isPresent();
         assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(oldOne.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
-
 
         Retry newOne = Retry.of("backendC", RetryConfig.ofDefaults());
         // add meters of old

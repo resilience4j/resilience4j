@@ -4,7 +4,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.rxjava3.core.Maybe;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -20,10 +20,10 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit test for {@link MaybeRateLimiter}.
  */
-public class MaybeRateLimiterTest {
+class MaybeRateLimiterTest {
 
     @Test
-    public void shouldEmitEvent() {
+    void shouldEmitEvent() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -34,7 +34,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
@@ -45,7 +45,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -57,7 +57,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitErrorWithRequestNotPermittedException() {
+    void shouldEmitErrorWithRequestNotPermittedException() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
@@ -69,7 +69,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -86,7 +86,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
+    void shouldDrainRateLimiterInConditionMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -107,7 +107,7 @@ public class MaybeRateLimiterTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
+    void shouldNotDrainRateLimiterInConditionNotMetOnSuccessfulCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))

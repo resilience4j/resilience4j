@@ -1,10 +1,6 @@
 dependencies {
     api(project(":resilience4j-core"))
 
-    testRuntimeOnly(libs.junit.vintage.engine)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.awaitility.old)
     testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-core").sourceSets.test.output)
 }

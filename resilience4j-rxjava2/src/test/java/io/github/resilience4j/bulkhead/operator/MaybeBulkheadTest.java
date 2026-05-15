@@ -4,8 +4,8 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,17 +16,17 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link MaybeBulkhead} using {@link BulkheadOperator}.
  */
-public class MaybeBulkheadTest {
+class MaybeBulkheadTest {
 
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitAllEvents() {
+    void shouldEmitAllEvents() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Maybe.just(1)
@@ -38,7 +38,7 @@ public class MaybeBulkheadTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Maybe.error(new IOException("BAM!"))
@@ -52,7 +52,7 @@ public class MaybeBulkheadTest {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Maybe.just(1)
@@ -66,7 +66,7 @@ public class MaybeBulkheadTest {
     }
 
     @Test
-    public void shouldReleaseBulkheadOnlyOnce() {
+    void shouldReleaseBulkheadOnlyOnce() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Maybe.just(Arrays.asList(1, 2, 3))

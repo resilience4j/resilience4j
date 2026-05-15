@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.reactivestreams.tck.SubscriberWhiteboxVerification;
 import org.reactivestreams.tck.TestEnvironment;
 import reactor.core.publisher.MonoProcessor;
 
-public class BulkheadSubscriberWhiteboxVerification extends
+class BulkheadSubscriberWhiteboxVerification extends
     SubscriberWhiteboxVerification<Integer> {
 
     public BulkheadSubscriberWhiteboxVerification() {

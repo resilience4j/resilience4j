@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Robert Winkler, Mahmoud Romeh
+ * Copyright 2026 Robert Winkler, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,7 +32,7 @@ import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMet
 import static io.github.resilience4j.micrometer.tagged.ThreadPoolBulkheadMetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TaggedThreadPoolBulkheadMetricsTest {
+class TaggedThreadPoolBulkheadMetricsTest {
 
     private static final List<String> EXPECTED_METERS = Arrays.asList(
         "custom.max.thread.pool.size",
@@ -49,8 +49,8 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     private ThreadPoolBulkheadRegistry bulkheadRegistry;
     private TaggedThreadPoolBulkheadMetrics taggedBulkheadMetrics;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         bulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");
@@ -65,7 +65,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldAddMetricsForANewlyCreatedRetry() {
+    void shouldAddMetricsForANewlyCreatedRetry() {
         ThreadPoolBulkhead newBulkhead = bulkheadRegistry.bulkhead("backendB");
 
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendB");
@@ -85,7 +85,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldAddCustomTags() {
+    void shouldAddCustomTags() {
         bulkheadRegistry.bulkhead("backendF", Map.of("key1", "value1"));
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(EXPECTED_METER_COUNT);
@@ -97,7 +97,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldRemovedMetricsForRemovedRetry() {
+    void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(EXPECTED_METER_COUNT);
 
@@ -111,7 +111,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void shouldReplaceMetrics() {
+    void shouldReplaceMetrics() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME)
             .gauges();
 
@@ -135,9 +135,8 @@ public class TaggedThreadPoolBulkheadMetricsTest {
             .isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
     }
 
-
     @Test
-    public void maxThreadPoolSizeGaugeIsRegistered() {
+    void maxThreadPoolSizeGaugeIsRegistered() {
         Gauge available = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME).gauge();
 
         assertThat(available).isNotNull();
@@ -145,7 +144,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void coreThreadPoolSizeGaugeIsRegistered() {
+    void coreThreadPoolSizeGaugeIsRegistered() {
         Gauge maxAllowed = meterRegistry.get(DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME).gauge();
 
         assertThat(maxAllowed).isNotNull();
@@ -154,7 +153,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void queueCapacityGaugeIsRegistered() {
+    void queueCapacityGaugeIsRegistered() {
         Gauge maxAllowed = meterRegistry.get(DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME).gauge();
 
         assertThat(maxAllowed).isNotNull();
@@ -163,7 +162,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void queueDepthGaugeIsRegistered() {
+    void queueDepthGaugeIsRegistered() {
         Gauge maxAllowed = meterRegistry.get(DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME).gauge();
 
         assertThat(maxAllowed).isNotNull();
@@ -172,7 +171,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void threadPoolSizeIsRegistered() {
+    void threadPoolSizeIsRegistered() {
         Gauge maxAllowed = meterRegistry.get(DEFAULT_THREAD_POOL_SIZE_METRIC_NAME).gauge();
 
         assertThat(maxAllowed).isNotNull();
@@ -181,7 +180,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void availableThreadCountIsRegistered() {
+    void availableThreadCountIsRegistered() {
         Gauge availableThreadCount = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME).gauge();
 
         assertThat(availableThreadCount).isNotNull();
@@ -190,7 +189,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
     }
 
     @Test
-    public void customMetricNamesGetApplied() {
+    void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         ThreadPoolBulkheadRegistry bulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");

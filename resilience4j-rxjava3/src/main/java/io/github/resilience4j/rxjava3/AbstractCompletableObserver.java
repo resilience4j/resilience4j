@@ -18,7 +18,6 @@ public abstract class AbstractCompletableObserver extends AbstractDisposable imp
         downstreamObserver.onSubscribe(this);
     }
 
-
     @Override
     public void onComplete() {
         whenNotCompleted(() -> {
@@ -38,6 +37,5 @@ public abstract class AbstractCompletableObserver extends AbstractDisposable imp
     }
 
     protected abstract void hookOnError(Throwable e);
-
 
 }

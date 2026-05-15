@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,16 +18,11 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import com.jayway.awaitility.core.ConditionFactory;
-import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,23 +31,19 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static io.vavr.control.Try.run;
 import static java.lang.Thread.State.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(Parameterized.class)
-public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
+class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBasedRateLimiterImplTest.class);
-
-    public SemaphoreBasedRateLimiterImplTest(ThreadType threadType) {
-        super(threadType);
-    }
 
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofMillis(100);
@@ -60,8 +51,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
     private static final Object O = new Object();
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
+
     private RateLimiterConfig config;
 
     private static ConditionFactory awaitImpatiently() {
@@ -75,8 +65,8 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         return new SemaphoreBasedRateLimiter("test", config, Executors.newScheduledThreadPool(1));
     }
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
@@ -85,9 +75,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void rateLimiterCreationWithProvidedScheduler() throws Exception {
-        LOG.info("Running rateLimiterCreationWithProvidedScheduler in {}", getThreadModeDescription());
-        
+    void rateLimiterCreationWithProvidedScheduler() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
@@ -119,12 +107,10 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isFalse();
-
     }
 
     @Test
-    public void acquirePermissionAndMetrics() throws Exception {
-
+    void acquirePermissionAndMetrics() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
@@ -167,7 +153,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void changeDefaultTimeoutDuration() {
+    void changeDefaultTimeoutDuration() {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config,
             scheduledExecutorService);
@@ -185,7 +171,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void changeLimitForPeriod() {
+    void changeLimitForPeriod() {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config,
             scheduledExecutorService);
@@ -203,7 +189,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void acquirePermissionInterruption() {
+    void acquirePermissionInterruption() {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
@@ -233,14 +219,14 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void getName() {
+    void getName() {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         then(limit.getName()).isEqualTo("test");
     }
 
     @Test
-    public void getMetrics() {
+    void getMetrics() {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
@@ -248,14 +234,14 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void getRateLimiterConfig() {
+    void getRateLimiterConfig() {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         then(limit.getRateLimiterConfig()).isEqualTo(config);
     }
 
     @Test
-    public void isUpperLimitedForPermissions() {
+    void isUpperLimitedForPermissions() {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
@@ -265,7 +251,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void getDetailedMetrics() {
+    void getDetailedMetrics() {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
@@ -274,28 +260,29 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     }
 
     @Test
-    public void constructionWithNullName() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiter(null, config, (ScheduledExecutorService) null);
+    void constructionWithNullName() {
+        assertThatThrownBy(() -> new SemaphoreBasedRateLimiter(null, config, (ScheduledExecutorService) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(NAME_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void constructionWithNullConfig() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiter("test", null, (ScheduledExecutorService) null);
+    void constructionWithNullConfig() {
+        assertThatThrownBy(() -> new SemaphoreBasedRateLimiter("test", null, (ScheduledExecutorService) null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage(CONFIG_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void shutdownRateLimiter() throws InterruptedException {
+    @SuppressWarnings("unchecked")
+    void shutdownRateLimiter() throws InterruptedException {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
 
         ScheduledFuture<?> future = mock(ScheduledFuture.class);
 
-        doReturn(future).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class), any(Long.class), any(Long.class),
-            any(TimeUnit.class));
+        doReturn(future).when(scheduledExecutorService).scheduleAtFixedRate(
+            any(Runnable.class), any(Long.class), any(Long.class), any(TimeUnit.class));
 
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
             scheduledExecutorService);

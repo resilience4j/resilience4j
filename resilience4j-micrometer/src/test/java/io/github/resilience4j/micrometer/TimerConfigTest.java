@@ -1,5 +1,5 @@
 /*
- *  Copyright 2023 Mariusz Kopylec
+ *  Copyright 2026 Mariusz Kopylec
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package io.github.resilience4j.micrometer;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class TimerConfigTest {
+class TimerConfigTest {
 
     @Test
-    public void shouldCreateDefaultTimerConfig() {
+    void shouldCreateDefaultTimerConfig() {
         TimerConfig config = TimerConfig.ofDefaults();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.calls");
@@ -30,7 +30,7 @@ public class TimerConfigTest {
     }
 
     @Test
-    public void shouldCreateCustomTimerConfig() {
+    void shouldCreateCustomTimerConfig() {
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
@@ -41,7 +41,7 @@ public class TimerConfigTest {
     }
 
     @Test
-    public void shouldCreateTimerConfigFromPrototype() {
+    void shouldCreateTimerConfigFromPrototype() {
         TimerConfig prototype = TimerConfig.custom()
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();

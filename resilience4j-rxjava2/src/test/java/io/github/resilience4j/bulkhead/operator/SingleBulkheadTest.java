@@ -4,8 +4,8 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,17 +18,17 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link SingleBulkhead} using {@link BulkheadOperator}.
  */
-public class SingleBulkheadTest {
+class SingleBulkheadTest {
 
     private Bulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    public void shouldEmitAllEvents() {
+    void shouldEmitAllEvents() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
@@ -40,7 +40,7 @@ public class SingleBulkheadTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.error(new IOException("BAM!"))
@@ -54,7 +54,7 @@ public class SingleBulkheadTest {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Single.just(1)
@@ -68,7 +68,7 @@ public class SingleBulkheadTest {
     }
 
     @Test
-    public void shouldReleaseBulkheadOnlyOnce() {
+    void shouldReleaseBulkheadOnlyOnce() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(Arrays.asList(1, 2, 3))
@@ -82,7 +82,7 @@ public class SingleBulkheadTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    void shouldReleasePermissionOnCancel() {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)

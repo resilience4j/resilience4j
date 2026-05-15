@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2026 Julien Hoarau
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,26 +28,26 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-public class MonoCircuitBreakerTest {
+class MonoCircuitBreakerTest {
 
     private CircuitBreaker circuitBreaker;
     private HelloWorldService helloWorldService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldSubscribeToMonoJust() {
+    void shouldSubscribeToMonoJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
@@ -66,7 +66,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldSubscribeToMonoFromCallable() {
+    void shouldSubscribeToMonoFromCallable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
@@ -85,7 +85,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldSubscribeToMonoFromCallableMultipleTimes() {
+    void shouldSubscribeToMonoFromCallableMultipleTimes() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
@@ -107,7 +107,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void emptyMonoShouldBeSuccessful() {
+    void emptyMonoShouldBeSuccessful() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -123,7 +123,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -140,7 +140,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitCallNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+    void shouldEmitCallNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -155,7 +155,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCircuitBreakerOpenException() {
+    void shouldEmitErrorWithCircuitBreakerOpenException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -170,7 +170,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    void shouldReleasePermissionOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -188,7 +188,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldNotSubscribeToMonoFromCallable() {
+    void shouldNotSubscribeToMonoFromCallable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
@@ -206,7 +206,7 @@ public class MonoCircuitBreakerTest {
     }
 
     @Test
-    public void shouldRecordSuccessWhenUsingToFuture() {
+    void shouldRecordSuccessWhenUsingToFuture() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         try {
@@ -216,7 +216,7 @@ public class MonoCircuitBreakerTest {
                 .get();
 
         } catch (InterruptedException | ExecutionException e) {
-            fail();
+            fail("Unexpected exception: " + e);
         }
     }
 }

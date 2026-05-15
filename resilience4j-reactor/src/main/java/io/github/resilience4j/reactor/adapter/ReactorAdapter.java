@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.reactor.adapter;
 
-
 import io.github.resilience4j.core.EventPublisher;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;

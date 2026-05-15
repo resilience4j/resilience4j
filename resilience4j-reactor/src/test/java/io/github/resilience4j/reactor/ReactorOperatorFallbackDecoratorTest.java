@@ -10,9 +10,9 @@ import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,8 +30,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-
-public class ReactorOperatorFallbackDecoratorTest {
+class ReactorOperatorFallbackDecoratorTest {
 
     private HelloWorldService helloWorldService;
 
@@ -39,15 +38,15 @@ public class ReactorOperatorFallbackDecoratorTest {
 
     private final TimeLimiter timeLimiter = mock(TimeLimiter.class);
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
-    @Ignore("when mono completes with onError, onComplete is not triggered and no MaxRetriesExceededException is thrown so this test fails")
-    public void shouldFallbackOnRetriesExceededUsingMono() {
+    @Disabled("when mono completes with onError, onComplete is not triggered and no MaxRetriesExceededException is thrown so this test fails")
+    void shouldFallbackOnRetriesExceededUsingMono() {
         RetryConfig config = RetryConfig.custom()
             .waitDuration(Duration.ofMillis(10))
             .failAfterMaxAttempts(true)
@@ -84,7 +83,7 @@ public class ReactorOperatorFallbackDecoratorTest {
     }
 
     @Test
-    public void shouldFallbackOnRetriesExceededUsingFlux() {
+    void shouldFallbackOnRetriesExceededUsingFlux() {
         RetryConfig config = RetryConfig.<String>custom()
             .retryOnResult("retry"::equals)
             .waitDuration(Duration.ofMillis(10))
@@ -108,7 +107,7 @@ public class ReactorOperatorFallbackDecoratorTest {
     }
 
     @Test
-    public void shouldFallbackOntimeoutUsingMono() {
+    void shouldFallbackOntimeoutUsingMono() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(TimeLimiterConfig.custom()
                 .timeoutDuration(Duration.ofMillis(1))
@@ -128,7 +127,7 @@ public class ReactorOperatorFallbackDecoratorTest {
     }
 
     @Test
-    public void shouldFallbackOnTimeoutUsingFlux() {
+    void shouldFallbackOnTimeoutUsingFlux() {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(TimeLimiterConfig.custom()
                 .timeoutDuration(Duration.ofMillis(1))
@@ -148,7 +147,7 @@ public class ReactorOperatorFallbackDecoratorTest {
     }
 
     @Test
-    public void shouldFallbackOnCircuitOpen() {
+    void shouldFallbackOnCircuitOpen() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
@@ -163,6 +162,5 @@ public class ReactorOperatorFallbackDecoratorTest {
 
         verify(circuitBreaker, never()).onResult(anyLong(), any(TimeUnit.class), any());
     }
-
 
 }

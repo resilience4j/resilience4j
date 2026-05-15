@@ -4,7 +4,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.rxjava3.core.Completable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -19,10 +19,10 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit test for {@link CompletableRateLimiter}.
  */
-public class CompletableRateLimiterTest {
+class CompletableRateLimiterTest {
 
     @Test
-    public void shouldEmitCompleted() {
+    void shouldEmitCompleted() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -33,7 +33,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldDelaySubscription() {
+    void shouldDelaySubscription() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
@@ -44,7 +44,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    void shouldPropagateError() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
@@ -56,7 +56,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldEmitErrorWithRequestNotPermittedException() {
+    void shouldEmitErrorWithRequestNotPermittedException() {
         RateLimiter rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
@@ -68,7 +68,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldDrainRateLimiterInConditionMetOnFailedCall() {
+    void shouldDrainRateLimiterInConditionMetOnFailedCall() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
@@ -85,7 +85,7 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
-    public void shouldNotDrainRateLimiterOnCompletion() {
+    void shouldNotDrainRateLimiterOnCompletion() {
         RateLimiter rateLimiter = RateLimiter.of("someLimiter", RateLimiterConfig.custom()
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))

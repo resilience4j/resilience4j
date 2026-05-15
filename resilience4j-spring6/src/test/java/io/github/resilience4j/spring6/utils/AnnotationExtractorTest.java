@@ -1,15 +1,14 @@
 package io.github.resilience4j.spring6.utils;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.spring6.utils.AnnotationExtractor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AnnotationExtractorTest {
+class AnnotationExtractorTest {
 
     @Test
-    public void testExtract() {
+    void testExtract() {
         CircuitBreaker circuitBreaker = AnnotationExtractor
             .extract(AnnotatedClass.class, CircuitBreaker.class);
 
@@ -18,7 +17,7 @@ public class AnnotationExtractorTest {
     }
 
     @Test
-    public void testExtract2() {
+    void testExtract2() {
         CircuitBreaker circuitBreaker = AnnotationExtractor
             .extract(NotAnnotatedClass.class, CircuitBreaker.class);
 

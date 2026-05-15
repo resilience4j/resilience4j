@@ -1,14 +1,12 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
-import io.github.resilience4j.spring6.timelimiter.configure.IllegalReturnTypeException;
-import io.github.resilience4j.spring6.timelimiter.configure.ReactorTimeLimiterAspectExt;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,8 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReactorTimeLimiterAspectExtTest {
+@ExtendWith(MockitoExtension.class)
+class ReactorTimeLimiterAspectExtTest {
 
     @Mock
     ProceedingJoinPoint proceedingJoinPoint;
@@ -25,15 +23,14 @@ public class ReactorTimeLimiterAspectExtTest {
     @InjectMocks
     ReactorTimeLimiterAspectExt reactorTimeLimiterAspectExt;
 
-
     @Test
-    public void testCheckTypes() {
+    void testCheckTypes() {
         assertThat(reactorTimeLimiterAspectExt.canHandleReturnType(Mono.class)).isTrue();
         assertThat(reactorTimeLimiterAspectExt.canHandleReturnType(Flux.class)).isTrue();
     }
 
     @Test
-    public void testReactorTypes() throws Throwable {
+    void testReactorTypes() throws Throwable {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
 
         when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
@@ -44,7 +41,7 @@ public class ReactorTimeLimiterAspectExtTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWithNotReactorType() throws Throwable{
+    void shouldThrowIllegalArgumentExceptionWithNotReactorType() throws Throwable{
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
         when(proceedingJoinPoint.proceed()).thenReturn("NOT REACTOR TYPE");
 
@@ -57,5 +54,4 @@ public class ReactorTimeLimiterAspectExtTest {
                     "java.lang.String testMethod has unsupported by @TimeLimiter return type. Reactor expects Mono/Flux.");
         }
     }
-
 }

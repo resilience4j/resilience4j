@@ -1,25 +1,30 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Flowable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link FlowableCircuitBreaker}.
  */
-public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
+class FlowableCircuitBreakerTest {
+
+    private final CircuitBreaker circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
 
     @Test
-    public void shouldInvokeOnSuccess() {
+    void shouldInvokeOnSuccess() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -35,7 +40,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeOnError() {
+    void shouldInvokeOnError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
@@ -53,7 +58,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldEmitErrorWithCallNotPermittedException() {
+    void shouldEmitErrorWithCallNotPermittedException() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Flowable.just("Event 1", "Event 2")
@@ -69,7 +74,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeReleasePermissionReleaseOnCancel() {
+    void shouldInvokeReleasePermissionReleaseOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just(1)
@@ -85,7 +90,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldInvokeOnSuccessOnCancelWhenOneEventWasEmitted() {
+    void shouldInvokeOnSuccessOnCancelWhenOneEventWasEmitted() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
         given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020: KrnSaurabh
+ *  Copyright 2026: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.function.Supplier;
@@ -36,7 +36,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
-public class VavrRateLimiterTest {
+class VavrRateLimiterTest {
 
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
@@ -45,8 +45,8 @@ public class VavrRateLimiterTest {
     private RateLimiterConfig config;
     private RateLimiter limit;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
@@ -57,7 +57,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void decorateCheckedSupplier() throws Throwable {
+    void decorateCheckedSupplier() throws Throwable {
         CheckedFunction0 supplier = mock(CheckedFunction0.class);
         CheckedFunction0 decorated = VavrRateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(false);
@@ -74,7 +74,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void decorateCheckedRunnable() throws Throwable {
+    void decorateCheckedRunnable() throws Throwable {
         CheckedRunnable runnable = mock(CheckedRunnable.class);
         CheckedRunnable decorated = VavrRateLimiter.decorateCheckedRunnable(limit, runnable);
         given(limit.acquirePermission(1)).willReturn(false);
@@ -91,7 +91,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void decorateCheckedFunction() throws Throwable {
+    void decorateCheckedFunction() throws Throwable {
         CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
         CheckedFunction1<Integer, String> decorated = VavrRateLimiter
             .decorateCheckedFunction(limit, function);
@@ -109,7 +109,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void decorateTrySupplier() {
+    void decorateTrySupplier() {
         Supplier<Try<String>> supplier = mock(Supplier.class);
         given(supplier.get()).willReturn(Try.success("Resource"));
         given(limit.acquirePermission(1)).willReturn(true);
@@ -121,7 +121,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void decorateEitherSupplier() {
+    void decorateEitherSupplier() {
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         given(supplier.get()).willReturn(Either.right("Resource"));
         given(limit.acquirePermission(1)).willReturn(true);
@@ -134,7 +134,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void shouldExecuteTrySupplierAndReturnRequestNotPermitted() {
+    void shouldExecuteTrySupplierAndReturnRequestNotPermitted() {
         Supplier<Try<String>> supplier = mock(Supplier.class);
         given(limit.acquirePermission(1)).willReturn(false);
 
@@ -146,7 +146,7 @@ public class VavrRateLimiterTest {
     }
 
     @Test
-    public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() {
+    void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() {
         
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         given(limit.acquirePermission(1)).willReturn(false);
