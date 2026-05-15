@@ -12,7 +12,7 @@ public class HealthResponse {
         return details;
     }
 
-    public void setDetails(Map<String, Object> details) {
+    void setDetails(Map<String, Object> details) {
         this.details = details;
     }
 
@@ -20,7 +20,7 @@ public class HealthResponse {
         return status;
     }
 
-    public void setStatus(String status) {
+    void setStatus(String status) {
         this.status = status;
     }
 }

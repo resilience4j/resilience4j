@@ -21,22 +21,18 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircuitBreakerEventsEndpointSnapshotReadTest {
+class CircuitBreakerEventsEndpointSnapshotReadTest {
 
     @Test
-    public void shouldUseSnapshotListWhenGettingAllEvents() {
+    void shouldUseSnapshotListWhenGettingAllEvents() {
         InMemoryEventConsumerRegistry registry = new InMemoryEventConsumerRegistry();
         ThrowingStreamCircularEventConsumer eventConsumer = new ThrowingStreamCircularEventConsumer();
         eventConsumer.consumeEvent(new CircuitBreakerOnResetEvent("backendA"));
@@ -50,7 +46,7 @@ public class CircuitBreakerEventsEndpointSnapshotReadTest {
     }
 
     @Test
-    public void shouldUseSnapshotListWhenFilteringByName() {
+    void shouldUseSnapshotListWhenFilteringByName() {
         InMemoryEventConsumerRegistry registry = new InMemoryEventConsumerRegistry();
         ThrowingStreamCircularEventConsumer eventConsumer = new ThrowingStreamCircularEventConsumer();
         eventConsumer.consumeEvent(new CircuitBreakerOnSuccessEvent("backendA", Duration.ofMillis(5)));
@@ -68,7 +64,7 @@ public class CircuitBreakerEventsEndpointSnapshotReadTest {
     }
 
     @Test
-    public void shouldUseSnapshotListWhenFilteringByNameAndType() {
+    void shouldUseSnapshotListWhenFilteringByNameAndType() {
         InMemoryEventConsumerRegistry registry = new InMemoryEventConsumerRegistry();
         ThrowingStreamCircularEventConsumer eventConsumer = new ThrowingStreamCircularEventConsumer();
         eventConsumer.consumeEvent(new CircuitBreakerOnSuccessEvent("backendA", Duration.ofMillis(5)));

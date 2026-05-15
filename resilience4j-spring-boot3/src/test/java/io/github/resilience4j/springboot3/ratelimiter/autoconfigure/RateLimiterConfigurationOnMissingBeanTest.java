@@ -1,32 +1,32 @@
 package io.github.resilience4j.springboot3.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.springboot3.TestUtils;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterAspect;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterAspectExt;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.github.resilience4j.springboot3.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     HealthContributorAutoConfiguration.class,
     RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
     RateLimiterConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(RateLimiterProperties.class)
-public class RateLimiterConfigurationOnMissingBeanTest {
+class RateLimiterConfigurationOnMissingBeanTest {
 
     @Autowired
     public ConfigWithOverrides configWithOverrides;
@@ -49,7 +49,7 @@ public class RateLimiterConfigurationOnMissingBeanTest {
     private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
 
     @Test
-    public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
+    void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
         throws NoSuchMethodException {
         final Class<RateLimiterConfiguration> originalClass = RateLimiterConfiguration.class;
         final Class<RateLimiterConfigurationOnMissingBean> onMissingBeanClass = RateLimiterConfigurationOnMissingBean.class;
@@ -57,15 +57,14 @@ public class RateLimiterConfigurationOnMissingBeanTest {
     }
 
     @Test
-    public void testAllCircuitBreakerConfigurationBeansOverridden() {
-        assertEquals(rateLimiterRegistry, configWithOverrides.rateLimiterRegistry);
-        assertEquals(rateLimiterAspect, configWithOverrides.rateLimiterAspect);
-        assertEquals(rateLimiterEventsConsumerRegistry,
-            configWithOverrides.rateLimiterEventsConsumerRegistry);
+    void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertThat(configWithOverrides.rateLimiterRegistry).isEqualTo(rateLimiterRegistry);
+        assertThat(configWithOverrides.rateLimiterAspect).isEqualTo(rateLimiterAspect);
+        assertThat(configWithOverrides.rateLimiterEventsConsumerRegistry).isEqualTo(rateLimiterEventsConsumerRegistry);
     }
 
     @Configuration
-    public static class ConfigWithOverrides {
+    static class ConfigWithOverrides {
 
         public RateLimiterRegistry rateLimiterRegistry;
 

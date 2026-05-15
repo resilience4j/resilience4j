@@ -1,12 +1,11 @@
 package io.github.resilience4j.springboot3.verifier.autoconfigure;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SpringBoot3VerifierTest {
+class SpringBoot3VerifierTest {
 
     @Test
-    public void compatibleWithCurrentSpringBoot() {
+    void compatibleWithCurrentSpringBoot() {
         new SpringBoot3Verifier().verifyCompatibility();
     }
-
 }

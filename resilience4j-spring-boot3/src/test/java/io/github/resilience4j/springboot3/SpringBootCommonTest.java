@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +17,33 @@ package io.github.resilience4j.springboot3;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.springboot3.bulkhead.autoconfigure.AbstractBulkheadConfigurationOnMissingBean;
-import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.springboot3.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfigurationProperties;
+import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.spring6.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.spring6.fallback.FallbackDecorators;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.springboot3.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.springboot3.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.spring6.retry.configure.RetryConfigurationProperties;
 import io.github.resilience4j.spring6.spelresolver.DefaultSpelResolver;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.github.resilience4j.springboot3.timelimiter.autoconfigure.AbstractTimeLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfigurationProperties;
-import org.junit.Test;
+import io.github.resilience4j.springboot3.bulkhead.autoconfigure.AbstractBulkheadConfigurationOnMissingBean;
+import io.github.resilience4j.springboot3.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
+import io.github.resilience4j.springboot3.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
+import io.github.resilience4j.springboot3.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
+import io.github.resilience4j.springboot3.timelimiter.autoconfigure.AbstractTimeLimiterConfigurationOnMissingBean;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -58,10 +58,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * @author romeh
  */
-public class SpringBootCommonTest {
+class SpringBootCommonTest {
 
     @Test
-    public void testBulkHeadCommonConfig() {
+    void testBulkHeadCommonConfig() {
         BulkheadConfigurationOnMissingBean bulkheadConfigurationOnMissingBean = new BulkheadConfigurationOnMissingBean();
         assertThat(bulkheadConfigurationOnMissingBean
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
@@ -90,7 +90,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testCircuitBreakerCommonConfig() {
+    void testCircuitBreakerCommonConfig() {
         CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(
             new CircuitBreakerConfigurationProperties());
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
@@ -109,7 +109,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testRetryCommonConfig() {
+    void testRetryCommonConfig() {
         RetryConfigurationOnMissingBean retryConfigurationOnMissingBean = new RetryConfigurationOnMissingBean();
         assertThat(retryConfigurationOnMissingBean.reactorRetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
@@ -129,7 +129,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testRateLimiterCommonConfig() {
+    void testRateLimiterCommonConfig() {
         RateLimiterConfigurationOnMissingBean rateLimiterConfigurationOnMissingBean = new RateLimiterConfigurationOnMissingBean();
         assertThat(rateLimiterConfigurationOnMissingBean.reactorRateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean.rxJava2RateLimiterAspectExt()).isNotNull();
@@ -151,7 +151,7 @@ public class SpringBootCommonTest {
     }
 
     @Test
-    public void testTimeLimiterCommonConfig() {
+    void testTimeLimiterCommonConfig() {
         TimeLimiterConfigurationOnMissingBean timeLimiterConfigurationOnMissingBean = new TimeLimiterConfigurationOnMissingBean();
         assertThat(timeLimiterConfigurationOnMissingBean.reactorTimeLimiterAspectExt()).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean.rxJava2TimeLimiterAspectExt()).isNotNull();

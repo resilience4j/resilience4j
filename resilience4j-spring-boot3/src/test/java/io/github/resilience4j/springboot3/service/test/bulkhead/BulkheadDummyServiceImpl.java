@@ -1,12 +1,11 @@
 package io.github.resilience4j.springboot3.service.test.bulkhead;
 
-import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
-
 
 @Component
 public class BulkheadDummyServiceImpl implements BulkheadDummyService {

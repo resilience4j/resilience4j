@@ -5,7 +5,7 @@ import reactor.core.publisher.Flux;
 
 public interface BulkheadReactiveDummyService {
 
-    String BACKEND = "backendB";
+    public String BACKEND = "backendB";
 
     Flux<String> doSomethingFlux();
 

@@ -1,15 +1,14 @@
 package io.github.resilience4j.springboot3.service.test;
 
-
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public interface DummyService {
 
-    String BACKEND = "backendA";
-    String BACKEND_B = "backendB";
+    public String BACKEND = "backendA";
+    public String BACKEND_B = "backendB";
 
-    void doSomething(boolean throwException) throws IOException;
+    public void doSomething(boolean throwException) throws IOException;
 
     CompletableFuture<String> longDoSomethingAsync() throws InterruptedException;
 

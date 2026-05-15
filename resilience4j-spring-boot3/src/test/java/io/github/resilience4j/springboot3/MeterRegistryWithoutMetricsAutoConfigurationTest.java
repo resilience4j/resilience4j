@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2026 Yevhenii Voievodin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,20 @@ package io.github.resilience4j.springboot3;
 
 import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 @EnableAutoConfiguration(exclude = {MetricsAutoConfiguration.class, ErrorMvcAutoConfiguration.class})
-public class MeterRegistryWithoutMetricsAutoConfigurationTest {
+class MeterRegistryWithoutMetricsAutoConfigurationTest {
 
 	@Autowired(required = false)
 	TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
@@ -72,5 +71,4 @@ public class MeterRegistryWithoutMetricsAutoConfigurationTest {
 	public void newRetryPublisherIsBound() {
 		assertThat(taggedRetryMetricsPublisher).isNull();
 	}
-
 }

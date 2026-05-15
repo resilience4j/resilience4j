@@ -1,5 +1,5 @@
 /*
- * Copyright 2025
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,25 @@
 package io.github.resilience4j.springboot3.thread.autoconfigure;
 
 import io.github.resilience4j.core.ThreadType;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ThreadTypeAutoConfigurationTest {
+class ThreadTypeAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(Resilience4jThreadAutoConfiguration.class));
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         System.clearProperty("resilience4j.thread.type");
     }
 
     @Test
-    public void registersBeanWhenPropertyIsVirtual() {
+    void registersBeanWhenPropertyIsVirtual() {
         contextRunner
             .withPropertyValues("resilience4j.thread.type=virtual")
             .run(context ->
@@ -43,7 +43,7 @@ public class ThreadTypeAutoConfigurationTest {
     }
 
     @Test
-    public void doesNotRegisterBeanWhenPropertyNotSpecified() {
+    void doesNotRegisterBeanWhenPropertyNotSpecified() {
         contextRunner
             .withPropertyValues("randomProperty=value")
             .run(context ->
@@ -52,7 +52,7 @@ public class ThreadTypeAutoConfigurationTest {
     }
 
     @Test
-    public void systemPropertyIsPropagatedFromSpringProperty() {
+    void systemPropertyIsPropagatedFromSpringProperty() {
         System.clearProperty("resilience4j.thread.type");
 
         contextRunner
@@ -65,7 +65,7 @@ public class ThreadTypeAutoConfigurationTest {
     }
 
     @Test
-    public void existingSystemPropertyIsNotOverwritten() {
+    void existingSystemPropertyIsNotOverwritten() {
         System.setProperty("resilience4j.thread.type", ThreadType.PLATFORM.toString());
 
         contextRunner
@@ -79,7 +79,7 @@ public class ThreadTypeAutoConfigurationTest {
     }
 
     @Test
-    public void threadTypePropertiesBindingIsCorrect() {
+    void threadTypePropertiesBindingIsCorrect() {
         contextRunner
             .withPropertyValues("resilience4j.thread.type=virtual")
             .run(context -> {

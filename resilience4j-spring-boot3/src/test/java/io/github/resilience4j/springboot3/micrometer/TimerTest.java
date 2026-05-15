@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
 import io.github.resilience4j.springboot3.service.test.micrometer.TimedService;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -38,14 +38,12 @@ import static io.github.resilience4j.micrometer.event.TimerEvent.Type.*;
 import static io.github.resilience4j.springboot3.service.test.micrometer.TimedService.*;
 import static java.time.Duration.ofSeconds;
 import static java.time.ZonedDateTime.now;
-import static java.time.ZonedDateTime.parse;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = TestApplication.class)
-public class TimerTest {
+class TimerTest {
 
     @Autowired
     private TestRestTemplate httpClient;
@@ -57,7 +55,7 @@ public class TimerTest {
     private TimedService service;
 
     @Test
-    public void shouldTimeBasicOperation() {
+    void shouldTimeBasicOperation() {
         Timer timer = timerRegistry.timer(BASIC_TIMER_NAME);
         ZonedDateTime now = now();
 
@@ -75,7 +73,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeReactorOperation() {
+    void shouldTimeReactorOperation() {
         Timer timer = timerRegistry.timer(REACTOR_TIMER_NAME);
         ZonedDateTime now = now();
 
@@ -94,7 +92,7 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeRxJava2Operation() {
+    void shouldTimeRxJava2Operation() {
         Timer timer = timerRegistry.timer(RXJAVA2_TIMER_NAME);
         ZonedDateTime now = now();
 

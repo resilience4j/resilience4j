@@ -92,5 +92,4 @@ public class ReactiveDummyServiceImpl implements ReactiveDummyService {
         }
         return Observable.just("testObservable");
     }
-
 }

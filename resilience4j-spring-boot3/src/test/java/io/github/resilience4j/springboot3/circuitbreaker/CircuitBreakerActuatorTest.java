@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Robert Winkler
+ * Copyright 2026 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.springboot3.circuitbreaker;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -23,24 +23,26 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerUpdateStateResponse;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
-public class CircuitBreakerActuatorTest {
+class CircuitBreakerActuatorTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    @RegisterExtension
+    static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(8090))
+            .build();
     @Autowired
     CircuitBreakerRegistry circuitBreakerRegistry;
 
@@ -48,7 +50,7 @@ public class CircuitBreakerActuatorTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    public void testUpdateCircuitBreakerState() {
+    void testUpdateCircuitBreakerState() {
         // given
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -89,7 +91,7 @@ public class CircuitBreakerActuatorTest {
     }
 
     @Test
-    public void testCircuitBreakerDetails() {
+    void testCircuitBreakerDetails() {
         // given
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -124,5 +126,4 @@ public class CircuitBreakerActuatorTest {
         assertThat(cbDetailsA.getNotPermittedCalls()).isEqualTo(metrics.getNumberOfNotPermittedCalls());
         assertThat(cbDetailsA.getState()).isEqualTo(cbA.getState());
     }
-
 }

@@ -11,7 +11,7 @@ public final class CompositeHealthResponse {
         return details;
     }
 
-    public void setDetails(Map<String, HealthResponse> details) {
+    void setDetails(Map<String, HealthResponse> details) {
         this.details = details;
     }
 
@@ -19,7 +19,7 @@ public final class CompositeHealthResponse {
         return status;
     }
 
-    public void setStatus(String status) {
+    void setStatus(String status) {
         this.status = status;
     }
 }

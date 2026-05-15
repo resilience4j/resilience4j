@@ -1,28 +1,28 @@
 package io.github.resilience4j.springboot3;
 
 import io.github.resilience4j.springboot3.scheduled.threadpool.autoconfigure.ContextAwareScheduledThreadPoolAutoConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ContextAwareScheduledThreadPoolAutoConfigurationTest {
+class ContextAwareScheduledThreadPoolAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
     @Test
-    public void registersBeanWhenConditionalPropertyIsInKebabCase() {
+    void registersBeanWhenConditionalPropertyIsInKebabCase() {
         assertBeanHasBeenCreated("resilience4j.scheduled.executor.core-pool-size=1");
     }
 
     @Test
-    public void registersBeanWhenConditionalPropertyIsInCamelCase() {
+    void registersBeanWhenConditionalPropertyIsInCamelCase() {
         assertBeanHasBeenCreated("resilience4j.scheduled.executor.corePoolSize=1");
     }
 
     @Test
-    public void doesNotRegisterBeanWhenConditionalPropertyNotSpecified() {
+    void doesNotRegisterBeanWhenConditionalPropertyNotSpecified() {
         assertBeanWasNotCreated("randomProperty");
     }
 
@@ -45,6 +45,4 @@ public class ContextAwareScheduledThreadPoolAutoConfigurationTest {
                 ContextAwareScheduledThreadPoolAutoConfiguration.class)
             );
     }
-
-
 }

@@ -4,12 +4,12 @@ import java.util.concurrent.CompletableFuture;
 
 public interface BulkheadDummyService {
 
-    String BACKEND = "backendA";
-    String BACKEND_C = "backendC";
-    String BACKEND_D = "backendD";
-    String BACKEND_E = "backendE";
+    public String BACKEND = "backendA";
+    public String BACKEND_C = "backendC";
+    public String BACKEND_D = "backendD";
+    public String BACKEND_E = "backendE";
 
-    void doSomething();
+    public void doSomething();
 
     CompletableFuture<String> doSomethingAsync() throws InterruptedException;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,41 @@
 package io.github.resilience4j.springboot3.retry;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.github.resilience4j.springboot3.circuitbreaker.IgnoredException;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.springboot3.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.spring6.retry.configure.RetryAspect;
+import io.github.resilience4j.springboot3.circuitbreaker.IgnoredException;
+import io.github.resilience4j.springboot3.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
+import io.github.resilience4j.springboot3.service.test.retry.ReactiveRetryDummyService;
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyFeignClient;
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyService;
-import io.github.resilience4j.springboot3.service.test.retry.ReactiveRetryDummyService;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.HashSet;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
-public class RetryAutoConfigurationTest {
+class RetryAutoConfigurationTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);
+    @RegisterExtension
+    static WireMockExtension wireMockServer = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(8090))
+            .build();
     @Autowired
     RetryRegistry retryRegistry;
     @Autowired
@@ -67,13 +69,13 @@ public class RetryAutoConfigurationTest {
      * as @Retry alone works with any normal service class
      */
     @Test
-    public void testFeignClient() {
+    void testFeignClient() {
 
-        WireMock.stubFor(WireMock
+        wireMockServer.stubFor(WireMock
             .get(WireMock.urlEqualTo("/retry/"))
             .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call"))
         );
-        WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/retry\\/error.*$"))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/retry\\/error.*$"))
             .willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
 
         assertThat(retryRegistry).isNotNull();
@@ -131,7 +133,7 @@ public class RetryAutoConfigurationTest {
      * RetryDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
-    public void testRetryAutoConfiguration() throws IOException {
+    void testRetryAutoConfiguration() throws IOException {
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
 

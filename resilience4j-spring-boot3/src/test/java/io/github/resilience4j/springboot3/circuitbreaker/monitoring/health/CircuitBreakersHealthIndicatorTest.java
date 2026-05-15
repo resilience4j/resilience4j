@@ -4,8 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.springboot3.circuitbreaker.monitoring.health.CircuitBreakersHealthIndicator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.SimpleStatusAggregator;
 import org.springframework.boot.actuate.health.Status;
@@ -21,10 +20,10 @@ import static org.mockito.Mockito.when;
 /**
  * @author bstorozhuk
  */
-public class CircuitBreakersHealthIndicatorTest {
+class CircuitBreakersHealthIndicatorTest {
 
     @Test
-    public void healthMetricsAndConfig() {
+    void healthMetricsAndConfig() {
         // given
         CircuitBreakerConfig config = mock(CircuitBreakerConfig.class);
         CircuitBreakerRegistry registry = mock(CircuitBreakerRegistry.class);
@@ -76,7 +75,7 @@ public class CircuitBreakersHealthIndicatorTest {
     }
 
     @Test
-    public void testHealthStatus() {
+    void testHealthStatus() {
         CircuitBreaker openCircuitBreaker = mock(CircuitBreaker.class);
         CircuitBreaker halfOpenCircuitBreaker = mock(CircuitBreaker.class);
         CircuitBreaker closeCircuitBreaker = mock(CircuitBreaker.class);
@@ -117,7 +116,7 @@ public class CircuitBreakersHealthIndicatorTest {
     }
 
     @Test
-    public void healthIndicatorMaxImpactCanBeOverridden() {
+    void healthIndicatorMaxImpactCanBeOverridden() {
         CircuitBreaker openCircuitBreaker = mock(CircuitBreaker.class);
         CircuitBreaker halfOpenCircuitBreaker = mock(CircuitBreaker.class);
         CircuitBreaker closeCircuitBreaker = mock(CircuitBreaker.class);
@@ -143,7 +142,6 @@ public class CircuitBreakersHealthIndicatorTest {
 
         CircuitBreakersHealthIndicator healthIndicator =
             new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, new SimpleStatusAggregator());
-
 
         // then
         Health health = healthIndicator.health();

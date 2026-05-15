@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2026 Yevhenii Voievodin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@ package io.github.resilience4j.springboot3;
 
 import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
-public class MetricsAutoConfigurationTest {
+class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
@@ -48,27 +47,27 @@ public class MetricsAutoConfigurationTest {
     TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher;
 
     @Test
-    public void newCircuitBreakerPublisherIsBound() {
+    void newCircuitBreakerPublisherIsBound() {
         assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newBulkheadPublisherIsBound() {
+    void newBulkheadPublisherIsBound() {
         assertThat(taggedBulkheadMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newThreadPoolBulkheadPublisherIsBound() {
+    void newThreadPoolBulkheadPublisherIsBound() {
         assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newRateLimiterPublisherIsBound() {
+    void newRateLimiterPublisherIsBound() {
         assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newRetryPublisherIsBound() {
+    void newRetryPublisherIsBound() {
         assertThat(taggedRetryMetricsPublisher).isNotNull();
     }
 
