@@ -30,13 +30,11 @@ import io.github.resilience4j.springboot3.service.test.DummyService;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
 import io.github.resilience4j.springboot3.service.test.ratelimiter.RateLimiterDummyFeignClient;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.time.Duration;

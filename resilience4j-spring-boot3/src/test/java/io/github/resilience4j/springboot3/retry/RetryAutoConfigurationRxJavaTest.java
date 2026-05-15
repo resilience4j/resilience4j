@@ -25,11 +25,9 @@ import io.github.resilience4j.springboot3.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
 import io.github.resilience4j.springboot3.service.test.retry.ReactiveRetryDummyService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 
