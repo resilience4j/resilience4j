@@ -29,15 +29,12 @@ jsr305 = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
 # Common test dependencies
 assertj-core = { module = "org.assertj:assertj-core", version = "3.18.1" }
 awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
-awaitility-old = { module = "com.jayway.awaitility:awaitility", version = "1.7.0" }
-junit = { module = "junit:junit", version = "4.13.2" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.2.3" }
 mockito-core = { module = "org.mockito:mockito-core", version = "5.16.1" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version = "5.16.1" }
 junit-bom = { module = "org.junit:junit-bom", version = "6.0.3" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 
 # resilience4j-cache
 jcache = { module = "javax.cache:cache-api", version = "1.1.0" }
