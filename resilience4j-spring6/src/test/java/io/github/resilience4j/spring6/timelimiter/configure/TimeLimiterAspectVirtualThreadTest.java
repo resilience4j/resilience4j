@@ -16,17 +16,14 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
 import io.github.resilience4j.core.ThreadType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,43 +32,28 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code resilience4j.thread.type} system property when no
  * {@code ContextAwareScheduledThreadPoolExecutor} bean is provided.
  */
-@RunWith(Parameterized.class)
-public class TimeLimiterAspectVirtualThreadTest {
+class TimeLimiterAspectVirtualThreadTest {
 
     private static final String SYS_PROP_KEY = "resilience4j.thread.type";
     private static final String EXPECTED_POOL_NAME = "TimeLimiterAspect";
 
-    private final ThreadType threadType;
     private String originalProperty;
     private TimeLimiterAspect aspect;
 
-    public TimeLimiterAspectVirtualThreadTest(ThreadType threadType) {
-        this.threadType = threadType;
+    private static Stream<ThreadType> threadModes() {
+        return Stream.of(ThreadType.PLATFORM, ThreadType.VIRTUAL);
     }
 
-    @Parameterized.Parameters(name = "threadMode={0}")
-    public static Collection<Object[]> threadModes() {
-        return Arrays.asList(new Object[][]{
-            {ThreadType.PLATFORM},
-            {ThreadType.VIRTUAL}
-        });
-    }
-
-    @Before
-    public void setUp() {
+    private void setUp(ThreadType threadType) {
         originalProperty = System.getProperty(SYS_PROP_KEY);
-        if (threadType == ThreadType.VIRTUAL) {
-            System.setProperty(SYS_PROP_KEY, threadType.toString());
-        } else {
-            System.clearProperty(SYS_PROP_KEY);
-        }
+        System.setProperty(SYS_PROP_KEY, threadType.toString());
         // Pass null for contextAwareScheduledThreadPoolExecutor to force the
         // ExecutorServiceFactory fallback path under test.
         aspect = new TimeLimiterAspect(null, null, null, null, null, null);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (aspect != null) {
             aspect.close();
         }
@@ -82,8 +64,10 @@ public class TimeLimiterAspectVirtualThreadTest {
         }
     }
 
-    @Test
-    public void fallbackSchedulerShouldUseConfiguredThreadType() throws Exception {
+    @ParameterizedTest(name = "threadMode={0}")
+    @MethodSource("threadModes")
+    void fallbackSchedulerShouldUseConfiguredThreadType(ThreadType threadType) throws Exception {
+        setUp(threadType);
         ScheduledExecutorService executor = extractExecutorService(aspect);
 
         boolean ranOnVirtual = executor
@@ -96,8 +80,10 @@ public class TimeLimiterAspectVirtualThreadTest {
             .isEqualTo(threadType == ThreadType.VIRTUAL);
     }
 
-    @Test
-    public void fallbackSchedulerShouldHaveAspectScopedThreadName() throws Exception {
+    @ParameterizedTest(name = "threadMode={0}")
+    @MethodSource("threadModes")
+    void fallbackSchedulerShouldHaveAspectScopedThreadName(ThreadType threadType) throws Exception {
+        setUp(threadType);
         ScheduledExecutorService executor = extractExecutorService(aspect);
 
         String threadName = executor
