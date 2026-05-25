@@ -19,6 +19,7 @@
 package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.hedge.HedgeConfig;
+import io.github.resilience4j.hedge.SimpleHedgeConfig;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 
 import java.time.Duration;
@@ -35,7 +36,7 @@ public interface HedgeDurationSupplier extends Supplier<Duration>{
      * @param config - the given HedgeConfiguration
      * @return the configured HedgeDurationSupplier
      */
-    static HedgeDurationSupplier fromConfig(HedgeConfig config) {
+    static HedgeDurationSupplier fromConfig(SimpleHedgeConfig config) {
         if (config.getDurationSupplier() == HedgeConfig.HedgeDurationSupplierType.PRECONFIGURED) {
             return ofPreconfigured(config.getCutoff());
         } else {

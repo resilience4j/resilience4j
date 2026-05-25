@@ -21,7 +21,6 @@ package io.github.resilience4j.hedge;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,28 +33,14 @@ import io.github.resilience4j.core.lang.Nullable;
 /**
  * HedgeConfig manages the configuration of Hedges
  */
-public class HedgeConfig implements Serializable {
+public class HedgeConfig extends SimpleHedgeConfig {
 
     private static final long serialVersionUID = 2203981592465761602L;
 
-    private static final String HEDGE_DURATION_MUST_NOT_BE_NULL = "HedgeDuration must not be null";
-    private final int concurrentHedges;
-    private final HedgeDurationSupplierType durationSupplierType;
-    private final boolean shouldUseFactorAsPercentage;
-    private final int hedgeTimeFactor;
-    private final boolean shouldMeasureErrors;
-    private final int windowSize;
-    private final Duration cutoff;
     private final transient ContextPropagator[] contextPropagators;
 
     private HedgeConfig(int concurrentHedges, HedgeDurationSupplierType durationSupplierType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ContextPropagator[] propagators) {
-        this.concurrentHedges = concurrentHedges;
-        this.durationSupplierType = durationSupplierType;
-        this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
-        this.hedgeTimeFactor = hedgeTimeFactor;
-        this.shouldMeasureErrors = shouldMeasureErrors;
-        this.windowSize = windowSize;
-        this.cutoff = cutoff;
+        super(concurrentHedges, durationSupplierType, shouldUseFactorAsPercentage, hedgeTimeFactor, shouldMeasureErrors, windowSize, cutoff);
         this.contextPropagators = propagators;
     }
 
@@ -85,10 +70,6 @@ public class HedgeConfig implements Serializable {
         return contextPropagators;
     }
 
-    public int getConcurrentHedges() {
-        return concurrentHedges;
-    }
-
     @Override
     public String toString() {
         return "HedgeConfig{" +
@@ -100,43 +81,12 @@ public class HedgeConfig implements Serializable {
             "}";
     }
 
-    public HedgeDurationSupplierType getDurationSupplier() {
-        return durationSupplierType;
-    }
-
-    public boolean isShouldUseFactorAsPercentage() {
-        return shouldUseFactorAsPercentage;
-    }
-
-    public int getHedgeTimeFactor() {
-        return hedgeTimeFactor;
-    }
-
-    public boolean isShouldMeasureErrors() {
-        return shouldMeasureErrors;
-    }
-
-    public int getWindowSize() {
-        return windowSize;
-    }
-
-    public Duration getCutoff() {
-        return cutoff;
-    }
-
     public enum HedgeDurationSupplierType {
         PRECONFIGURED, AVERAGE_PLUS
     }
 
-    public static class Builder {
+    public static class Builder extends SimpleHedgeConfig.Builder<Builder> {
 
-        private HedgeDurationSupplierType hedgeDurationSupplierType = HedgeDurationSupplierType.PRECONFIGURED;
-        private boolean shouldUseFactorAsPercentage = false;
-        private int hedgeTimeFactor = 0;
-        private boolean shouldMeasureErrors = true;
-        private int windowSize = 100;
-        private Duration cutoff;
-        private int concurrentHedges = 10;
         private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
         private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
 
@@ -144,12 +94,7 @@ public class HedgeConfig implements Serializable {
         }
 
         public Builder(HedgeConfig baseConfig) {
-            this.shouldUseFactorAsPercentage = baseConfig.shouldUseFactorAsPercentage;
-            this.hedgeTimeFactor = baseConfig.hedgeTimeFactor;
-            this.shouldMeasureErrors = baseConfig.shouldMeasureErrors;
-            this.windowSize = baseConfig.windowSize;
-            this.cutoff = baseConfig.cutoff;
-            this.concurrentHedges = baseConfig.concurrentHedges;
+            super(baseConfig);
         }
 
         public static Builder fromConfig(HedgeConfig baseConfig) {
@@ -161,6 +106,7 @@ public class HedgeConfig implements Serializable {
          *
          * @return the HedgeConfig
          */
+        @Override
         public HedgeConfig build() {
             final List<ContextPropagator> propagators = new ArrayList<>();
 
@@ -187,32 +133,6 @@ public class HedgeConfig implements Serializable {
             );
         }
 
-        public Builder averagePlusPercentageDuration(int percentageAsInteger, boolean shouldMeasureErrors) {
-            this.hedgeDurationSupplierType = HedgeDurationSupplierType.AVERAGE_PLUS;
-            this.shouldUseFactorAsPercentage = true;
-            this.hedgeTimeFactor = percentageAsInteger;
-            this.shouldMeasureErrors = shouldMeasureErrors;
-            return this;
-        }
-
-        public Builder averagePlusAmountDuration(int amount, boolean shouldMeasureErrors, int windowSize) {
-            this.hedgeDurationSupplierType = HedgeDurationSupplierType.AVERAGE_PLUS;
-            this.shouldUseFactorAsPercentage = false;
-            this.hedgeTimeFactor = amount;
-            this.shouldMeasureErrors = shouldMeasureErrors;
-            this.windowSize = windowSize;
-            return this;
-        }
-
-        public Builder preconfiguredDuration(Duration cutoff) {
-            if (cutoff == null) {
-                throw new NullPointerException(HEDGE_DURATION_MUST_NOT_BE_NULL);
-            }
-            this.hedgeDurationSupplierType = HedgeDurationSupplierType.PRECONFIGURED;
-            this.cutoff = cutoff;
-            return this;
-        }
-
         /**
          * Configures the context propagator classes.
          *
@@ -231,11 +151,6 @@ public class HedgeConfig implements Serializable {
             this.contextPropagators = contextPropagators != null ?
                 Arrays.stream(contextPropagators).collect(toList()) :
                 new ArrayList<>();
-            return this;
-        }
-
-        public Builder withMaxConcurrency(int concurrentHedges) {
-            this.concurrentHedges = concurrentHedges;
             return this;
         }
     }

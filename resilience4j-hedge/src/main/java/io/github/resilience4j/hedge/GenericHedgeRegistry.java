@@ -19,46 +19,50 @@
 package io.github.resilience4j.hedge;
 
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.hedge.internal.InMemoryHedgeRegistry;
+import io.github.resilience4j.hedge.internal.InMemoryGenericHedgeRegistry;
 
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
  * Manages all Hedge instances.
+ *
+ * @param <H> the specific Hedge type
+ * @param <C> the specific configuration type
  */
-public interface HedgeRegistry extends GenericHedgeRegistry<Hedge, HedgeConfig> {
+public interface GenericHedgeRegistry<H extends GenericHedge, C extends SimpleHedgeConfig> extends Registry<H, C> {
 
     /**
      * Gets a registry builder.
      *
-     * @return a builder for building {@link InMemoryHedgeRegistry} instances.
+     * @param executorServiceFunction a function to provide an executor service
+     * @return a builder for building {@link InMemoryGenericHedgeRegistry} instances.
      */
-    static InMemoryHedgeRegistry.Builder builder() {
-        return new InMemoryHedgeRegistry.Builder();
+    static InMemoryGenericHedgeRegistry.Builder builder(Function<SimpleHedgeConfig, ScheduledExecutorService> executorServiceFunction) {
+        return new InMemoryGenericHedgeRegistry.Builder(executorServiceFunction);
     }
 
     /**
-     * Returns all managed {@link Hedge} instances.
+     * Returns all managed {@link GenericHedge} instances.
      *
-     * @return all managed {@link Hedge} instances.
+     * @return all managed {@link GenericHedge} instances.
      */
-    @Override
-    Stream<Hedge> getAllHedges();
+    Stream<? extends GenericHedge> getAllHedges();
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one with the default Hedge
+     * Returns a managed {@link GenericHedge} or creates a new one with the default Hedge
      * configuration.
      *
      * @param name the name of the Hedge
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name);
+    GenericHedge hedge(String name);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one with the default Hedge
+     * Returns a managed {@link GenericHedge} or creates a new one with the default Hedge
      * configuration.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
@@ -67,24 +71,22 @@ public interface HedgeRegistry extends GenericHedgeRegistry<Hedge, HedgeConfig> 
      *
      * @param name the name of the Hedge
      * @param tags tags added to the Hedge
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name, Map<String, String> tags);
+    GenericHedge hedge(String name, Map<String, String> tags);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one with a custom Hedge
+     * Returns a managed {@link GenericHedge} or creates a new one with a custom Hedge
      * configuration.
      *
      * @param name        the name of the Hedge
      * @param hedgeConfig a custom Hedge configuration
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name, HedgeConfig hedgeConfig);
+    GenericHedge hedge(String name, C hedgeConfig);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one with a custom Hedge
+     * Returns a managed {@link GenericHedge} or creates a new one with a custom Hedge
      * configuration.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
@@ -94,25 +96,23 @@ public interface HedgeRegistry extends GenericHedgeRegistry<Hedge, HedgeConfig> 
      * @param name        the name of the Hedge
      * @param hedgeConfig a custom Hedge configuration
      * @param tags        tags added to the Hedge
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name, HedgeConfig hedgeConfig,
+    GenericHedge hedge(String name, C hedgeConfig,
                 Map<String, String> tags);
 
     /**
-     * Returns a managed {@link HedgeConfig} or creates a new one with a custom
+     * Returns a managed {@link GenericHedge} or creates a new one with a custom
      * HedgeConfig configuration.
      *
      * @param name                the name of the HedgeConfig
      * @param hedgeConfigSupplier a supplier of a custom HedgeConfig configuration
      * @return The {@link HedgeConfig}
      */
-    @Override
-    Hedge hedge(String name, Supplier<HedgeConfig> hedgeConfigSupplier);
+    GenericHedge hedge(String name, Supplier<C> hedgeConfigSupplier);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one with a custom Hedge
+     * Returns a managed {@link GenericHedge} or creates a new one with a custom Hedge
      * configuration.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
@@ -122,26 +122,24 @@ public interface HedgeRegistry extends GenericHedgeRegistry<Hedge, HedgeConfig> 
      * @param name                the name of the Hedge
      * @param hedgeConfigSupplier a supplier of a custom Hedge configuration
      * @param tags                tags added to the Hedge
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name,
-                Supplier<HedgeConfig> hedgeConfigSupplier,
+    GenericHedge hedge(String name,
+                Supplier<C> hedgeConfigSupplier,
                 Map<String, String> tags);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one.
+     * Returns a managed {@link GenericHedge} or creates a new one.
      * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the Hedge
      * @param configName the name of the shared configuration
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name, String configName);
+    GenericHedge hedge(String name, String configName);
 
     /**
-     * Returns a managed {@link Hedge} or creates a new one.
+     * Returns a managed {@link GenericHedge} or creates a new one.
      * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
@@ -151,10 +149,9 @@ public interface HedgeRegistry extends GenericHedgeRegistry<Hedge, HedgeConfig> 
      * @param name       the name of the Hedge
      * @param configName the name of the shared configuration
      * @param tags       tags added to the Hedge
-     * @return The {@link Hedge}
+     * @return The {@link GenericHedge}
      */
-    @Override
-    Hedge hedge(String name, String configName,
+    GenericHedge hedge(String name, String configName,
                 Map<String, String> tags);
 
 }
