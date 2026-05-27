@@ -27,6 +27,7 @@ import io.github.resilience4j.hedge.HedgeRegistry;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
@@ -149,5 +150,12 @@ public class InMemoryHedgeRegistry extends
         HedgeConfig config = getConfiguration(configName)
             .orElseThrow(() -> new ConfigurationNotFoundException(configName));
         return hedge(name, config, tags);
+    }
+
+    @Override
+    public void close() {
+        for (Hedge hedge : getAllHedges().collect(Collectors.toList())) {
+            hedge.close();
+        }
     }
 }

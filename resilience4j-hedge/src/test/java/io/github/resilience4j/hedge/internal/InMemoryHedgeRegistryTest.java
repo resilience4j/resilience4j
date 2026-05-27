@@ -26,6 +26,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -131,6 +134,25 @@ class InMemoryHedgeRegistryTest {
 
         then(registry.getAllHedges().count()).isOne();
         then(registry.getAllHedges().findFirst().orElseThrow().getName()).isEqualTo("foo");
+    }
+
+    @Test
+    public void shouldCascadeCloseToAllHedges() throws Exception {
+        HedgeConfig validConfig = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
+        HedgeRegistry registry = HedgeRegistry.builder().withDefaultConfig(validConfig).build();
+
+        Hedge hedge1 = registry.hedge("hedge1");
+        Hedge hedge2 = registry.hedge("hedge2");
+        Hedge hedge3 = registry.hedge("hedge3");
+
+        registry.close();
+
+        assertThatThrownBy(() -> hedge1.submit(() -> "val", Executors.newSingleThreadExecutor()))
+            .isInstanceOf(RejectedExecutionException.class);
+        assertThatThrownBy(() -> hedge2.submit(() -> "val", Executors.newSingleThreadExecutor()))
+            .isInstanceOf(RejectedExecutionException.class);
+        assertThatThrownBy(() -> hedge3.submit(() -> "val", Executors.newSingleThreadExecutor()))
+            .isInstanceOf(RejectedExecutionException.class);
     }
 
 }

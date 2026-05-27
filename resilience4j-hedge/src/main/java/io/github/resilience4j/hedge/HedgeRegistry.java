@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 /**
  * Manages all Hedge instances.
  */
-public interface HedgeRegistry extends Registry<Hedge, HedgeConfig> {
+public interface HedgeRegistry extends Registry<Hedge, HedgeConfig>, AutoCloseable {
 
     /**
      * Gets a registry builder.
@@ -147,5 +147,13 @@ public interface HedgeRegistry extends Registry<Hedge, HedgeConfig> {
      */
     Hedge hedge(String name, String configName,
                 Map<String, String> tags);
+
+    /**
+     * Closes all managed Hedge instances by shutting down their internal schedulers.
+     * <p>
+     * This method is idempotent.
+     */
+    @Override
+    void close();
 
 }
