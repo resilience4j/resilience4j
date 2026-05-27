@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * Good candidates for Hedged calls include side-effect-free calls, calls which may have a long response time tail. Do
  * not hedge non-idempotent inserts or other similar calls.
  */
-public interface Hedge {
+public interface Hedge extends AutoCloseable {
 
     String DEFAULT_NAME = "UNDEFINED";
 
@@ -230,6 +230,20 @@ public interface Hedge {
      * @param throwable The throwable which must be recorded
      */
     void onSecondaryFailure(Duration duration, Throwable throwable);
+
+    /**
+     * Closes the Hedge and shuts down its internal scheduled executor.
+     * <p>
+     * This method is idempotent. Multiple invocations have no additional effect.
+     * After close(), {@link #submit} and {@link #decorateCompletionStage} will
+     * throw {@link java.util.concurrent.RejectedExecutionException} from the
+     * underlying executor.
+     * <p>
+     * In-flight work is allowed to complete (graceful drain). The method waits
+     * up to 5 seconds for running tasks to finish, then forces shutdown.
+     */
+    @Override
+    void close();
 
     /**
      * An EventPublisher which can be used to register event consumers.

@@ -29,9 +29,14 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -82,5 +87,67 @@ class HedgeImplTest {
         assertThatNoException().isThrownBy(() -> hedge.onSecondaryFailure(Duration.ofMillis(1000), new Throwable()));
 
         Mockito.verify(eventProcessor, Mockito.never()).consumeEvent(any());
+    }
+
+    @Test
+    public void shouldRejectSubmitAfterClose() {
+        HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
+        Hedge closeableHedge = new HedgeImpl("closeTest", config);
+        closeableHedge.close();
+
+        assertThatThrownBy(() -> closeableHedge.submit(() -> "value", Executors.newSingleThreadExecutor()))
+            .isInstanceOf(RejectedExecutionException.class);
+    }
+
+    @Test
+    public void shouldDrainInFlightWorkOnClose() throws Exception {
+        HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
+        Hedge drainHedge = new HedgeImpl("drainTest", config);
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch finish = new CountDownLatch(1);
+        AtomicBoolean completed = new AtomicBoolean(false);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        drainHedge.submit(() -> {
+            started.countDown();
+            finish.await(10, TimeUnit.SECONDS);
+            completed.set(true);
+            return "done";
+        }, executor);
+
+        started.await(5, TimeUnit.SECONDS);
+        drainHedge.close();
+        finish.countDown();
+
+        await().atMost(5, TimeUnit.SECONDS).until(() -> completed.get());
+        executor.shutdown();
+    }
+
+    @Test
+    public void shouldBeIdempotentOnClose() {
+        HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
+        Hedge idempotentHedge = new HedgeImpl("idempotentTest", config);
+
+        assertThatCode(() -> {
+            idempotentHedge.close();
+            idempotentHedge.close();
+            idempotentHedge.close();
+        }).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void shouldHandleScheduledButNotStartedTaskOnClose() throws Exception {
+        HedgeConfig config = HedgeConfig.custom()
+            .preconfiguredDuration(Duration.ofSeconds(30))
+            .build();
+        Hedge scheduledHedge = Hedge.of("scheduledCloseTest", config);
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        CompletableFuture<String> future = scheduledHedge.submit(() -> "primary", executor);
+
+        scheduledHedge.close();
+
+        await().atMost(5, TimeUnit.SECONDS).until(future::isDone);
+        executor.shutdown();
     }
 }

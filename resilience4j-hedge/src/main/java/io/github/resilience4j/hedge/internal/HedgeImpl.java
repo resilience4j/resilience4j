@@ -64,6 +64,7 @@ public class HedgeImpl implements Hedge {
                 .newScheduledThreadPool()
                 .corePoolSize(hedgeConfig.getConcurrentHedges())
                 .contextPropagators(hedgeConfig.getContextPropagators())
+                .daemon(true)
                 .build();
     }
 
@@ -241,6 +242,21 @@ public class HedgeImpl implements Hedge {
             eventProcessor.consumeEvent(event);
         } catch (RuntimeException e) {
             LOG.warn("Failed to handle event {}", event.getEventType(), e);
+        }
+    }
+
+    @Override
+    public void close() {
+        configuredHedgeExecutor.shutdown();
+        try {
+            if (!configuredHedgeExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                configuredHedgeExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            if (!configuredHedgeExecutor.isTerminated()) {
+                configuredHedgeExecutor.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
         }
     }
 
