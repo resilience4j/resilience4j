@@ -32,10 +32,16 @@ public class NamingThreadFactory implements ThreadFactory {
     private final ThreadGroup group;
     private final AtomicInteger threadNumber = new AtomicInteger(1);
     private final String prefix;
+    private final boolean daemon;
 
     public NamingThreadFactory(String name) {
+        this(name, false);
+    }
+
+    public NamingThreadFactory(String name, boolean daemon) {
         this.group = getThreadGroup();
-        this.prefix = String.join("-",name, "");
+        this.prefix = String.join("-", name, "");
+        this.daemon = daemon;
     }
 
     /**
@@ -57,9 +63,7 @@ public class NamingThreadFactory implements ThreadFactory {
             ? Thread.ofVirtual().name(name, 0).unstarted(runnable)
             : new Thread(group, runnable, name, 0);
         if (!thread.isVirtual()) {
-            if (thread.isDaemon()) {
-                thread.setDaemon(false);
-            }
+            thread.setDaemon(daemon);
             if (thread.getPriority() != Thread.NORM_PRIORITY) {
                 thread.setPriority(Thread.NORM_PRIORITY);
             }
