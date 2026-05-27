@@ -35,8 +35,9 @@ public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPool
     private static final String THREAD_PREFIX = "ContextAwareScheduledThreadPool";
 
     private ContextAwareScheduledThreadPoolExecutor(int corePoolSize,
-                                                   @Nullable List<ContextPropagator> contextPropagators) {
-        super(corePoolSize, new NamingThreadFactory(THREAD_PREFIX));
+                                                   @Nullable List<ContextPropagator> contextPropagators,
+                                                   boolean daemon) {
+        super(corePoolSize, new NamingThreadFactory(THREAD_PREFIX, daemon));
         this.contextPropagators = contextPropagators != null ? contextPropagators : new ArrayList<>();
     }
 
@@ -114,6 +115,7 @@ public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPool
     public static class Builder {
         private List<ContextPropagator> contextPropagators = new ArrayList<>();
         private int corePoolSize;
+        private boolean daemon = false;
 
         public Builder corePoolSize(int corePoolSize) {
             if (corePoolSize < 1) {
@@ -131,8 +133,13 @@ public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPool
             return this;
         }
 
+        public Builder daemon(boolean daemon) {
+            this.daemon = daemon;
+            return this;
+        }
+
         public ContextAwareScheduledThreadPoolExecutor build() {
-            return new ContextAwareScheduledThreadPoolExecutor(corePoolSize, contextPropagators);
+            return new ContextAwareScheduledThreadPoolExecutor(corePoolSize, contextPropagators, daemon);
         }
     }
 }
