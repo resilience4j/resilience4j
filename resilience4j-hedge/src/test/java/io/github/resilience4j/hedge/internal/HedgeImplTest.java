@@ -30,9 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -90,41 +88,70 @@ class HedgeImplTest {
     }
 
     @Test
-    public void shouldRejectSubmitAfterClose() {
+    void shouldRejectSubmitAfterClose() {
         HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
         Hedge closeableHedge = new HedgeImpl("closeTest", config);
         closeableHedge.close();
 
-        assertThatThrownBy(() -> closeableHedge.submit(() -> "value", Executors.newSingleThreadExecutor()))
-            .isInstanceOf(RejectedExecutionException.class);
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            assertThatThrownBy(() -> closeableHedge.submit(() -> "value", executor))
+                .isInstanceOf(RejectedExecutionException.class);
+        }
     }
 
     @Test
-    public void shouldDrainInFlightWorkOnClose() throws Exception {
+    void shouldDrainInFlightWorkOnClose() throws Exception {
         HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
         Hedge drainHedge = new HedgeImpl("drainTest", config);
-        CountDownLatch started = new CountDownLatch(1);
-        CountDownLatch finish = new CountDownLatch(1);
-        AtomicBoolean completed = new AtomicBoolean(false);
+        CountDownLatch primaryStarted = new CountDownLatch(1);
+        CountDownLatch releasePrimary = new CountDownLatch(1);
+        CountDownLatch hedgedStarted = new CountDownLatch(1);
+        CountDownLatch releaseHedged = new CountDownLatch(1);
+        CountDownLatch hedgedCompleted = new CountDownLatch(1);
+        CountDownLatch closeStarted = new CountDownLatch(1);
+        String primaryThreadName = "drain-primary";
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        drainHedge.submit(() -> {
-            started.countDown();
-            finish.await(10, TimeUnit.SECONDS);
-            completed.set(true);
-            return "done";
-        }, executor);
+        ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, primaryThreadName));
+        ExecutorService closeExecutor = Executors.newSingleThreadExecutor();
+        try {
+            drainHedge.submit(() -> {
+                if (!primaryThreadName.equals(Thread.currentThread().getName())) {
+                    hedgedStarted.countDown();
+                    assertThat(releaseHedged.await(5, TimeUnit.SECONDS)).isTrue();
+                    hedgedCompleted.countDown();
+                    return "hedged";
+                }
+                primaryStarted.countDown();
+                assertThat(releasePrimary.await(5, TimeUnit.SECONDS)).isTrue();
+                return "primary";
+            }, executor);
 
-        started.await(5, TimeUnit.SECONDS);
-        drainHedge.close();
-        finish.countDown();
+            assertThat(primaryStarted.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(hedgedStarted.await(5, TimeUnit.SECONDS)).isTrue();
 
-        await().atMost(5, TimeUnit.SECONDS).until(() -> completed.get());
-        executor.shutdown();
+            Future<?> closeFuture = closeExecutor.submit(() -> {
+                closeStarted.countDown();
+                drainHedge.close();
+            });
+
+            assertThat(closeStarted.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThatThrownBy(() -> closeFuture.get(100, TimeUnit.MILLISECONDS))
+                .isInstanceOf(TimeoutException.class);
+            releaseHedged.countDown();
+
+            assertThat(hedgedCompleted.await(5, TimeUnit.SECONDS)).isTrue();
+            closeFuture.get(5, TimeUnit.SECONDS);
+        } finally {
+            releasePrimary.countDown();
+            releaseHedged.countDown();
+            drainHedge.close();
+            executor.shutdownNow();
+            closeExecutor.shutdownNow();
+        }
     }
 
     @Test
-    public void shouldBeIdempotentOnClose() {
+    void shouldBeIdempotentOnClose() {
         HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
         Hedge idempotentHedge = new HedgeImpl("idempotentTest", config);
 
@@ -136,18 +163,18 @@ class HedgeImplTest {
     }
 
     @Test
-    public void shouldHandleScheduledButNotStartedTaskOnClose() throws Exception {
+    void shouldHandleScheduledButNotStartedTaskOnClose() throws Exception {
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofSeconds(30))
             .build();
         Hedge scheduledHedge = Hedge.of("scheduledCloseTest", config);
 
-        ExecutorService executor = Executors.newCachedThreadPool();
-        CompletableFuture<String> future = scheduledHedge.submit(() -> "primary", executor);
+        try (ExecutorService executor = Executors.newCachedThreadPool()) {
+            CompletableFuture<String> future = scheduledHedge.submit(() -> "primary", executor);
 
-        scheduledHedge.close();
+            scheduledHedge.close();
 
-        await().atMost(5, TimeUnit.SECONDS).until(future::isDone);
-        executor.shutdown();
+            assertThat(future.get(5, TimeUnit.SECONDS)).isEqualTo("primary");
+        }
     }
 }

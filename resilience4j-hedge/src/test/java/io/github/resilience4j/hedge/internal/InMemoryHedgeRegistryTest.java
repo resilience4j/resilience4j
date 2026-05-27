@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Supplier;
@@ -137,7 +138,7 @@ class InMemoryHedgeRegistryTest {
     }
 
     @Test
-    public void shouldCascadeCloseToAllHedges() throws Exception {
+    void shouldCascadeCloseToAllHedges() throws Exception {
         HedgeConfig validConfig = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
         HedgeRegistry registry = HedgeRegistry.builder().withDefaultConfig(validConfig).build();
 
@@ -147,12 +148,16 @@ class InMemoryHedgeRegistryTest {
 
         registry.close();
 
-        assertThatThrownBy(() -> hedge1.submit(() -> "val", Executors.newSingleThreadExecutor()))
-            .isInstanceOf(RejectedExecutionException.class);
-        assertThatThrownBy(() -> hedge2.submit(() -> "val", Executors.newSingleThreadExecutor()))
-            .isInstanceOf(RejectedExecutionException.class);
-        assertThatThrownBy(() -> hedge3.submit(() -> "val", Executors.newSingleThreadExecutor()))
-            .isInstanceOf(RejectedExecutionException.class);
+        try (ExecutorService executor1 = Executors.newSingleThreadExecutor();
+             ExecutorService executor2 = Executors.newSingleThreadExecutor();
+             ExecutorService executor3 = Executors.newSingleThreadExecutor()) {
+            assertThatThrownBy(() -> hedge1.submit(() -> "val", executor1))
+                .isInstanceOf(RejectedExecutionException.class);
+            assertThatThrownBy(() -> hedge2.submit(() -> "val", executor2))
+                .isInstanceOf(RejectedExecutionException.class);
+            assertThatThrownBy(() -> hedge3.submit(() -> "val", executor3))
+                .isInstanceOf(RejectedExecutionException.class);
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NamingThreadFactoryTest {
 
     @Test
-    public void shouldCreateDaemonThreadWhenDaemonTrue() {
+    public void shouldCreateDaemonThreadWhenDaemonTrue() throws Exception {
         NamingThreadFactory factory = new NamingThreadFactory("test", true);
         AtomicBoolean wasDaemon = new AtomicBoolean(false);
 
@@ -17,7 +18,12 @@ public class NamingThreadFactoryTest {
             wasDaemon.set(Thread.currentThread().isDaemon());
         });
 
+        thread.start();
+        thread.join(TimeUnit.SECONDS.toMillis(5));
+
         assertThat(thread.isDaemon()).isTrue();
+        assertThat(thread.isAlive()).isFalse();
+        assertThat(wasDaemon.get()).isTrue();
         assertThat(thread.getName()).startsWith("test-");
     }
 

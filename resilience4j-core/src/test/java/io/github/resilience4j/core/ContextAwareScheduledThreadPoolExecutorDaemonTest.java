@@ -21,14 +21,17 @@ public class ContextAwareScheduledThreadPoolExecutorDaemonTest {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicBoolean wasDaemon = new AtomicBoolean(false);
 
-        executor.schedule(() -> {
-            wasDaemon.set(Thread.currentThread().isDaemon());
-            latch.countDown();
-        }, 0, TimeUnit.MILLISECONDS);
+        try {
+            executor.schedule(() -> {
+                wasDaemon.set(Thread.currentThread().isDaemon());
+                latch.countDown();
+            }, 0, TimeUnit.MILLISECONDS);
 
-        latch.await(5, TimeUnit.SECONDS);
-        assertThat(wasDaemon.get()).isTrue();
-        executor.shutdown();
+            assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(wasDaemon.get()).isTrue();
+        } finally {
+            executor.shutdown();
+        }
     }
 
     @Test
@@ -41,13 +44,16 @@ public class ContextAwareScheduledThreadPoolExecutorDaemonTest {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicBoolean wasDaemon = new AtomicBoolean(false);
 
-        executor.schedule(() -> {
-            wasDaemon.set(Thread.currentThread().isDaemon());
-            latch.countDown();
-        }, 0, TimeUnit.MILLISECONDS);
+        try {
+            executor.schedule(() -> {
+                wasDaemon.set(Thread.currentThread().isDaemon());
+                latch.countDown();
+            }, 0, TimeUnit.MILLISECONDS);
 
-        latch.await(5, TimeUnit.SECONDS);
-        assertThat(wasDaemon.get()).isFalse();
-        executor.shutdown();
+            assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(wasDaemon.get()).isFalse();
+        } finally {
+            executor.shutdown();
+        }
     }
 }
