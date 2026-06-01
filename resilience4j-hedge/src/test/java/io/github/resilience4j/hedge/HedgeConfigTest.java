@@ -47,6 +47,17 @@ class HedgeConfigTest {
     }
 
     @Test
+    void shouldInitializeDurationSupplierTypeFromOtherConfig() {
+        HedgeConfig config = HedgeConfig.custom()
+            .averagePlusAmountDuration(200, false, 100).build();
+
+        HedgeConfig copiedConfig = HedgeConfig.from(config).build();
+
+        then(copiedConfig.getDurationSupplier())
+            .isEqualTo(HedgeConfig.HedgeDurationSupplierType.AVERAGE_PLUS);
+    }
+
+    @Test
     void configToString() {
         then(HedgeConfig.ofDefaults().toString()).isEqualTo(HEDGE_TO_STRING);
     }

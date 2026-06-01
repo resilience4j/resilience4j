@@ -144,6 +144,7 @@ public class HedgeConfig implements Serializable {
         }
 
         public Builder(HedgeConfig baseConfig) {
+            this.hedgeDurationSupplierType = baseConfig.durationSupplierType;
             this.shouldUseFactorAsPercentage = baseConfig.shouldUseFactorAsPercentage;
             this.hedgeTimeFactor = baseConfig.hedgeTimeFactor;
             this.shouldMeasureErrors = baseConfig.shouldMeasureErrors;
