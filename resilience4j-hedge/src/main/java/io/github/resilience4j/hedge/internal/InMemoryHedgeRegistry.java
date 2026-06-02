@@ -154,8 +154,20 @@ public class InMemoryHedgeRegistry extends
 
     @Override
     public void close() {
+        Exception firstException = null;
         for (Hedge hedge : getAllHedges().collect(Collectors.toList())) {
-            hedge.close();
+            try {
+                hedge.close();
+            } catch (Exception e) {
+                if (firstException == null) {
+                    firstException = e;
+                } else {
+                    firstException.addSuppressed(e);
+                }
+            }
+        }
+        if (firstException != null) {
+            throw new RuntimeException("Failed to close one or more Hedge instances", firstException);
         }
     }
 }

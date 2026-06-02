@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2026: Matthew Sandoz
+ *  Copyright 2021: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -99,6 +99,12 @@ class HedgeImplTest {
         }
     }
 
+    /**
+     * Verifies that close() drains in-flight work rather than terminating it.
+     * Hedge submits the same callable to both primary and hedge (internal) executors.
+     * We distinguish them by thread name since the API provides no other way
+     * to identify which executor is running the callable.
+     */
     @Test
     void shouldDrainInFlightWorkOnClose() throws Exception {
         HedgeConfig config = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();

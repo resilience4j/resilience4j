@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * Concurrency tests for Hedge pattern with both virtual and platform threads.
@@ -39,6 +38,7 @@ class HedgeConcurrencyTest {
     private ScheduledExecutorService hedgeExecutor;
     private ExecutorService testExecutor;
     private HedgeRegistry hedgeRegistry;
+    private final List<Hedge> createdHedges = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -49,6 +49,12 @@ class HedgeConcurrencyTest {
 
     @AfterEach
     void tearDown() {
+        for (Hedge hedge : createdHedges) {
+            hedge.close();
+        }
+        createdHedges.clear();
+        hedgeRegistry.close();
+
         if (hedgeExecutor != null && !hedgeExecutor.isShutdown()) {
             hedgeExecutor.shutdown();
             try {
@@ -76,12 +82,10 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentHedgeOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge operations with {}", threadType);
 
         Hedge hedge = Hedge.of(Duration.ofMillis(50));
+        createdHedges.add(hedge);
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -126,9 +130,6 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentHedgeRegistryOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge registry operations with {}", threadType);
 
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -182,9 +183,6 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentEventPublishing(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent event publishing with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
@@ -192,6 +190,7 @@ class HedgeConcurrencyTest {
             .build();
 
         Hedge hedge = Hedge.of(config);
+        createdHedges.add(hedge);
 
         List<HedgeEvent> events = Collections.synchronizedList(new ArrayList<>());
         hedge.getEventPublisher().onEvent(events::add);
@@ -235,9 +234,6 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleRaceConditionsBetweenOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing race conditions with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
@@ -245,6 +241,7 @@ class HedgeConcurrencyTest {
             .build();
 
         Hedge hedge = Hedge.of(config);
+        createdHedges.add(hedge);
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -289,9 +286,6 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentHedgeTriggering(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge triggering with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
@@ -299,6 +293,7 @@ class HedgeConcurrencyTest {
             .build();
 
         Hedge hedge = Hedge.of(config);
+        createdHedges.add(hedge);
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(5);
