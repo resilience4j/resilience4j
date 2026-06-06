@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":resilience4j-retry"))
     implementation(project(":resilience4j-timelimiter"))
 
-    testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
+    testImplementation(testFixtures(project(":resilience4j-micrometer")))
     testImplementation(project(":resilience4j-test"))
     testImplementation(libs.rxjava3)
 }

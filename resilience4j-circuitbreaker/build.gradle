@@ -4,6 +4,6 @@ dependencies {
     testImplementation(project(":resilience4j-test"))
     testImplementation(libs.mock.clock)
     testImplementation(libs.vavr)
-    testImplementation(project(":resilience4j-core").sourceSets.test.output)
+    testImplementation(testFixtures(project(":resilience4j-core")))
 }
 ext.moduleName = "io.github.resilience4j.circuitbreaker"

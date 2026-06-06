@@ -15,7 +15,7 @@ dependencies {
     compileOnly(libs.spring6.core)
 
     testImplementation(project(":resilience4j-metrics"))
-    testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
+    testImplementation(testFixtures(project(":resilience4j-micrometer")))
     testImplementation(project(":resilience4j-reactor"))
     testImplementation(project(":resilience4j-rxjava2"))
     testImplementation(project(":resilience4j-rxjava3"))

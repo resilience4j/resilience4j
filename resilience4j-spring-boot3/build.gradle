@@ -13,7 +13,7 @@ dependencies {
 
     testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-micrometer"))
-    testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
+    testImplementation(testFixtures(project(":resilience4j-micrometer")))
     testImplementation(project(":resilience4j-reactor"))
     testImplementation(project(":resilience4j-rxjava2"))
     testImplementation(project(":resilience4j-rxjava3"))
