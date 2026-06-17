@@ -7,6 +7,6 @@ dependencies {
     compileOnly(libs.feign.core)
 
     testImplementation(libs.feign.core)
-    testImplementation(libs.feign.wiremock)
+    testImplementation(libs.wiremock)
 }
 ext.moduleName = "io.github.resilience4j.feign"
