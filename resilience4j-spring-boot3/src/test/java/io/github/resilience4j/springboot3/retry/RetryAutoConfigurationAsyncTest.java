@@ -27,6 +27,7 @@ import io.github.resilience4j.springboot3.service.test.retry.ReactiveRetryDummyS
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyFeignClient;
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyService;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,12 @@ class RetryAutoConfigurationAsyncTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @AfterEach
+    void tearDown() {
+        MDC.clear();
+        TestThreadLocalContextHolder.clear();
+    }
 
     /**
      * The test verifies that a Async Retry instance is created and configured properly when the

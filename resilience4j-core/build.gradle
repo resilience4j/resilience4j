@@ -1,6 +1,13 @@
+apply plugin: "java-test-fixtures"
+
 ext.moduleName = "io.github.resilience4j.core"
 
 dependencies {
+    testFixturesImplementation(libs.bundles.testing)
+    testFixturesImplementation(platform(libs.junit.bom))
+    testFixturesImplementation(libs.junit.jupiter)
+    testFixturesImplementation(libs.slf4j)
+
     testImplementation(libs.mock.clock)
     // TODO: other modules currently depend on ThreadModeTestBaseJUnit4
     //  remove after migration to JUnit 6 is completed
