@@ -107,4 +107,12 @@ class HedgeConfigTest {
 //            .getName())
 //            .isEqualTo("hedge-TEST-1");
 //    }
+
+    @Test
+    void shouldCreateUsableDefaultDurationSupplier() {
+        HedgeDurationSupplier supplier = HedgeDurationSupplier.fromConfig(HedgeConfig.ofDefaults());
+        then(supplier.get()).isNotNull();
+    }
+
+
 }
