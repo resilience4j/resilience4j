@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -203,13 +204,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void handleThrowable(long duration, TimeUnit durationUnit, Throwable throwable) {
-        if (circuitBreakerConfig.getIgnoreExceptionPredicate().test(throwable)) {
+        if (evaluatePredicate(circuitBreakerConfig.getIgnoreExceptionPredicate(), throwable)) {
             LOG.debug("CircuitBreaker '{}' ignored an exception:", name, throwable);
             releasePermission();
             publishCircuitIgnoredErrorEvent(name, duration, durationUnit, throwable);
             return;
         }
-        if (circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)) {
+        if (evaluatePredicate(circuitBreakerConfig.getRecordExceptionPredicate(), throwable)) {
             LOG.debug("CircuitBreaker '{}' recorded an exception as failure:", name, throwable);
             publishCircuitErrorEvent(name, duration, durationUnit, throwable);
             stateReference.get().onError(duration, durationUnit, throwable);
@@ -230,7 +231,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onResult(long duration, TimeUnit durationUnit, @Nullable Object result) {
-        if (result != null && circuitBreakerConfig.getRecordResultPredicate().test(result)) {
+        if (result != null && evaluatePredicate(circuitBreakerConfig.getRecordResultPredicate(), result)) {
             LOG.debug("CircuitBreaker '{}' recorded a result type '{}' as failure:", name, result.getClass());
             ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result);
             publishCircuitErrorEvent(name, duration, durationUnit, failure);
@@ -240,6 +241,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (result != null) {
                 handlePossibleTransition(Either.left(result));
             }
+        }
+    }
+
+    /**
+     * Evaluates a user-supplied predicate, making sure a permission that was previously acquired is
+     * not leaked if the predicate throws. Without this, an exception escaping a record/ignore
+     * predicate would bypass {@link #releasePermission()} and the recording of the call, leaving the
+     * CircuitBreaker with a permanently lost permit (most visibly wedging the HALF_OPEN state). The
+     * original exception is rethrown so the caller still observes the failure.
+     */
+    private <T> boolean evaluatePredicate(Predicate<T> predicate, T value) {
+        try {
+            return predicate.test(value);
+        } catch (Exception predicateException) {
+            releasePermission();
+            throw predicateException;
         }
     }
 
