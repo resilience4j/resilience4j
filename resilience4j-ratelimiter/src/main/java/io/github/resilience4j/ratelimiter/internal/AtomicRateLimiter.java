@@ -41,8 +41,8 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
  * <p>Each cycle has duration of {@link RateLimiterConfig#getLimitRefreshPeriod} in nanoseconds.
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
  * set {@link State#activePermissions} to {@link RateLimiterConfig#getLimitForPeriod}. For the {@link
- * AtomicRateLimiter} callers it is really looks so, but under the hood there is some optimisations
- * that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
+ * AtomicRateLimiter} callers it is really looks that way, but under the hood there are some optimizations
+ * that  skip this refresh if {@link AtomicRateLimiter} is not actively used.
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
  * AtomicReference} to {@link AtomicRateLimiter.State}
  */
@@ -256,11 +256,11 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param permits              permits of required permissions
      * @param cyclePeriodInNanos   current configuration values
      * @param permissionsPerCycle  current configuration values
-     * @param availablePermissions currently available permissions, can be negative if some
-     *                             permissions have been reserved
+     * @param availablePermissions currently available permissions can be negative if some
+     * permissions have been reserved
      * @param currentNanos         current time in nanoseconds
      * @param currentCycle         current {@link AtomicRateLimiter} cycle    @return nanoseconds to
-     *                             wait for the next permission
+     * wait for the next permission
      */
     private long nanosToWaitForPermission(final int permits, final long cyclePeriodInNanos,
                                           final int permissionsPerCycle,
@@ -335,12 +335,12 @@ public class AtomicRateLimiter implements RateLimiter {
 
     /**
      * Parks {@link Thread} for nanosToWait.
-     * <p>If the current thread is {@linkplain Thread#interrupted}
+     * <p>If the current thread is {@linkplain 'Threadinterrupted'}
      * while waiting for a permit then it won't throw {@linkplain InterruptedException}, but its
      * interrupt status will be set.
      *
      * @param nanosToWait nanoseconds caller need to wait
-     * @return true if caller was not {@link Thread#interrupted} while waiting
+     * @return true if caller was not {@link 'Thread#interrupted'} while waiting
      */
     private boolean waitForPermission(final long nanosToWait) {
         waitingThreads.incrementAndGet();
