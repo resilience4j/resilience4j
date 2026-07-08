@@ -249,7 +249,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * not leaked if the predicate throws. Without this, an exception escaping a record/ignore
      * predicate would bypass {@link #releasePermission()} and the recording of the call, leaving the
      * CircuitBreaker with a permanently lost permit (most visibly wedging the HALF_OPEN state). The
-     * original exception is rethrown so the caller still observes the failure.
+     * exception thrown by the predicate is rethrown so the caller still observes the failure.
      */
     private <T> boolean evaluatePredicate(Predicate<T> predicate, T value) {
         try {
