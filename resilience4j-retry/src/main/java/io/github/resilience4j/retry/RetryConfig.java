@@ -23,8 +23,11 @@ import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+import io.github.resilience4j.retry.internal.BudgetRetryImpl;
+import io.github.resilience4j.retry.internal.SlidingWindowSynchronizationStrategy;
 
 import java.io.Serializable;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
@@ -60,6 +63,12 @@ public class RetryConfig implements Serializable {
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
     private boolean failAfterMaxAttempts = false;
     private boolean writableStackTraceEnabled = true;
+
+    private SlidingWindowSynchronizationStrategy synchronizationStrategy = SlidingWindowSynchronizationStrategy.LOCK_FREE;
+    private int windowSize = 10;
+    private double maxRetryRatio = 10.0;
+    private Clock clock = Clock.systemUTC();
+    private long minSampleSize = 100;
 
     @Nullable
     private transient IntervalFunction intervalFunction;
@@ -114,6 +123,27 @@ public class RetryConfig implements Serializable {
      */
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
+    }
+
+    /**
+     * @return the sliding window synchronization strategy for {@link BudgetRetryImpl}
+     */
+    public SlidingWindowSynchronizationStrategy getSynchronizationStrategy() {
+        return synchronizationStrategy;
+    }
+
+    /**
+     * @return the sliding window size for {@link BudgetRetryImpl}
+     */
+    public int getWindowSize() {
+        return windowSize;
+    }
+
+    /**
+     * @return the sliding window failure/total ratio for {@link BudgetRetryImpl}
+     */
+    public double getMaxRetryRatio() {
+        return maxRetryRatio;
     }
 
     /**
@@ -185,8 +215,26 @@ public class RetryConfig implements Serializable {
         retryConfig.append(Arrays.toString(retryExceptions));
         retryConfig.append(", ignoreExceptions=");
         retryConfig.append(Arrays.toString(ignoreExceptions));
+        retryConfig.append(", slidingWindowSynchronizationStrategy=");
+        retryConfig.append(synchronizationStrategy);
+        retryConfig.append(", windowSize=");
+        retryConfig.append(windowSize);
+        retryConfig.append(", ratio=");
+        retryConfig.append(maxRetryRatio);
+        retryConfig.append(", clock=");
+        retryConfig.append(clock);
+        retryConfig.append(", minSampleSize=");
+        retryConfig.append(minSampleSize);
         retryConfig.append("}");
         return retryConfig.toString();
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
+    public long getMinSampleSize() {
+        return minSampleSize;
     }
 
     public static class Builder<T> {
@@ -194,6 +242,12 @@ public class RetryConfig implements Serializable {
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
         private boolean failAfterMaxAttempts = false;
         private boolean writableStackTraceEnabled = true;
+
+        private SlidingWindowSynchronizationStrategy synchronizationStrategy = SlidingWindowSynchronizationStrategy.LOCK_FREE;
+        private int windowSize = 10;
+        private double maxRetryRatio = 10.0;
+        private Clock clock = Clock.systemUTC();
+        private long minSampleSize = 100;
 
         @Nullable
         private IntervalFunction intervalFunction;
@@ -227,6 +281,11 @@ public class RetryConfig implements Serializable {
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
+            this.synchronizationStrategy = baseConfig.synchronizationStrategy;
+            this.windowSize = baseConfig.windowSize;
+            this.maxRetryRatio = baseConfig.maxRetryRatio;
+            this.clock = baseConfig.clock;
+            this.minSampleSize = baseConfig.minSampleSize;
             if (baseConfig.intervalFunction != null) {
                 this.intervalFunction = baseConfig.intervalFunction;
             } else {
@@ -390,6 +449,47 @@ public class RetryConfig implements Serializable {
             return this;
         }
 
+        public Builder<T> slidingWindowSynchronizationStrategy(SlidingWindowSynchronizationStrategy synchronizationStrategy) {
+            this.synchronizationStrategy = synchronizationStrategy;
+            return this;
+        }
+
+        public Builder<T> windowSize(int windowSize) {
+            if (windowSize < 1) {
+                throw new IllegalArgumentException(
+                        "windowSize must be greater than or equal to 1");
+            }
+
+            this.windowSize = windowSize;
+            return this;
+        }
+
+        public Builder<T> maxRetryRatio(double maxRetryRatio) {
+            if (maxRetryRatio < 0) {
+                throw new IllegalArgumentException(
+                        "maxRetryRatio must be greater than or equal to 0");
+            }
+
+            this.maxRetryRatio = maxRetryRatio;
+            return this;
+        }
+
+        public Builder<T> clock(Clock clock) {
+            this.clock = clock;
+
+            return this;
+        }
+
+        public Builder<T> minSampleSize(long minSampleSize) {
+            if (minSampleSize < 0) {
+                throw new IllegalArgumentException(
+                        "minSampleSize must be greater than or equal to 0");
+            }
+
+            this.minSampleSize = minSampleSize;
+            return this;
+        }
+
         public RetryConfig build() {
             if (intervalFunction != null && intervalBiFunction != null) {
                 throw new IllegalStateException("The intervalFunction was configured twice which could result in an" +
@@ -408,6 +508,11 @@ public class RetryConfig implements Serializable {
             config.intervalFunction = createIntervalFunction();
             config.intervalBiFunction = Optional.ofNullable(intervalBiFunction)
                 .orElse(IntervalBiFunction.ofIntervalFunction(config.intervalFunction));
+            config.synchronizationStrategy = synchronizationStrategy;
+            config.windowSize = windowSize;
+            config.maxRetryRatio = maxRetryRatio;
+            config.clock = clock;
+            config.minSampleSize = minSampleSize;
             return config;
         }
 
