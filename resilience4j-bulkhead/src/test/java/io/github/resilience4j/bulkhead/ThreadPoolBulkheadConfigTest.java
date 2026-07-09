@@ -221,6 +221,43 @@ class ThreadPoolBulkheadConfigTest {
                 .endsWith("}");
     }
 
+    @Test
+    void fromShouldNotMutateBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(4)
+            .coreThreadPoolSize(2)
+            .queueCapacity(10)
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .maxThreadPoolSize(20)
+            .coreThreadPoolSize(8)
+            .queueCapacity(50)
+            .build();
+
+        assertThat(derivedConfig).isNotSameAs(baseConfig);
+        assertThat(baseConfig.getMaxThreadPoolSize()).isEqualTo(4);
+        assertThat(baseConfig.getCoreThreadPoolSize()).isEqualTo(2);
+        assertThat(baseConfig.getQueueCapacity()).isEqualTo(10);
+        assertThat(derivedConfig.getMaxThreadPoolSize()).isEqualTo(20);
+        assertThat(derivedConfig.getCoreThreadPoolSize()).isEqualTo(8);
+        assertThat(derivedConfig.getQueueCapacity()).isEqualTo(50);
+    }
+
+    @Test
+    void fromShouldNotLeakContextPropagatorsIntoBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .contextPropagator(new TestCtxPropagator())
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .contextPropagator(new TestCtxPropagator2())
+            .build();
+
+        assertThat(baseConfig.getContextPropagator()).hasSize(1);
+        assertThat(derivedConfig.getContextPropagator()).hasSize(2);
+    }
+
     public static class TestCtxPropagator implements ContextPropagator<Object> {
 
         @Override
