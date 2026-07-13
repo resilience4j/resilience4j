@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
 import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 
+import java.time.Duration;
+
 class HedgeConfigTest {
 
     private static final String HEDGE_DURATION_MUST_NOT_BE_NULL = "HedgeDuration must not be null";
@@ -111,7 +113,9 @@ class HedgeConfigTest {
     @Test
     void shouldCreateUsableDefaultDurationSupplier() {
         HedgeDurationSupplier supplier = HedgeDurationSupplier.fromConfig(HedgeConfig.ofDefaults());
-        then(supplier.get()).isNotNull();
+        Duration result = supplier.get();
+        then(result).isNotNull();
+        then(result).isGreaterThan(Duration.ZERO);
     }
 
 
