@@ -335,6 +335,42 @@ class SupplierRetryTest {
     }
 
     @Test
+    void shouldNotRetryWhenExceptionMatchesIgnorePredicate() {
+        given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException("ignore"));
+        RetryConfig config = RetryConfig.custom()
+            .ignoreExceptionPredicate(e -> "ignore".equals(e.getMessage()))
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedSupplier<String> retryableSupplier = Retry
+            .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
+
+        Try<String> result = Try.of(() -> retryableSupplier.get());
+
+        then(helloWorldService).should().returnHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
+        assertThat(sleptTime).isZero();
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldRetryWhenExceptionDoesNotMatchIgnorePredicate() {
+        given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException("retry"));
+        RetryConfig config = RetryConfig.custom()
+            .ignoreExceptionPredicate(e -> "ignore".equals(e.getMessage()))
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedSupplier<String> retryableSupplier = Retry
+            .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
+
+        Try<String> result = Try.of(() -> retryableSupplier.get());
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
     void shouldReturnAfterThreeAttemptsAndRecover() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");

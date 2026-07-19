@@ -209,6 +209,19 @@ class RetryConfigBuilderTest {
     }
 
     @Test()
+    void shouldUseIgnoreExceptionPredicate() {
+        RetryConfig retryConfig = RetryConfig.custom()
+            .retryExceptions(RuntimeException.class)
+            .ignoreExceptionPredicate(e -> "ignore".equals(e.getMessage()))
+            .build();
+        final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
+        then(failurePredicate.test(new RuntimeException())).isTrue();
+        then(failurePredicate.test(new RuntimeException("ignore"))).isFalse();
+        then(failurePredicate.test(new Exception("ignore"))).isFalse();
+        then(failurePredicate.test(new Exception())).isFalse();
+    }
+
+    @Test()
     void shouldBuilderCreateConfigEveryTime() {
         final RetryConfig.Builder<Object> builder = RetryConfig.custom();
         builder.maxAttempts(5);

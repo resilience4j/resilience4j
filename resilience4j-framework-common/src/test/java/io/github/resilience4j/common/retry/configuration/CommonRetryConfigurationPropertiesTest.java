@@ -91,6 +91,17 @@ class CommonRetryConfigurationPropertiesTest {
         testCreateRetryConfig(WITH_WAIT_DURATION, ENABLE_RANDOMIZED_WAIT, WITH_RANDOMIZED_FACTOR, ENABLE_EXPONENTIAL_BACKOFF, WITH_BACKOFF_MULTIPLIER, WITH_EXPONENTIAL_MAX_WAIT_DURATION);
     }
 
+    @Test
+    void createRetryConfig_withIgnoreExceptionPredicate() {
+        CommonRetryConfigurationProperties properties = new CommonRetryConfigurationProperties();
+        CommonRetryConfigurationProperties.InstanceProperties instanceProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        instanceProperties.setIgnoreExceptionPredicate(io.github.resilience4j.common.RecordFailurePredicate.class);
+        properties.getInstances().put("test", instanceProperties);
+        RetryConfig retryConfig = properties.createRetryConfig("test", new CompositeCustomizer<>(List.of()));
+        assertThat(retryConfig).isNotNull();
+        assertThat(retryConfig.getIgnoreExceptionPredicate()).isNotNull();
+    }
+
     @SafeVarargs
     private void testCreateRetryConfig(Consumer<CommonRetryConfigurationProperties.InstanceProperties>... customizers) {
         String defaultConfigurationName = "default";
