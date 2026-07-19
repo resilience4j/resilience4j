@@ -52,6 +52,9 @@ public class RetryConfig implements Serializable {
     private transient Predicate<Throwable> retryOnExceptionPredicate;
 
     @Nullable
+    private transient Predicate<Throwable> ignoreExceptionPredicate;
+
+    @Nullable
     private transient Predicate retryOnResultPredicate;
 
     @Nullable
@@ -140,6 +143,10 @@ public class RetryConfig implements Serializable {
         return exceptionPredicate;
     }
 
+    public Predicate<Throwable> getIgnoreExceptionPredicate() {
+        return ignoreExceptionPredicate;
+    }
+
     /**
      * Return the Predicate which evaluates if a result should be retried. The Predicate must
      * return true if the result should be retried, otherwise it must return false.
@@ -175,6 +182,8 @@ public class RetryConfig implements Serializable {
         retryConfig.append(intervalFunction);
         retryConfig.append(", retryOnExceptionPredicate=");
         retryConfig.append(retryOnExceptionPredicate);
+        retryConfig.append(", ignoreExceptionPredicate=");
+        retryConfig.append(ignoreExceptionPredicate);
         retryConfig.append(", retryOnResultPredicate=");
         retryConfig.append(retryOnResultPredicate);
         retryConfig.append(", intervalBiFunction=");
@@ -201,6 +210,8 @@ public class RetryConfig implements Serializable {
         @Nullable
         private Predicate<Throwable> retryOnExceptionPredicate;
         @Nullable
+        private Predicate<Throwable> ignoreExceptionPredicate;
+        @Nullable
         private Predicate<T> retryOnResultPredicate;
 
         @Nullable
@@ -221,6 +232,7 @@ public class RetryConfig implements Serializable {
         public Builder(RetryConfig baseConfig) {
             this.maxAttempts = baseConfig.maxAttempts;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
+            this.ignoreExceptionPredicate = baseConfig.ignoreExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
             this.consumeResultBeforeRetryAttempt = baseConfig.consumeResultBeforeRetryAttempt;
             this.failAfterMaxAttempts = baseConfig.failAfterMaxAttempts;
@@ -340,6 +352,19 @@ public class RetryConfig implements Serializable {
         }
 
         /**
+         * Configures a Predicate which evaluates if an exception should be ignored and neither
+         * count as a failure nor success. The Predicate must return true if the exception should be
+         * ignored. The Predicate must return false, if the exception should count as a failure.
+         *
+         * @param predicate the Predicate which evaluates if an exception should count as a failure
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> ignoreExceptionPredicate(Predicate<Throwable> predicate) {
+            this.ignoreExceptionPredicate = predicate;
+            return this;
+        }
+
+        /**
          * Configures a list of error classes that are recorded as a failure and thus are retried.
          * Any exception matching or inheriting from one of the list will be retried, unless ignored
          * via
@@ -400,6 +425,7 @@ public class RetryConfig implements Serializable {
             config.failAfterMaxAttempts = failAfterMaxAttempts;
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
+            config.ignoreExceptionPredicate = ignoreExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
             config.consumeResultBeforeRetryAttempt = consumeResultBeforeRetryAttempt;
             config.retryExceptions = retryExceptions;
@@ -420,9 +446,10 @@ public class RetryConfig implements Serializable {
         }
 
         private Predicate<Throwable> createExceptionPredicate() {
+            Predicate<Throwable> ignorePredicate = PredicateCreator.createExceptionsPredicate(ignoreExceptionPredicate, ignoreExceptions)
+                .orElse(throwable -> false);
             return createRetryOnExceptionPredicate()
-                .and(PredicateCreator.createNegatedExceptionsPredicate(ignoreExceptions)
-                    .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
+                .and(ignorePredicate.negate());
         }
 
         private Predicate<Throwable> createRetryOnExceptionPredicate() {

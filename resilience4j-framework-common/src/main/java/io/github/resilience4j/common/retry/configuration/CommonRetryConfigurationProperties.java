@@ -131,6 +131,12 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
                 builder.retryOnException(predicate);
             }
 
+            if (properties.getIgnoreExceptionPredicate() != null) {
+                Predicate<Throwable> predicate = ClassUtils
+                    .instantiatePredicateClass(properties.getIgnoreExceptionPredicate());
+                builder.ignoreExceptionPredicate(predicate);
+            }
+
             if (properties.getIgnoreExceptions() != null) {
                 builder.ignoreExceptions(properties.getIgnoreExceptions());
             }
@@ -266,6 +272,12 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         private Class<? extends Predicate<Throwable>> retryExceptionPredicate;
 
         /**
+         * ignore exception predicate class to be used to evaluate the exception to ignore or not
+         */
+        @Nullable
+        private Class<? extends Predicate<Throwable>> ignoreExceptionPredicate;
+
+        /**
          * retry setResultPredicate predicate class to be used to evaluate the result to retry or not
          */
         @Nullable
@@ -380,6 +392,17 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         public InstanceProperties setRetryExceptionPredicate(
             Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
             this.retryExceptionPredicate = retryExceptionPredicate;
+            return this;
+        }
+
+        @Nullable
+        public Class<? extends Predicate<Throwable>> getIgnoreExceptionPredicate() {
+            return ignoreExceptionPredicate;
+        }
+
+        public InstanceProperties setIgnoreExceptionPredicate(
+            Class<? extends Predicate<Throwable>> ignoreExceptionPredicate) {
+            this.ignoreExceptionPredicate = ignoreExceptionPredicate;
             return this;
         }
 
