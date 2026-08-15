@@ -129,9 +129,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     void refreshLimit() {
-        int permissionsToRelease =
-            this.rateLimiterConfig.get().getLimitForPeriod() - semaphore.availablePermits();
-        semaphore.release(permissionsToRelease);
+        int limitForPeriod = this.rateLimiterConfig.get().getLimitForPeriod();
+        semaphore.drainPermits();
+        semaphore.release(limitForPeriod);
     }
 
     /**

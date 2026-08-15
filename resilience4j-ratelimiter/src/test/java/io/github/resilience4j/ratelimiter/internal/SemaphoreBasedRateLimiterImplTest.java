@@ -189,6 +189,28 @@ class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
     }
 
     @Test
+    void shouldApplyDecreasedLimitForPeriodOnNextRefresh() {
+        ScheduledExecutorService scheduledExecutorService =
+                mock(ScheduledExecutorService.class);
+
+        SemaphoreBasedRateLimiter limit =
+                new SemaphoreBasedRateLimiter(
+                        "test",
+                        config,
+                        scheduledExecutorService
+                );
+
+        RateLimiter.Metrics metrics = limit.getMetrics();
+        then(metrics.getAvailablePermissions()).isEqualTo(LIMIT);
+        limit.changeLimitForPeriod(1);
+        then(metrics.getAvailablePermissions()).isEqualTo(LIMIT);
+        limit.refreshLimit();
+        then(metrics.getAvailablePermissions()).isEqualTo(1);
+        limit.refreshLimit();
+        then(metrics.getAvailablePermissions()).isEqualTo(1);
+    }
+
+    @Test
     void acquirePermissionInterruption() {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
