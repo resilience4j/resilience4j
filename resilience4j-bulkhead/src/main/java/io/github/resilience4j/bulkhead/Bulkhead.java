@@ -379,6 +379,46 @@ public interface Bulkhead {
     void acquirePermission();
 
     /**
+     * Acquires a permission to execute a call asynchronously, without blocking the calling
+     * thread.
+     * <p>
+     * The returned future completes successfully as soon as a permission has been acquired. If
+     * the Bulkhead is full and {@link BulkheadConfig#getMaxWaitDuration()} is greater than zero,
+     * the permission request is queued and granted in FIFO order as running calls complete. If
+     * no permission has been granted within the max wait duration, or the Bulkhead is full and
+     * the max wait duration is zero, the future completes exceptionally with a
+     * {@link BulkheadFullException}.
+     * <p>
+     * Once the future completes successfully, the caller must release the permission with
+     * {@link Bulkhead#onComplete()} or {@link Bulkhead#releasePermission()}, exactly like a
+     * permission acquired with {@link Bulkhead#tryAcquirePermission()}.
+     * <p>
+     * Cancelling the returned future while the permission request is queued removes it from the
+     * queue. If {@link CompletableFuture#cancel(boolean)} returns {@code false}, the permission
+     * was already granted and must still be released. The returned future must never be
+     * completed by the caller.
+     * <p>
+     * The default implementation is a blocking bridge which acquires the permission with
+     * {@link Bulkhead#acquirePermission()} and exists for backwards compatibility with custom
+     * implementations. The {@link SemaphoreBulkhead} overrides it with a non-blocking
+     * implementation which never parks the calling thread.
+     *
+     * @return a future which completes when a permission has been acquired and completes
+     * exceptionally with a {@link BulkheadFullException} when no permission could be acquired
+     * within the max wait duration.
+     */
+    default CompletableFuture<Void> acquirePermissionAsync() {
+        CompletableFuture<Void> permission = new CompletableFuture<>();
+        try {
+            acquirePermission();
+            permission.complete(null);
+        } catch (Throwable throwable) {
+            permission.completeExceptionally(throwable);
+        }
+        return permission;
+    }
+
+    /**
      * Releases a permission and increases the number of available permits by one.
      * <p>
      * Should only be used when a permission was acquired but not used. Otherwise use {@link

@@ -24,6 +24,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -39,7 +40,8 @@ class FluxBulkheadTest {
 
     @Test
     void shouldEmitEvent() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
@@ -53,7 +55,8 @@ class FluxBulkheadTest {
 
     @Test
     void shouldPropagateError() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
@@ -67,8 +70,9 @@ class FluxBulkheadTest {
 
     @Test
     void shouldEmitErrorWithBulkheadFullException() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
-        bulkhead.tryAcquirePermission();
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         StepVerifier.create(
             Flux.just("Event")
@@ -82,7 +86,9 @@ class FluxBulkheadTest {
 
     @Test
     void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
@@ -96,7 +102,9 @@ class FluxBulkheadTest {
 
     @Test
     void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
@@ -110,7 +118,8 @@ class FluxBulkheadTest {
 
     @Test
     void shouldReleaseBulkheadSemaphoreOnCancel() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Flux.just("Event")
@@ -125,7 +134,8 @@ class FluxBulkheadTest {
 
     @Test
     void shouldInvokeOnCompleteOnCancelWhenEventWasEmitted() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Flux.just("Event1", "Event2", "Event3")
@@ -141,7 +151,8 @@ class FluxBulkheadTest {
 
     @Test
     void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
         doThrow(new RuntimeException("BAM!")).when(bulkhead).onComplete();
 
         StepVerifier.create(
