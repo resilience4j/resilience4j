@@ -89,7 +89,7 @@ jobs:
 
       - name: Build
         env:
-          GRADLE_OPTS: ${{ matrix.java-version == 25 && '-Djdk.tracePinnedThreads=full' || '' }}
+          JAVA_TOOL_OPTIONS: ${{ matrix.java-version == 25 && '-Djdk.tracePinnedThreads=full' || '' }}
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
