@@ -62,11 +62,16 @@ final class PermissionAwaitingSubscription<T> extends Operators.DeferredSubscrip
         permission.whenComplete((granted, error) -> {
             if (error != null) {
                 if (!(error instanceof CancellationException) && !isCancelled()) {
-                    actual.onError(error);
+                    actual.onError(unwrap(error));
                 }
+            } else if (isCancelled()) {
+                // The downstream cancelled while the permission was being granted. Nothing would
+                // consume the upstream, so release the permission instead of subscribing to a
+                // source which may have subscribe-time side effects.
+                bulkhead.releasePermission();
             } else {
                 // The BulkheadSubscriber releases the permission on all terminal signals. When
-                // the downstream cancelled concurrently, set(...) cancels the incoming
+                // the downstream cancels from here on, set(...) cancels the incoming
                 // subscription, which also releases the permission.
                 source.subscribe(new BulkheadSubscriber<>(bulkhead, this, singleProducer));
             }
@@ -114,7 +119,18 @@ final class PermissionAwaitingSubscription<T> extends Operators.DeferredSubscrip
         } catch (CancellationException e) {
             return e;
         } catch (CompletionException e) {
-            return e.getCause() != null ? e.getCause() : e;
+            return unwrap(e);
         }
+    }
+
+    /**
+     * Unwraps the cause of a {@link CompletionException}, which a Bulkhead implementation can
+     * surface when its permission future is a dependent stage.
+     */
+    private static Throwable unwrap(Throwable throwable) {
+        if (throwable instanceof CompletionException && throwable.getCause() != null) {
+            return throwable.getCause();
+        }
+        return throwable;
     }
 }

@@ -29,10 +29,17 @@ import reactor.util.context.Context;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the non-blocking queueing behavior of the {@link BulkheadOperator} with a real
@@ -207,6 +214,52 @@ class BulkheadOperatorQueueingTest {
             .verify(Duration.ofSeconds(5));
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionWithoutSubscribingWhenGrantRacesCancellation() {
+        Bulkhead bulkhead = mock(Bulkhead.class);
+        // Models a permission which is granted concurrently with the cancellation: cancelling
+        // the request loses the race and the granted permission has to be released.
+        CompletableFuture<Void> permission = new CompletableFuture<>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return false;
+            }
+        };
+        given(bulkhead.acquirePermissionAsync()).willReturn(permission);
+        AtomicBoolean subscribed = new AtomicBoolean();
+
+        Disposable waiting = Mono.just("Event")
+            .doOnSubscribe(subscription -> subscribed.set(true))
+            .transformDeferred(BulkheadOperator.of(bulkhead))
+            .subscribe();
+        waiting.dispose();
+        permission.complete(null);
+
+        assertThat(subscribed)
+            .as("upstream must not be subscribed for a cancelled subscriber")
+            .isFalse();
+        verify(bulkhead).releasePermission();
+        verify(bulkhead, never()).onComplete();
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldUnwrapCompletionExceptionOfQueuedPermission() {
+        Bulkhead bulkhead = mock(Bulkhead.class);
+        CompletableFuture<Void> permission = new CompletableFuture<>();
+        given(bulkhead.acquirePermissionAsync()).willReturn(permission);
+        IOException cause = new IOException("BAM!");
+
+        StepVerifier.create(
+            Mono.just("Event")
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .then(() -> permission.completeExceptionally(new CompletionException(cause)))
+            .expectErrorSatisfies(error -> assertThat(error).isSameAs(cause))
+            .verify(Duration.ofSeconds(5));
     }
 
     @Test
