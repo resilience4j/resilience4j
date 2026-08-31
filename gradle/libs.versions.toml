@@ -55,7 +55,7 @@ feign-wiremock = { module = "org.wiremock:wiremock", version = "3.13.1" }
 
 # resilience4j-kotlin
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.9.25" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.11.0" }
 
 # resilience4j-metrics (Dropwizard)
 metrics-core = { module = "io.dropwizard.metrics:metrics-core", version = "4.1.16" }
