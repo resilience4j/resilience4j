@@ -144,7 +144,7 @@ public class RateLimiterConfig implements Serializable {
             ", limitRefreshPeriod=" + limitRefreshPeriod +
             ", limitForPeriod=" + limitForPeriod +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
-            '}';
+            "}";
     }
 
     public static class Builder {

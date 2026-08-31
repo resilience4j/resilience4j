@@ -67,9 +67,9 @@ public class CircuitBreakerUpdateStateResponse {
     @Override
     public String toString() {
         return "CircuitBreakerUpdateStateResponse{" +
-            "circuitBreakerName='" + circuitBreakerName + '\'' +
-            ", currentState='" + currentState + '\'' +
-            ", message='" + message + '\'' +
-            '}';
+            "circuitBreakerName='" + circuitBreakerName + "'" +
+            ", currentState='" + currentState + "'" +
+            ", message='" + message + "'" +
+            "}";
     }
 }
