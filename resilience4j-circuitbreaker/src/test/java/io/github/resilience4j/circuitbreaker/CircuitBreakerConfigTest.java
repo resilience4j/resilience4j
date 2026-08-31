@@ -101,6 +101,69 @@ class CircuitBreakerConfigTest {
     }
 
     @Test
+    void timeBasedLockFreeSlidingWindowSizeBelowTwoShouldFail() {
+        assertThatThrownBy(() -> custom().slidingWindow(
+            1, 1, SlidingWindowType.TIME_BASED, SlidingWindowSynchronizationStrategy.LOCK_FREE
+        ).build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("TIME_BASED with LOCK_FREE");
+    }
+
+    @Test
+    void timeBasedLockFreeSlidingWindowSizeAtLeastTwoShouldSucceed() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().slidingWindow(
+            2, 1, SlidingWindowType.TIME_BASED, SlidingWindowSynchronizationStrategy.LOCK_FREE
+        ).build();
+
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(2);
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(SlidingWindowSynchronizationStrategy.LOCK_FREE);
+    }
+
+    @Test
+    void countBasedLockFreeSlidingWindowSizeBelowTwoShouldSucceed() {
+        // the TIME_BASED + LOCK_FREE + size<2 guard only applies to TIME_BASED windows
+        CircuitBreakerConfig circuitBreakerConfig = custom().slidingWindow(
+            1, 1, SlidingWindowType.COUNT_BASED, SlidingWindowSynchronizationStrategy.LOCK_FREE
+        ).build();
+
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1);
+    }
+
+    @Test
+    void recordExceptionsWithNullVarargsShouldDefaultToEmpty() {
+        Class<? extends Throwable>[] nullVarargs = null;
+
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .recordExceptions(nullVarargs)
+            .build();
+
+        assertThat(circuitBreakerConfig.toString())
+            .contains("recordExceptions=[]");
+    }
+
+    @Test
+    void ignoreExceptionsWithNullVarargsShouldDefaultToEmpty() {
+        Class<? extends Throwable>[] nullVarargs = null;
+
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .ignoreExceptions(nullVarargs)
+            .build();
+
+        assertThat(circuitBreakerConfig.toString())
+            .contains("ignoreExceptions=[]");
+    }
+
+    @Test
+    void clockWithNullShouldFallBackToDefaultClock() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .clock(null)
+            .build();
+
+        then(circuitBreakerConfig.getClock()).isNotNull();
+    }
+
+    @Test
     void zeroMinimumNumberOfCallsShouldFai2l() {
         assertThatThrownBy(() -> custom().minimumNumberOfCalls(0).build())
                 .isInstanceOf(IllegalArgumentException.class);
