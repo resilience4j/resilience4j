@@ -958,10 +958,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         private void checkIfThresholdsExceeded(Result result) {
-            if (!Result.hasExceededThresholds(result)) {
-                return;
-            }
-
             if (shouldPublishFailureRateExceededEvent(result)) {
                 publishCircuitFailureRateExceededEvent(getName(), circuitBreakerMetrics.getFailureRate());
             }
@@ -972,13 +968,26 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         private boolean shouldPublishFailureRateExceededEvent(Result result) {
-            return Result.hasFailureRateExceededThreshold(result) &&
-                isFailureRateExceeded.compareAndSet(false, true);
+            if (Result.hasFailureRateExceededThreshold(result)) {
+                return isFailureRateExceeded.compareAndSet(false, true);
+            }
+            // Once the rate drops back below the threshold we arm the flag again, so a later
+            // breach is published anew. BELOW_MINIMUM_CALLS_THRESHOLD means there is not enough
+            // data to tell, so we leave the flag untouched in that case.
+            if (result != Result.BELOW_MINIMUM_CALLS_THRESHOLD) {
+                isFailureRateExceeded.set(false);
+            }
+            return false;
         }
 
         private boolean shouldPublishSlowCallRateExceededEvent(Result result) {
-            return Result.hasSlowCallRateExceededThreshold(result) &&
-                isSlowCallRateExceeded.compareAndSet(false, true);
+            if (Result.hasSlowCallRateExceededThreshold(result)) {
+                return isSlowCallRateExceeded.compareAndSet(false, true);
+            }
+            if (result != Result.BELOW_MINIMUM_CALLS_THRESHOLD) {
+                isSlowCallRateExceeded.set(false);
+            }
+            return false;
         }
 
         @Override
