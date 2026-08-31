@@ -49,7 +49,9 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(
         onResult(durationInNanos, TimeUnit.NANOSECONDS, result)
         return result
     } catch (exception: Throwable) {
-        if (ignoreThrowablePredicate(exception, coroutineContext)) {
+        val shouldIgnore =
+            try { ignoreThrowablePredicate(exception, coroutineContext) } catch (_: Exception) { false }
+        if (shouldIgnore) {
             releasePermission()
         } else {
             val durationInNanos = getCurrentTimestamp() - start
