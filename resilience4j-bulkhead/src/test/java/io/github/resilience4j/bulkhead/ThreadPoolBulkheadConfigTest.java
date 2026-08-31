@@ -221,6 +221,54 @@ class ThreadPoolBulkheadConfigTest {
                 .endsWith("}");
     }
 
+    @Test
+    void fromShouldCopyConfigAndNotMutateTheBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(20)
+            .coreThreadPoolSize(2)
+            .queueCapacity(50)
+            .keepAliveDuration(Duration.ofMillis(555))
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .maxThreadPoolSize(30)
+            .coreThreadPoolSize(4)
+            .queueCapacity(99)
+            .build();
+
+        // the derived config reflects the overrides
+        assertThat(derivedConfig.getMaxThreadPoolSize()).isEqualTo(30);
+        assertThat(derivedConfig.getCoreThreadPoolSize()).isEqualTo(4);
+        assertThat(derivedConfig.getQueueCapacity()).isEqualTo(99);
+
+        // the base config is left untouched (from(...) must copy, not alias)
+        assertThat(baseConfig.getMaxThreadPoolSize()).isEqualTo(20);
+        assertThat(baseConfig.getCoreThreadPoolSize()).isEqualTo(2);
+        assertThat(baseConfig.getQueueCapacity()).isEqualTo(50);
+
+        // build() must return a distinct instance, not the base config
+        assertThat(derivedConfig).isNotSameAs(baseConfig);
+    }
+
+    @Test
+    void fromShouldCopyTheContextPropagatorListSoTheBaseIsNotMutated() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .contextPropagator(new TestCtxPropagator())
+            .build();
+
+        int baseSizeBefore = baseConfig.getContextPropagator().size();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .contextPropagator(new TestCtxPropagator2())
+            .build();
+
+        // adding a propagator to the derived config must not leak into the base config's list
+        assertThat(baseConfig.getContextPropagator()).hasSize(baseSizeBefore);
+        assertThat(derivedConfig.getContextPropagator()).hasSize(baseSizeBefore + 1);
+        assertThat(derivedConfig.getContextPropagator())
+            .isNotSameAs(baseConfig.getContextPropagator());
+    }
+
     public static class TestCtxPropagator implements ContextPropagator<Object> {
 
         @Override
