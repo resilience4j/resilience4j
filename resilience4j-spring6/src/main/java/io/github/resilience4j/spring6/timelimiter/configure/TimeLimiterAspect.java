@@ -17,14 +17,15 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.ExecutorServiceFactory;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
+import io.github.resilience4j.spring6.utils.AnnotationExtractor;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
-import io.github.resilience4j.spring6.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,7 +38,10 @@ import org.springframework.core.Ordered;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Aspect
 public class TimeLimiterAspect implements Ordered, AutoCloseable {
@@ -64,7 +68,9 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         this.spelResolver = spelResolver;
         this.timeLimiterExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
             contextAwareScheduledThreadPoolExecutor :
-            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+            ExecutorServiceFactory.newScheduledThreadPool(
+                Runtime.getRuntime().availableProcessors(),
+                "TimeLimiterAspect");
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
