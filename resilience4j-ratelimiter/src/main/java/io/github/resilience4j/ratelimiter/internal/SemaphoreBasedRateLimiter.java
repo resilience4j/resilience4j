@@ -131,7 +131,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     void refreshLimit() {
         int permissionsToRelease =
             this.rateLimiterConfig.get().getLimitForPeriod() - semaphore.availablePermits();
-        semaphore.release(permissionsToRelease);
+        if (permissionsToRelease > 0) {
+            semaphore.release(permissionsToRelease);
+        } else if (permissionsToRelease < 0) {
+            semaphore.tryAcquire(-permissionsToRelease);
+        }
     }
 
     /**
@@ -236,10 +240,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     @Override
     public String toString() {
-        return "SemaphoreBasedRateLimiter{"
-            + "name='" + name + '\''
-            + ", rateLimiterConfig=" + rateLimiterConfig
-            + '}';
+        return "SemaphoreBasedRateLimiter{" +
+            "name='" + name + '\'' +
+            ", rateLimiterConfig=" + rateLimiterConfig +
+            "}";
     }
 
     @Override

@@ -127,6 +127,6 @@ public class SnapshotImpl implements Snapshot {
             ", totalNumberOfSlowFailedCalls=" + totalNumberOfSlowFailedCalls +
             ", totalNumberOfFailedCalls=" + totalNumberOfFailedCalls +
             ", totalNumberOfCalls=" + totalNumberOfCalls +
-            '}';
+            "}";
     }
 }

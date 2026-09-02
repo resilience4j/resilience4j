@@ -400,7 +400,7 @@ public class AtomicRateLimiter implements RateLimiter {
         return "AtomicRateLimiter{" +
             "name='" + name + '\'' +
             ", rateLimiterConfig=" + state.get().config +
-            '}';
+            "}";
     }
 
     /**
