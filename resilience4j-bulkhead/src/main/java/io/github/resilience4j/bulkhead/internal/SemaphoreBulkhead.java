@@ -32,6 +32,7 @@ import io.github.resilience4j.core.exception.AcquirePermissionCancelledException
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledFuture;
@@ -202,7 +203,10 @@ public class SemaphoreBulkhead implements Bulkhead {
             timeoutTask.cancel(false);
             if (throwable != null) {
                 pendingPermissions.remove(permission);
-                publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
+                // A cancelled request was withdrawn by the caller, the Bulkhead did not reject it
+                if (!(throwable instanceof CancellationException)) {
+                    publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
+                }
             }
         });
         grantPendingPermissions();

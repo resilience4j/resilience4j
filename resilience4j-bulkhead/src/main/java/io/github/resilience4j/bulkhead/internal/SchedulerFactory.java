@@ -58,7 +58,8 @@ final class SchedulerFactory {
     /**
      * Returns a {@link ScheduledExecutorService} matching the current Resilience4j thread-type
      * configuration. If the configuration changed since the last call, the previous scheduler
-     * is shut down and a new one is created.
+     * is shut down gracefully, so that already scheduled permission timeouts still fire, and a
+     * new one is created.
      */
     ScheduledExecutorService getScheduler() {
         ScheduledExecutorService old = null;
@@ -88,7 +89,7 @@ final class SchedulerFactory {
         }
 
         if (old != null) {
-            old.shutdownNow();
+            old.shutdown();
         }
         return result;
     }
@@ -96,7 +97,7 @@ final class SchedulerFactory {
     /**
      * For test-code: shut down and forget the current scheduler so that the next
      * {@link #getScheduler()} call creates a fresh executor according to the then active
-     * configuration.
+     * configuration. Already scheduled permission timeouts still fire on the old scheduler.
      */
     void reset() {
         ScheduledExecutorService old;
@@ -110,7 +111,7 @@ final class SchedulerFactory {
         }
 
         if (old != null) {
-            old.shutdownNow();
+            old.shutdown();
         }
     }
 }

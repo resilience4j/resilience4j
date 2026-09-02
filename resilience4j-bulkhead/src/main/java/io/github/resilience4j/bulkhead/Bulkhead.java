@@ -394,9 +394,10 @@ public interface Bulkhead {
      * permission acquired with {@link Bulkhead#tryAcquirePermission()}.
      * <p>
      * Cancelling the returned future while the permission request is queued removes it from the
-     * queue. If {@link CompletableFuture#cancel(boolean)} returns {@code false}, the permission
-     * was already granted and must still be released. The returned future must never be
-     * completed by the caller.
+     * queue without publishing an event, because the request was withdrawn by the caller and not
+     * rejected by the Bulkhead. If {@link CompletableFuture#cancel(boolean)} returns
+     * {@code false}, the permission was already granted and must still be released. The returned
+     * future must never be completed by the caller.
      * <p>
      * The default implementation is a blocking bridge which acquires the permission with
      * {@link Bulkhead#acquirePermission()} and exists for backwards compatibility with custom

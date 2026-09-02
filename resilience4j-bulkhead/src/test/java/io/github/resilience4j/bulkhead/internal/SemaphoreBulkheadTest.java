@@ -727,6 +727,7 @@ class SemaphoreBulkheadTest {
         Bulkhead bulkhead = createQueueingBulkhead("asyncCancel", threadType, 1,
             Duration.ofSeconds(10));
         assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
 
         CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
         CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
@@ -739,6 +740,25 @@ class SemaphoreBulkheadTest {
             .isCompleted();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        // a cancelled request is withdrawn by the caller and must not be reported as rejected
+        testSubscriber.assertValues(CALL_FINISHED, CALL_PERMITTED, CALL_FINISHED);
+    }
+
+    @TestTemplate
+    void shouldStillExpireQueuedPermissionAsyncAfterSchedulerReset(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncSchedulerReset", threadType, 1,
+            Duration.ofMillis(50));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        SchedulerFactory.getInstance().reset();
+
+        assertThatThrownBy(() -> permission.get(5, SECONDS))
+            .as("timeout scheduled on the replaced scheduler must still fire in %s", threadType)
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(BulkheadFullException.class);
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
