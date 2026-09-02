@@ -20,6 +20,7 @@ package io.github.resilience4j.bulkhead.internal;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
@@ -44,7 +45,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -623,6 +631,197 @@ class SemaphoreBulkheadTest {
         AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry.getConfiguration("testNotFound")).isEmpty();
         inMemoryBulkheadRegistry.addConfiguration("testConfig", defaultConfig);
         AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry.getConfiguration("testConfig")).isNotNull();
+    }
+
+    private Bulkhead createQueueingBulkhead(String name, ThreadType threadType, int maxConcurrentCalls,
+        Duration maxWaitDuration) {
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrentCalls)
+            .maxWaitDuration(maxWaitDuration)
+            .build();
+        return Bulkhead.of(name + "-" + threadType, config);
+    }
+
+    @TestTemplate
+    void shouldCompletePermissionAsyncImmediatelyWhenPermitIsAvailable(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncFastPath", threadType, 1,
+            Duration.ofSeconds(10));
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        assertThat(permission).isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
+        testSubscriber.assertValues(CALL_PERMITTED);
+
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldRejectPermissionAsyncImmediatelyWhenFullAndMaxWaitDurationIsZero(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncFailFast", threadType, 1, Duration.ZERO);
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        assertThat(permission).isCompletedExceptionally();
+        assertThatThrownBy(permission::join).hasCauseInstanceOf(BulkheadFullException.class);
+        testSubscriber.assertValues(CALL_REJECTED);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
+    }
+
+    @TestTemplate
+    void shouldQueuePermissionAsyncAndGrantInFifoOrderOnRelease(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncQueue", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        assertThat(first).isNotDone();
+        assertThat(second).isNotDone();
+
+        bulkhead.onComplete();
+        assertThat(first)
+            .as("first queued permission should be granted in %s", threadType)
+            .isCompleted();
+        assertThat(second).isNotDone();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
+
+        bulkhead.onComplete();
+        assertThat(second)
+            .as("second queued permission should be granted in %s", threadType)
+            .isCompleted();
+
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldRejectQueuedPermissionAsyncAfterMaxWaitDuration(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncTimeout", threadType, 1,
+            Duration.ofMillis(50));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        assertThatThrownBy(() -> permission.get(5, SECONDS))
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(BulkheadFullException.class);
+
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
+            .as("expired permission request must not consume the released permit in %s", threadType)
+            .isEqualTo(1);
+        await().atMost(2, SECONDS).untilAsserted(
+            () -> testSubscriber.assertValueSet(Set.of(CALL_REJECTED, CALL_FINISHED))
+                .assertValueCount(2));
+    }
+
+    @TestTemplate
+    void shouldSkipCancelledPermissionAsyncWhenGranting(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncCancel", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+        assertThat(first.cancel(false)).isTrue();
+
+        bulkhead.onComplete();
+
+        assertThat(second)
+            .as("granting should skip the cancelled permission request in %s", threadType)
+            .isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
+
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        // a cancelled request is withdrawn by the caller and must not be reported as rejected
+        testSubscriber.assertValues(CALL_FINISHED, CALL_PERMITTED, CALL_FINISHED);
+    }
+
+    @TestTemplate
+    void shouldStillExpireQueuedPermissionAsyncAfterSchedulerReset(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncSchedulerReset", threadType, 1,
+            Duration.ofMillis(50));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        SchedulerFactory.getInstance().reset();
+
+        assertThatThrownBy(() -> permission.get(5, SECONDS))
+            .as("timeout scheduled on the replaced scheduler must still fire in %s", threadType)
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(BulkheadFullException.class);
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldGrantQueuedPermissionAsyncWhenIncreasingMaxConcurrentCalls(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncChangeConfig", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        CompletableFuture<Void> queued = bulkhead.acquirePermissionAsync();
+        assertThat(queued).isNotDone();
+
+        bulkhead.changeConfig(BulkheadConfig.custom()
+            .maxConcurrentCalls(2)
+            .maxWaitDuration(Duration.ofSeconds(10))
+            .build());
+
+        assertThat(queued)
+            .as("queued permission should be granted by the additional permit in %s", threadType)
+            .isCompleted();
+
+        bulkhead.onComplete();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+    }
+
+    @TestTemplate
+    void shouldKeepStateConsistentUnderConcurrentPermissionAsyncLoad(ThreadType threadType)
+        throws InterruptedException {
+        int maxConcurrentCalls = 3;
+        int requests = 1500;
+        Bulkhead bulkhead = createQueueingBulkhead("asyncStress", threadType, maxConcurrentCalls,
+            Duration.ofSeconds(10));
+        AtomicInteger granted = new AtomicInteger();
+        AtomicInteger rejected = new AtomicInteger();
+        CountDownLatch settled = new CountDownLatch(requests);
+        ExecutorService executor = Executors.newFixedThreadPool(6);
+
+        try {
+            for (int i = 0; i < requests; i++) {
+                executor.execute(
+                    () -> bulkhead.acquirePermissionAsync().whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            granted.incrementAndGet();
+                            bulkhead.onComplete();
+                        } else {
+                            rejected.incrementAndGet();
+                        }
+                        settled.countDown();
+                    }));
+            }
+
+            assertThat(settled.await(30, SECONDS))
+                .as("all permission requests should settle in %s", threadType)
+                .isTrue();
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertThat(granted.get() + rejected.get()).isEqualTo(requests);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
+            .as("all permits should be returned in %s", threadType)
+            .isEqualTo(maxConcurrentCalls);
     }
 
     private RegistryEventConsumer<Bulkhead> getNoOpsRegistryEventConsumer() {

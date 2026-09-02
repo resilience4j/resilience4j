@@ -32,8 +32,14 @@ import io.github.resilience4j.core.exception.AcquirePermissionCancelledException
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -52,6 +58,9 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final Semaphore semaphore;
     private final BulkheadMetrics metrics;
     private final BulkheadEventProcessor eventProcessor;
+    private final ConcurrentLinkedQueue<CompletableFuture<Void>> pendingPermissions =
+        new ConcurrentLinkedQueue<>();
+    private final AtomicInteger grantsInProgress = new AtomicInteger();
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Map<String, String> tags;
@@ -137,6 +146,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         } finally {
             lock.unlock();
         }
+        grantPendingPermissions();
     }
 
     /**
@@ -173,8 +183,51 @@ public class SemaphoreBulkhead implements Bulkhead {
      * {@inheritDoc}
      */
     @Override
+    public CompletableFuture<Void> acquirePermissionAsync() {
+        if (pendingPermissions.isEmpty() && semaphore.tryAcquire()) {
+            publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
+            return CompletableFuture.completedFuture(null);
+        }
+        long maxWaitMillis = config.getMaxWaitDuration().toMillis();
+        if (maxWaitMillis == 0) {
+            publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
+            return CompletableFuture
+                .failedFuture(BulkheadFullException.createBulkheadFullException(this));
+        }
+        CompletableFuture<Void> permission = new CompletableFuture<>();
+        ScheduledFuture<?> timeoutTask;
+        try {
+            timeoutTask = SchedulerFactory.getInstance().getScheduler().schedule(
+                () -> permission
+                    .completeExceptionally(BulkheadFullException.createBulkheadFullException(this)),
+                maxWaitMillis, TimeUnit.MILLISECONDS);
+        } catch (RejectedExecutionException e) {
+            // The scheduler was shut down concurrently. Fail before queueing the request, otherwise
+            // a request nobody holds would be granted a permit later and leak it.
+            return CompletableFuture.failedFuture(e);
+        }
+        pendingPermissions.offer(permission);
+        permission.whenComplete((result, throwable) -> {
+            timeoutTask.cancel(false);
+            if (throwable != null) {
+                pendingPermissions.remove(permission);
+                // A cancelled request was withdrawn by the caller, the Bulkhead did not reject it
+                if (!(throwable instanceof CancellationException)) {
+                    publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
+                }
+            }
+        });
+        grantPendingPermissions();
+        return permission;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void releasePermission() {
         semaphore.release();
+        grantPendingPermissions();
     }
 
     /**
@@ -184,6 +237,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     public void onComplete() {
         semaphore.release();
         publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
+        grantPendingPermissions();
     }
 
     /**
@@ -243,6 +297,33 @@ public class SemaphoreBulkhead implements Bulkhead {
             Thread.currentThread().interrupt();
             return false;
         }
+    }
+
+    /**
+     * Grants queued permission requests in FIFO order as long as permits are available.
+     * Permission requests which are already completed, because they timed out or were
+     * cancelled, are skipped and their permit is returned.
+     * <p>
+     * Completing a permission request runs its dependent actions on the granting thread. Such
+     * an action may release its permission and trigger the next grant, so re-entrant and
+     * concurrent calls are folded into the already running grant loop instead of recursing.
+     */
+    private void grantPendingPermissions() {
+        if (grantsInProgress.getAndIncrement() != 0) {
+            return;
+        }
+        int missed = 1;
+        do {
+            while (!pendingPermissions.isEmpty() && semaphore.tryAcquire()) {
+                CompletableFuture<Void> permission = pendingPermissions.poll();
+                if (permission != null && permission.complete(null)) {
+                    publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
+                } else {
+                    semaphore.release();
+                }
+            }
+            missed = grantsInProgress.addAndGet(-missed);
+        } while (missed != 0);
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {

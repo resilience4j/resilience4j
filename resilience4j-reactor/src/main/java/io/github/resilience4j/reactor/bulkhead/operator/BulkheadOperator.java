@@ -28,6 +28,12 @@ import java.util.function.UnaryOperator;
  * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe
  * to an upstream Publisher. Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is
  * full.
+ * <p>
+ * The permission is acquired with {@link Bulkhead#acquirePermissionAsync()} and therefore never
+ * blocks the subscribing thread. When the Bulkhead is full and a max wait duration is
+ * configured, the subscription to the upstream Publisher is deferred until a permission has
+ * been granted, or a {@link BulkheadFullException} is emitted once the max wait duration has
+ * elapsed.
  *
  * @param <T> the value type
  */
