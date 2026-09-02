@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -194,11 +195,18 @@ public class SemaphoreBulkhead implements Bulkhead {
                 .failedFuture(BulkheadFullException.createBulkheadFullException(this));
         }
         CompletableFuture<Void> permission = new CompletableFuture<>();
+        ScheduledFuture<?> timeoutTask;
+        try {
+            timeoutTask = SchedulerFactory.getInstance().getScheduler().schedule(
+                () -> permission
+                    .completeExceptionally(BulkheadFullException.createBulkheadFullException(this)),
+                maxWaitMillis, TimeUnit.MILLISECONDS);
+        } catch (RejectedExecutionException e) {
+            // The scheduler was shut down concurrently. Fail before queueing the request, otherwise
+            // a request nobody holds would be granted a permit later and leak it.
+            return CompletableFuture.failedFuture(e);
+        }
         pendingPermissions.offer(permission);
-        ScheduledFuture<?> timeoutTask = SchedulerFactory.getInstance().getScheduler().schedule(
-            () -> permission
-                .completeExceptionally(BulkheadFullException.createBulkheadFullException(this)),
-            maxWaitMillis, TimeUnit.MILLISECONDS);
         permission.whenComplete((result, throwable) -> {
             timeoutTask.cancel(false);
             if (throwable != null) {
