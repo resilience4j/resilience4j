@@ -140,10 +140,8 @@ public class TimerImpl implements Timer {
             io.micrometer.core.instrument.Timer.Builder calls = builder(timerConfig.getMetricNames())
                     .description("Timed decorated operation calls")
                     .tag(NAME, name)
-                    .tag(KIND, resultKind);
-            if (throwable != null) {
-                calls.tag(FAILURE_TAG, timerConfig.getOnFailureTagResolver().apply(throwable));
-            }
+                    .tag(KIND, resultKind)
+                    .tag(FAILURE_TAG, throwable == null ? "" : timerConfig.getOnFailureTagResolver().apply(throwable));
             calls.tags(tags)
                     .register(registry)
                     .record(duration);
