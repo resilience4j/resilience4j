@@ -12,7 +12,7 @@ class TimeLimiterConfigTest {
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final boolean SHOULD_CANCEL = false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
-    private static final String TIMEOUT_TO_STRING = "TimeLimiterConfig{timeoutDuration=PT1ScancelRunningFuture=true}";
+    private static final String TIMEOUT_TO_STRING = "TimeLimiterConfig{timeoutDuration=PT1S, cancelRunningFuture=true}";
 
     @Test
     void builderPositive() {
