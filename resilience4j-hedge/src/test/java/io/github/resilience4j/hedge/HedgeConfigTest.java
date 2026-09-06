@@ -29,7 +29,8 @@ import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 class HedgeConfigTest {
 
     private static final String HEDGE_DURATION_MUST_NOT_BE_NULL = "HedgeDuration must not be null";
-    private static final String HEDGE_TO_STRING = "HedgeConfig{false,0,true,100,null}";
+    private static final String HEDGE_TO_STRING = "HedgeConfig{shouldUseFactorAsPercentage=false, "
+        + "hedgeTimeFactor=0, shouldMeasureErrors=true, windowSize=100, cutoff=null}";
 
     @Test
     void builderTimeoutIsNull() {
@@ -43,7 +44,7 @@ class HedgeConfigTest {
         HedgeConfig config = HedgeConfig.custom().build();
         HedgeConfig.Builder builder = HedgeConfig.from(config);
 
-        then(builder.build().toString()).isEqualTo("HedgeConfig{false,0,true,100,null}");
+        then(builder.build().toString()).isEqualTo(HEDGE_TO_STRING);
     }
 
     @Test

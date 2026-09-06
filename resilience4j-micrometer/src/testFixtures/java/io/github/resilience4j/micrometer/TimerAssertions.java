@@ -46,9 +46,7 @@ public class TimerAssertions {
         List<Tag> tags = timer.getTags().entrySet().stream().map(tag -> Tag.of(tag.getKey(), tag.getValue())).collect(toCollection(ArrayList::new));
         tags.add(Tag.of(NAME, timer.getName()));
         tags.add(Tag.of(KIND, resultKind));
-        if (throwable != null) {
-            tags.add(Tag.of("failure", timer.getTimerConfig().getOnFailureTagResolver().apply(throwable)));
-        }
+        tags.add(Tag.of("failure", throwable == null ? "" : timer.getTimerConfig().getOnFailureTagResolver().apply(throwable)));
         then(meter.count()).isEqualTo(1);
         then(meter.getId().getTags()).containsExactlyInAnyOrderElementsOf(tags);
         registry.remove(meter);
