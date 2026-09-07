@@ -70,7 +70,8 @@ public class ThreadPoolBulkheadConfig {
     }
 
     /**
-     * Returns a builder to create a custom ThreadPoolBulkheadConfig.
+     * Returns a builder to create a custom ThreadPoolBulkheadConfig based on another
+     * ThreadPoolBulkheadConfig. The given config is copied and left unchanged.
      *
      * @return a {@link Builder}
      */
@@ -132,7 +133,14 @@ public class ThreadPoolBulkheadConfig {
         private ThreadPoolBulkheadConfig config;
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
-            this.config = bulkheadConfig;
+            this.config = new ThreadPoolBulkheadConfig();
+            this.config.maxThreadPoolSize = bulkheadConfig.maxThreadPoolSize;
+            this.config.coreThreadPoolSize = bulkheadConfig.coreThreadPoolSize;
+            this.config.queueCapacity = bulkheadConfig.queueCapacity;
+            this.config.keepAliveDuration = bulkheadConfig.keepAliveDuration;
+            this.config.writableStackTraceEnabled = bulkheadConfig.writableStackTraceEnabled;
+            this.config.contextPropagators = new ArrayList<>(bulkheadConfig.contextPropagators);
+            this.config.rejectedExecutionHandler = bulkheadConfig.rejectedExecutionHandler;
         }
 
         public Builder() {

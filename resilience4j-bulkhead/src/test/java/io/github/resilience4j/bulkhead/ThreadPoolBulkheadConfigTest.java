@@ -81,6 +81,53 @@ class ThreadPoolBulkheadConfigTest {
     }
 
     @Test
+    void fromShouldNotMutateBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(4)
+            .coreThreadPoolSize(2)
+            .queueCapacity(10)
+            .keepAliveDuration(Duration.ofMillis(100))
+            .writableStackTraceEnabled(false)
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .maxThreadPoolSize(20)
+            .coreThreadPoolSize(8)
+            .queueCapacity(50)
+            .keepAliveDuration(Duration.ofMillis(500))
+            .writableStackTraceEnabled(true)
+            .build();
+
+        assertThat(baseConfig.getMaxThreadPoolSize()).isEqualTo(4);
+        assertThat(baseConfig.getCoreThreadPoolSize()).isEqualTo(2);
+        assertThat(baseConfig.getQueueCapacity()).isEqualTo(10);
+        Assertions.assertThat(baseConfig.getKeepAliveDuration()).hasMillis(100);
+        assertThat(baseConfig.isWritableStackTraceEnabled()).isFalse();
+        assertThat(derivedConfig).isNotSameAs(baseConfig);
+        assertThat(derivedConfig.getMaxThreadPoolSize()).isEqualTo(20);
+        assertThat(derivedConfig.getCoreThreadPoolSize()).isEqualTo(8);
+        assertThat(derivedConfig.getQueueCapacity()).isEqualTo(50);
+    }
+
+    @Test
+    void fromShouldNotAccumulateContextPropagatorsOnBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .contextPropagator(TestCtxPropagator.class)
+            .build();
+
+        ThreadPoolBulkheadConfig first = ThreadPoolBulkheadConfig.from(baseConfig)
+            .contextPropagator(TestCtxPropagator.class)
+            .build();
+        ThreadPoolBulkheadConfig second = ThreadPoolBulkheadConfig.from(baseConfig)
+            .contextPropagator(TestCtxPropagator.class)
+            .build();
+
+        assertThat(baseConfig.getContextPropagator()).hasSize(1);
+        assertThat(first.getContextPropagator()).hasSize(2);
+        assertThat(second.getContextPropagator()).hasSize(2);
+    }
+
+    @Test
     void buildWithIllegalMaxThreadPoolSize() {
         assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom().maxThreadPoolSize(-1).build())
             .isInstanceOf(IllegalArgumentException.class);
