@@ -93,12 +93,22 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return ofRandomized(DEFAULT_INITIAL_INTERVAL, DEFAULT_RANDOMIZATION_FACTOR);
     }
 
+    /**
+     * Creates an IntervalFunction which returns an exponentially increasing interval in milliseconds,
+     * capped at a maximum interval.
+     *
+     * @param initialIntervalMillis the initial interval in milliseconds
+     * @param multiplier            the multiplier which increases the interval after each attempt
+     * @param maxIntervalMillis     the maximum interval in milliseconds
+     * @return an IntervalFunction which returns an exponentially increasing interval in milliseconds.
+     * @throws IllegalArgumentException if the initial interval or the maximum interval is less than 1 millisecond
+     */
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier, long maxIntervalMillis) {
         checkInterval(maxIntervalMillis);
+        final IntervalFunction uncapped = ofExponentialBackoff(initialIntervalMillis, multiplier);
         return attempt -> {
             checkAttempt(attempt);
-            final long interval = ofExponentialBackoff(initialIntervalMillis, multiplier)
-                .apply(attempt);
+            final long interval = uncapped.apply(attempt);
             return Math.min(interval, maxIntervalMillis);
         };
     }
@@ -127,6 +137,18 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return ofExponentialBackoff(DEFAULT_INITIAL_INTERVAL, DEFAULT_MULTIPLIER);
     }
 
+    /**
+     * Creates an IntervalFunction which returns an exponentially increasing and randomized interval
+     * in milliseconds, capped at a maximum interval.
+     *
+     * @param initialIntervalMillis the initial interval in milliseconds
+     * @param multiplier            the multiplier which increases the interval after each attempt
+     * @param randomizationFactor   the randomization factor, between 0 and 1
+     * @param maxIntervalMillis     the maximum interval in milliseconds
+     * @return an IntervalFunction which returns an exponentially increasing and randomized interval in milliseconds.
+     * @throws IllegalArgumentException if the initial interval or the maximum interval is less than 1 millisecond,
+     *                                  or the randomization factor is outside the range 0 to 1
+     */
     static IntervalFunction ofExponentialRandomBackoff(
         long initialIntervalMillis,
         double multiplier,
@@ -135,10 +157,11 @@ public interface IntervalFunction extends Function<Integer, Long> {
     ) {
         checkInterval(maxIntervalMillis);
         checkRandomizationFactor(randomizationFactor);
+        final IntervalFunction uncapped = ofExponentialRandomBackoff(initialIntervalMillis, multiplier,
+            randomizationFactor);
         return attempt -> {
             checkAttempt(attempt);
-            final long interval = ofExponentialRandomBackoff(initialIntervalMillis, multiplier, randomizationFactor)
-                .apply(attempt);
+            final long interval = uncapped.apply(attempt);
             return Math.min(interval, maxIntervalMillis);
         };
     }

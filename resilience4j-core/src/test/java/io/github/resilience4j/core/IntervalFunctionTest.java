@@ -52,6 +52,14 @@ class IntervalFunctionTest {
 
         assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, negativeInterval)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(negativeInterval, 1, positiveInterval)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(zeroInterval, 1, positiveInterval)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(negativeInterval, 1, 0.5, positiveInterval)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(zeroInterval, 1, 0.5, positiveInterval)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(zeroInterval, 1, 5.0, positiveInterval)).hasMessageContaining("randomizationFactor");
     }
 
     @Test
