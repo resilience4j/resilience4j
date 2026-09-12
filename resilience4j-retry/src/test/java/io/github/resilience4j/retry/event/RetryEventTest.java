@@ -109,4 +109,27 @@ class RetryEventTest {
             "Retry 'test', waiting PT0.5S until attempt '2'. Last attempt failed with exception 'null'.");
     }
 
+    @Test
+    void testRetryOnRetryEventCapturesLastResult() {
+        RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2, null, 500L,
+            "tryAgain");
+        assertThat(retryOnRetryEvent.getLastThrowable()).isNull();
+        assertThat(retryOnRetryEvent.getLastResult()).isEqualTo("tryAgain");
+    }
+
+    @Test
+    void testRetryOnRetryEventWithoutLastResult() {
+        RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2,
+            new IOException("Bla"), 1234L);
+        assertThat(retryOnRetryEvent.getLastResult()).isNull();
+    }
+
+    @Test
+    void testRetryOnRetryEventToStringReportsLastResult() {
+        RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2, null, 500L,
+            "tryAgain");
+        assertThat(retryOnRetryEvent.toString()).contains(
+            "Retry 'test', waiting PT0.5S until attempt '2'. Last attempt returned result 'tryAgain'.");
+    }
+
 }
