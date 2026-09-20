@@ -25,6 +25,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.springboot.health.ComponentHealthResponse;
+import io.github.resilience4j.springboot.health.RootHealthResponse;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterProperties;
 import io.github.resilience4j.springboot.service.test.DummyService;
 import io.github.resilience4j.springboot.service.test.TestApplication;
@@ -35,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -210,5 +213,30 @@ class RateLimiterAutoConfigurationTest {
         RateLimiter backendCustomizer = rateLimiterRegistry.rateLimiter("backendCustomizer");
         assertThat(backendCustomizer.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(200);
 
+    }
+
+    /**
+     * Regression coverage for <a href="https://github.com/resilience4j/resilience4j/issues/2350">#2350</a>.
+     * <p>
+     * The RateLimiter equivalent of the CircuitBreaker composite-health scenario: RateLimiter health
+     * indicators must appear as a component of the composite {@code /actuator/health} endpoint
+     * (i.e. {@code components.rateLimiters.details.{...}}).
+     * <p>
+     * Spring Boot 4 health SPI support already landed in #2384, so this test asserts already-working
+     * behaviour and passes without any production change; its purpose is to guard against a silent
+     * regression of the composite-endpoint registration.
+     */
+    @Test
+    void testRateLimitersExposedInCompositeHealthEndpoint() {
+        ResponseEntity<RootHealthResponse> healthResponse = restTemplate
+            .getForEntity("/actuator/health", RootHealthResponse.class);
+
+        assertThat(healthResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(healthResponse.getBody()).isNotNull();
+        ComponentHealthResponse rateLimiters = healthResponse.getBody().getComponents().get("rateLimiters");
+        assertThat(rateLimiters).isNotNull();
+        assertThat(rateLimiters.getDetails())
+            .isNotNull()
+            .containsKeys("backendA", "backendB", "backendCustomizer", "rateLimiterDummyFeignClient");
     }
 }
