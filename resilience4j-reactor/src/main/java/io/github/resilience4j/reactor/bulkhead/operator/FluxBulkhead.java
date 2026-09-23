@@ -16,11 +16,12 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
+
+import java.util.concurrent.CompletableFuture;
 
 class FluxBulkhead<T> extends FluxOperator<T, T> {
 
@@ -33,11 +34,19 @@ class FluxBulkhead<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if (bulkhead.tryAcquirePermission()) {
-            source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, false));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                Operators.error(actual,
+                    PermissionAwaitingSubscription.permissionFailure(permission));
+            } else {
+                source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, false));
+            }
         } else {
-            Operators.error(actual, BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingSubscription<T> subscription = new PermissionAwaitingSubscription<>(
+                source, bulkhead, actual, false, permission);
+            actual.onSubscribe(subscription);
+            subscription.await();
         }
     }
-
 }

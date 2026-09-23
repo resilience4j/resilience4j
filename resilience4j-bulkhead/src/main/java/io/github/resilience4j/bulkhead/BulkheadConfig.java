@@ -144,8 +144,13 @@ public class BulkheadConfig implements Serializable {
          * can be set to 0.
          * <p>
          * Note: for threads running on an event-loop or equivalent (rx computation pool, etc),
-         * setting maxWaitDuration to 0 is highly recommended. Blocking an event-loop thread will
-         * most likely have a negative effect on application throughput.
+         * blocking the thread must be avoided. Callers which use the blocking
+         * {@link Bulkhead#acquirePermission()} or {@link Bulkhead#tryAcquirePermission()} on such
+         * threads should set maxWaitDuration to 0. {@link Bulkhead#acquirePermissionAsync()} and
+         * the Reactor Bulkhead operator wait for a permission without blocking the calling
+         * thread, so they can be combined with a non-zero maxWaitDuration on an event-loop. The
+         * RxJava 2 and RxJava 3 Bulkhead operators still acquire the permission with the blocking
+         * {@link Bulkhead#tryAcquirePermission()}.
          *
          * @param maxWaitDuration maximum wait time for bulkhead entry
          * @return the BulkheadConfig.Builder
