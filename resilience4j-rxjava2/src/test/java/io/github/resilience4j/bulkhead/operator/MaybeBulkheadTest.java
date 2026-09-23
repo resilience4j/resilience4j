@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -27,7 +28,8 @@ class MaybeBulkheadTest {
 
     @Test
     void shouldEmitAllEvents() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         Maybe.just(1)
             .compose(BulkheadOperator.of(bulkhead))
@@ -39,7 +41,8 @@ class MaybeBulkheadTest {
 
     @Test
     void shouldPropagateError() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         Maybe.error(new IOException("BAM!"))
             .compose(BulkheadOperator.of(bulkhead))
@@ -53,7 +56,9 @@ class MaybeBulkheadTest {
 
     @Test
     void shouldEmitErrorWithBulkheadFullException() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         Maybe.just(1)
             .compose(BulkheadOperator.of(bulkhead))
@@ -67,7 +72,8 @@ class MaybeBulkheadTest {
 
     @Test
     void shouldReleaseBulkheadOnlyOnce() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         Maybe.just(Arrays.asList(1, 2, 3))
             .compose(BulkheadOperator.of(bulkhead))
