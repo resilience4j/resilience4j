@@ -48,7 +48,7 @@ class AveragePlusResponseTimeCutoffTest {
 
         supplier.accept(HedgeEvent.Type.SECONDARY_SUCCESS, LONG_DURATION);
 
-        then(supplier.get()).isEqualTo(Duration.ofMillis(0));
+        then(supplier.get()).isEqualTo(Duration.ofMillis(1));
     }
 
     @Test
@@ -57,7 +57,7 @@ class AveragePlusResponseTimeCutoffTest {
 
         supplier.accept(HedgeEvent.Type.PRIMARY_FAILURE, LONG_DURATION);
 
-        then(supplier.get()).isEqualTo(Duration.ofMillis(0));
+        then(supplier.get()).isEqualTo(Duration.ofMillis(1));
     }
 
     @Test

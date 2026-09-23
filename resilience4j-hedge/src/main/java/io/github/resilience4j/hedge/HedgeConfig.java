@@ -130,7 +130,7 @@ public class HedgeConfig implements Serializable {
 
     public static class Builder {
 
-        private HedgeDurationSupplierType hedgeDurationSupplierType = HedgeDurationSupplierType.PRECONFIGURED;
+        private HedgeDurationSupplierType hedgeDurationSupplierType = HedgeDurationSupplierType.AVERAGE_PLUS;
         private boolean shouldUseFactorAsPercentage = false;
         private int hedgeTimeFactor = 0;
         private boolean shouldMeasureErrors = true;
