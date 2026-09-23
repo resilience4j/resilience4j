@@ -17,6 +17,7 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.ExecutorServiceFactory;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -64,7 +65,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         this.spelResolver = spelResolver;
         this.timeLimiterExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
             contextAwareScheduledThreadPoolExecutor :
-            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+            ExecutorServiceFactory.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), "TimeLimiterAspect");
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
