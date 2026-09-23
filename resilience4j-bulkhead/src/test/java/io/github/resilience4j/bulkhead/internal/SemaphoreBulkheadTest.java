@@ -51,6 +51,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -761,6 +762,82 @@ class SemaphoreBulkheadTest {
             .hasCauseInstanceOf(BulkheadFullException.class);
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldPublishPermittedBeforeFinishedWhenGrantedCallCompletesSynchronously(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncEventOrder", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        // the granted call finishes synchronously in a dependent action, like a Mono.just does
+        permission.thenRun(bulkhead::onComplete);
+
+        bulkhead.onComplete();
+
+        assertThat(permission).isCompleted();
+        testSubscriber.assertValues(CALL_FINISHED, CALL_PERMITTED, CALL_FINISHED);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldKeepGrantingQueuedPermissionsWhenPermittedEventConsumerThrows(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncConsumerFailure", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        AtomicBoolean failOnce = new AtomicBoolean(true);
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            if (failOnce.getAndSet(false)) {
+                throw new IllegalStateException("BAM!");
+            }
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        assertThatThrownBy(bulkhead::onComplete)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("BAM!");
+
+        assertThat(first)
+            .as("permission must be granted although the event consumer failed in %s", threadType)
+            .isCompleted();
+        assertThat(second).isNotDone();
+
+        bulkhead.onComplete();
+        assertThat(second)
+            .as("later grants must not be blocked by the earlier consumer failure in %s", threadType)
+            .isCompleted();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldQueueSubMillisecondMaxWaitDurationInsteadOfFailingFast(ThreadType threadType)
+        throws InterruptedException {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncSubMillisecond", threadType, 1,
+            Duration.ofNanos(1));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        // occupy the single scheduler thread so that the tiny timeout cannot fire during the test
+        CountDownLatch releaseScheduler = new CountDownLatch(1);
+        Future<?> schedulerBlocker = SchedulerFactory.getInstance().getScheduler()
+            .submit(() -> releaseScheduler.await(10, SECONDS));
+
+        try {
+            CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+            assertThat(permission)
+                .as("a positive max wait duration must queue the request in %s", threadType)
+                .isNotDone();
+
+            bulkhead.onComplete();
+            assertThat(permission).isCompleted();
+            bulkhead.onComplete();
+            assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        } finally {
+            releaseScheduler.countDown();
+            assertThat(schedulerBlocker).isNotNull();
+        }
     }
 
     @TestTemplate

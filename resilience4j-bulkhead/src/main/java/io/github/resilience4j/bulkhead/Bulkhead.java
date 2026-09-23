@@ -379,8 +379,9 @@ public interface Bulkhead {
     void acquirePermission();
 
     /**
-     * Acquires a permission to execute a call asynchronously, without blocking the calling
-     * thread.
+     * Acquires a permission to execute a call asynchronously. Implementations are expected to
+     * wait for a permission by completing the returned future later instead of parking the
+     * calling thread; see the note on the default implementation below.
      * <p>
      * The returned future completes successfully as soon as a permission has been acquired. If
      * the Bulkhead is full and {@link BulkheadConfig#getMaxWaitDuration()} is greater than zero,
@@ -396,13 +397,16 @@ public interface Bulkhead {
      * Cancelling the returned future while the permission request is queued removes it from the
      * queue without publishing an event, because the request was withdrawn by the caller and not
      * rejected by the Bulkhead. If {@link CompletableFuture#cancel(boolean)} returns
-     * {@code false}, the permission was already granted and must still be released. The returned
-     * future must never be completed by the caller.
+     * {@code false}, the request had already been settled: either the permission was granted and
+     * must still be released, or the max wait duration had elapsed. The returned future must
+     * never be completed by the caller.
      * <p>
      * The default implementation is a blocking bridge which acquires the permission with
-     * {@link Bulkhead#acquirePermission()} and exists for backwards compatibility with custom
-     * implementations. The {@link SemaphoreBulkhead} overrides it with a non-blocking
-     * implementation which never parks the calling thread.
+     * {@link Bulkhead#acquirePermission()} and therefore can wait for up to the max wait duration
+     * on the calling thread. It only exists for backwards compatibility with custom
+     * implementations, which should override it to honor the non-blocking contract. The
+     * {@link SemaphoreBulkhead} overrides it with an implementation which never parks the
+     * calling thread.
      *
      * @return a future which completes when a permission has been acquired and completes
      * exceptionally with a {@link BulkheadFullException} when no permission could be acquired

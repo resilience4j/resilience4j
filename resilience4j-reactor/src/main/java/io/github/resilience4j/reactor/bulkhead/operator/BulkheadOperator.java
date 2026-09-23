@@ -29,11 +29,12 @@ import java.util.function.UnaryOperator;
  * to an upstream Publisher. Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is
  * full.
  * <p>
- * The permission is acquired with {@link Bulkhead#acquirePermissionAsync()} and therefore never
- * blocks the subscribing thread. When the Bulkhead is full and a max wait duration is
- * configured, the subscription to the upstream Publisher is deferred until a permission has
- * been granted, or a {@link BulkheadFullException} is emitted once the max wait duration has
- * elapsed.
+ * The permission is acquired with {@link Bulkhead#acquirePermissionAsync()}, which does not
+ * block the subscribing thread for Bulkhead implementations that support asynchronous
+ * acquisition, such as the semaphore based Bulkhead. When the Bulkhead is full and a max wait
+ * duration is configured, the subscription to the upstream Publisher is deferred until a
+ * permission has been granted, or a {@link BulkheadFullException} is emitted once the max wait
+ * duration has elapsed.
  *
  * @param <T> the value type
  */
