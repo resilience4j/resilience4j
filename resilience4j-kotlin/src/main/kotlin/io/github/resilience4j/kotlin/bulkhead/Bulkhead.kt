@@ -21,8 +21,8 @@ package io.github.resilience4j.kotlin.bulkhead
 import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.kotlin.isCancellation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.future.await
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -76,17 +76,20 @@ fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> 
 }
 
 /**
- * Try to immediately acquire permission from the bulkhead when it is not expected to block.
- *
- * If a wait duration is configured on the bulkhead, then attempt to acquire permission within
- * the confines of a dispatcher specialized for blocking calls.
- *
+ * Acquires a permission without blocking a thread. When the bulkhead is full and a max wait
+ * duration is configured, the request is queued and this coroutine suspends until the permission
+ * is granted or the wait duration has elapsed, which fails with a
+ * [io.github.resilience4j.bulkhead.BulkheadFullException]. Cancelling the coroutine withdraws the
+ * queued request.
  */
 internal suspend fun Bulkhead.acquirePermissionSuspend() {
-    // Fast path. Avoid dispatch context switch.
-    if (bulkheadConfig.maxWaitDuration.isZero) {
-        acquirePermission()
-    } else {
-        withContext(Dispatchers.IO) { acquirePermission() }
+    val permission = acquirePermissionAsync()
+    try {
+        permission.await()
+    } catch (e: CancellationException) {
+        // The wait was cancelled. A permission granted concurrently has to be handed back; the grant
+        // may still complete the future after this point, so release from its completion.
+        permission.whenComplete { _, failure -> if (failure == null) releasePermission() }
+        throw e
     }
 }
