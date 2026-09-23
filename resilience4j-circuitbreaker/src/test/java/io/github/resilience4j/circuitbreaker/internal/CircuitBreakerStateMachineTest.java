@@ -860,6 +860,41 @@ class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    void shouldPublishFailureRateExceededEventAgainAfterRateRecoversInMetricsOnlyState() {
+        CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
+            .failureRateThreshold(50)
+            .slidingWindow(5, 5, SlidingWindowType.COUNT_BASED)
+            .build());
+        circuitBreaker.transitionToMetricsOnlyState();
+        circuitBreaker.getEventPublisher().onFailureRateExceeded(mockOnFailureRateExceededEventConsumer);
+
+        recordFailures(circuitBreaker, 5);
+        recordSuccesses(circuitBreaker, 5);
+        recordFailures(circuitBreaker, 5);
+
+        verify(mockOnFailureRateExceededEventConsumer, times(2))
+            .consumeEvent(any(CircuitBreakerOnFailureRateExceededEvent.class));
+    }
+
+    @Test
+    void shouldPublishSlowCallRateExceededEventAgainAfterRateRecoversInMetricsOnlyState() {
+        CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
+            .slowCallRateThreshold(50)
+            .slowCallDurationThreshold(Duration.ofSeconds(1))
+            .slidingWindow(5, 5, SlidingWindowType.COUNT_BASED)
+            .build());
+        circuitBreaker.transitionToMetricsOnlyState();
+        circuitBreaker.getEventPublisher().onSlowCallRateExceeded(mockOnSlowCallRateExceededEventConsumer);
+
+        recordSlowCalls(circuitBreaker, 5);
+        recordSuccesses(circuitBreaker, 5);
+        recordSlowCalls(circuitBreaker, 5);
+
+        verify(mockOnSlowCallRateExceededEventConsumer, times(2))
+            .consumeEvent(any(CircuitBreakerOnSlowCallRateExceededEvent.class));
+    }
+
+    @Test
     void allCircuitBreakerStatesAllowTransitionToMetricsOnlyMode() {
         for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
             assertThatNoException().isThrownBy(() -> CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, CircuitBreaker.State.METRICS_ONLY));
@@ -1012,6 +1047,24 @@ class CircuitBreakerStateMachineTest {
 
     private void assertThatMetricsAreReset() {
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
+    }
+
+    private void recordFailures(CircuitBreaker circuitBreaker, int count) {
+        for (int i = 0; i < count; i++) {
+            circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        }
+    }
+
+    private void recordSuccesses(CircuitBreaker circuitBreaker, int count) {
+        for (int i = 0; i < count; i++) {
+            circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    private void recordSlowCalls(CircuitBreaker circuitBreaker, int count) {
+        for (int i = 0; i < count; i++) {
+            circuitBreaker.onSuccess(2, TimeUnit.SECONDS);
+        }
     }
 
 }
