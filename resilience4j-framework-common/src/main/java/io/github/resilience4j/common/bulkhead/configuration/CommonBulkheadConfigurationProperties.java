@@ -70,6 +70,9 @@ public class CommonBulkheadConfigurationProperties extends CommonProperties {
             if (instanceProperties.isWritableStackTraceEnabled() != null) {
                 builder.writableStackTraceEnabled(instanceProperties.isWritableStackTraceEnabled());
             }
+            if (instanceProperties.getMaxQueuedCalls() != null) {
+                builder.maxQueuedCalls(instanceProperties.getMaxQueuedCalls());
+            }
         }
         compositeBulkheadCustomizer.getCustomizer(instanceName)
             .ifPresent(bulkheadConfigCustomizer -> bulkheadConfigCustomizer.customize(builder));
@@ -111,6 +114,8 @@ public class CommonBulkheadConfigurationProperties extends CommonProperties {
         private Integer maxConcurrentCalls;
         private Duration maxWaitDuration;
         private Boolean writableStackTraceEnabled;
+        @Nullable
+        private Integer maxQueuedCalls;
         @Nullable
         private String baseConfig;
         @Nullable
@@ -154,6 +159,22 @@ public class CommonBulkheadConfigurationProperties extends CommonProperties {
             }
 
             this.maxWaitDuration = maxWaitDuration;
+            return this;
+        }
+
+        @Nullable
+        public Integer getMaxQueuedCalls() {
+            return maxQueuedCalls;
+        }
+
+        public InstanceProperties setMaxQueuedCalls(Integer maxQueuedCalls) {
+            Objects.requireNonNull(maxQueuedCalls);
+            if (maxQueuedCalls < 0) {
+                throw new IllegalArgumentException(
+                    "maxQueuedCalls must be greater than or equal to 0.");
+            }
+
+            this.maxQueuedCalls = maxQueuedCalls;
             return this;
         }
 

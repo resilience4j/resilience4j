@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,11 +61,11 @@ class TaggedBulkheadMetricsTest {
         Bulkhead newBulkhead = bulkheadRegistry.bulkhead("backendB");
 
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(2);
-        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendB")).hasSize(2);
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(3);
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendB")).hasSize(3);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(6);
 
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
@@ -78,7 +79,7 @@ class TaggedBulkheadMetricsTest {
     @Test
     void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(2);
+        assertThat(meters).hasSize(3);
 
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA");
         bulkheadRegistry.remove("backendA");
@@ -125,6 +126,14 @@ class TaggedBulkheadMetricsTest {
     }
 
     @Test
+    void queuedCallsGaugeIsRegistered() {
+        Gauge queuedCalls = meterRegistry.get(DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME).gauge();
+
+        assertThat(queuedCalls).isNotNull();
+        assertThat(queuedCalls.value()).isEqualTo(bulkhead.getMetrics().getQueuedCalls());
+    }
+
+    @Test
     void maxAllowedConcurrentCallsGaugeIsRegistered() {
         Gauge maxAllowed = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauge();
@@ -143,7 +152,7 @@ class TaggedBulkheadMetricsTest {
         bulkheadC.tryAcquirePermission();
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(6);
         final RequiredSearch match = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).tags("key1", "value1");
         assertThat(match).isNotNull();
     }
@@ -157,6 +166,7 @@ class TaggedBulkheadMetricsTest {
             BulkheadMetricNames.custom()
                 .availableConcurrentCallsMetricName("custom_available_calls")
                 .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
+                .queuedCallsMetricName("custom_queued_calls")
                 .build(),
             bulkheadRegistry
         ).bindTo(meterRegistry);
@@ -169,7 +179,8 @@ class TaggedBulkheadMetricsTest {
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
             "custom_available_calls",
-            "custom_max_allowed_calls"
+            "custom_max_allowed_calls",
+            "custom_queued_calls"
         ));
     }
 }

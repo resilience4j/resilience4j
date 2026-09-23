@@ -59,6 +59,12 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
             .tag(TagNames.NAME, bulkhead.getName())
             .tags(customTags)
             .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getQueuedCallsMetricName(), bulkhead,
+            bh -> bh.getMetrics().getQueuedCalls())
+            .description("The number of calls waiting for a permission")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
 
         meterIdMap.put(bulkhead.getName(), idSet);
 
