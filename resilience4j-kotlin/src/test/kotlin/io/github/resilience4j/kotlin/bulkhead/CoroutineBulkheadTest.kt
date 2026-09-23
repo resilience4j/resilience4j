@@ -21,12 +21,12 @@ package io.github.resilience4j.kotlin.bulkhead
 import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.yield
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -189,8 +189,8 @@ class CoroutineBulkheadTest {
             }.registerEventListener()
             assertThat(bulkhead.tryAcquirePermission()).isTrue()
 
-            val waiting = async { bulkhead.executeSuspendFunction { "done" } }
-            yield()
+            // UNDISPATCHED runs the coroutine on this thread until it suspends waiting for the permission
+            val waiting = async(start = CoroutineStart.UNDISPATCHED) { bulkhead.executeSuspendFunction { "done" } }
             assertThat(waiting.isCompleted).isFalse()
 
             bulkhead.onComplete()
@@ -214,8 +214,8 @@ class CoroutineBulkheadTest {
                 }
             }.registerEventListener()
             assertThat(bulkhead.tryAcquirePermission()).isTrue()
-            val waiting = launch { bulkhead.executeSuspendFunction { "never" } }
-            yield()
+            val waiting = launch(start = CoroutineStart.UNDISPATCHED) { bulkhead.executeSuspendFunction { "never" } }
+            assertThat(waiting.isActive).isTrue()
 
             waiting.cancelAndJoin()
             bulkhead.onComplete()
@@ -238,8 +238,7 @@ class CoroutineBulkheadTest {
                 override fun cancel(mayInterruptIfRunning: Boolean): Boolean = false
             }
             given(bulkhead.acquirePermissionAsync()).willReturn(permission)
-            val waiting = launch { bulkhead.executeSuspendFunction { "never" } }
-            yield()
+            val waiting = launch(start = CoroutineStart.UNDISPATCHED) { bulkhead.executeSuspendFunction { "never" } }
 
             waiting.cancelAndJoin()
             verify(bulkhead, never()).releasePermission()

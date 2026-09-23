@@ -26,10 +26,19 @@ import kotlinx.coroutines.future.await
 import kotlin.coroutines.coroutineContext
 
 /**
- * Decorates and executes the given suspend function [block].
+ * Decorates and executes the given suspend function.
  *
- * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
- * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ * The permission is acquired with [Bulkhead.acquirePermissionAsync], so no thread is blocked while
+ * waiting: when the bulkhead is full and a `maxWaitDuration` greater than zero is configured, the
+ * coroutine suspends until a permission is granted or the wait duration has elapsed. Cancelling the
+ * coroutine while it is waiting withdraws the queued request. Once [block] runs, the permission is
+ * released when it completes, fails or is cancelled.
+ *
+ * @param block the suspend function to execute once a permission has been acquired
+ * @return the result of [block]
+ * @throws io.github.resilience4j.bulkhead.BulkheadFullException if no permission could be acquired
+ *         within `maxWaitDuration`, or immediately when the bulkhead is full and `maxWaitDuration`
+ *         is zero
  */
 suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
     acquirePermissionSuspend()
@@ -66,10 +75,12 @@ fun <T> Bulkhead.executeFunction(block: () -> T): T {
 }
 
 /**
- * Decorates the given suspend function [block] and returns it.
+ * Decorates the given suspend function with this bulkhead. Every invocation of the returned function
+ * acquires a permission like [executeSuspendFunction]: it suspends instead of blocking a thread while
+ * waiting for a permission, and cancelling the calling coroutine withdraws its queued request.
  *
- * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
- * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ * @param block the suspend function to decorate
+ * @return the decorated suspend function
  */
 fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
