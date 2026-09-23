@@ -148,4 +148,17 @@ public interface HedgeRegistry extends Registry<Hedge, HedgeConfig> {
     Hedge hedge(String name, String configName,
                 Map<String, String> tags);
 
+    /**
+     * Closes every {@link Hedge} currently managed by this registry by invoking
+     * {@link Hedge#close()} on each. Safe to call multiple times; individual
+     * Hedge implementations are expected to make {@code close()} idempotent.
+     * <p>
+     * After this call, Hedges that remain referenced outside the registry can
+     * no longer submit or decorate calls. Newly created Hedges registered after
+     * {@code close()} are unaffected and behave normally.
+     */
+    default void close() {
+        getAllHedges().forEach(Hedge::close);
+    }
+
 }
