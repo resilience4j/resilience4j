@@ -53,6 +53,8 @@ public class BulkheadMetrics implements MetricSet {
                 (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
             metricRegistry.register(name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS),
                 (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+            metricRegistry.register(name(prefix, name, QUEUED_CALLS),
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getQueuedCalls());
         });
     }
 
