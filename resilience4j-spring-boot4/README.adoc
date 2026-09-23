@@ -5,12 +5,88 @@ With this starter you can apply rate limiters and circuit breakers to any of you
 
 NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-3[Usage Guide]*
 
+=== Virtual Thread configuration
+
+Starting with Resilience4j 3 the Spring Boot 4 starter can switch the internal schedulers
+(CircuitBreaker, RateLimiter, etc.) to Java *virtual threads* (Project Loom).
+
+## [source,yaml]
+
+resilience4j:
+thread:
+type: virtual
+-------------
+
+NOTE: The setting above **only switches the internal schedulers of Resilience4j** to
+virtual threads. If you also want your Spring Boot application (TaskExecutor,
+`@Scheduled`, Servlet container, etc.) to run on virtual threads, activate the
+following Spring properties as well:
+
+## [source,yaml]
+
+spring:
+threads:
+virtual:
+enabled: true
+server:
+virtual-threads:
+enabled: true
+-------------
+
+You can achieve the same via a JVM flag:
+
+```
+-Dresilience4j.thread.type=virtual
+```
+
+If the property (or system property) is omitted, Resilience4j falls back to regular *platform* threads.
+
+=== Thread Metrics
+
+When virtual threads are enabled, you might want to monitor their usage. Resilience4j provides metrics to track whether virtual threads are enabled or not. These metrics are automatically registered when using Spring Boot with Micrometer.
+
+## [source,yaml]
+
+resilience4j:
+thread:
+metrics:
+enabled: true  # default is true
+--------------------------------
+
+When enabled, the following metric is available:
+
+* `resilience4j.thread.virtual_thread_enabled`: A gauge that reports whether virtual threads are enabled (1.0) or disabled (0.0)
+
+This is especially useful in environments where you want to verify the actual configuration is applied correctly across your services.
+
+# [WARNING]
+
+**Important Note on Aspect Order**
+
+The default Aspect Order may cause `@Retry` to run *before* (outside) `@CircuitBreaker`. This means a single logical operation with multiple retries will be recorded as **multiple failures** by the CircuitBreaker, potentially opening the circuit too aggressively.
+
+To ensure the CircuitBreaker wraps the entire Retry operation (recording only 1 failure per total attempt), explicitly configure the aspect order so that the CircuitBreaker has a higher priority (lower value):
+
+## [source,properties]
+
+# Ensure CircuitBreaker runs first (Outer)
+
+resilience4j.circuitbreaker.circuitBreakerAspectOrder=1
+
+# Ensure Retry runs second (Inner)
+
+## resilience4j.retry.retryAspectOrder=2
+
+====
+
 == License
 
 Copyright 2025 Robert Winkler and Bohdan Storozhuk, Artur Havliukovskyi
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+```
+http://www.apache.org/licenses/LICENSE-2.0
+```
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
