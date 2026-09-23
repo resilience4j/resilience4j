@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
-import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.AbstractSubscriber;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,18 +40,42 @@ class FlowableBulkhead<T> extends Flowable<T> {
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if (bulkhead.tryAcquirePermission()) {
-            upstream.subscribe(new BulkheadSubscriber(downstream));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                downstream.onSubscribe(EmptySubscription.INSTANCE);
+                downstream.onError(PermissionFailures.of(permission));
+            } else {
+                upstream.subscribe(new BulkheadSubscriber(downstream, null));
+            }
         } else {
-            downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingSubscription awaiting =
+                new PermissionAwaitingSubscription(bulkhead, permission);
+            downstream.onSubscribe(awaiting);
+            awaiting.await(
+                () -> upstream.subscribe(new BulkheadSubscriber(downstream, awaiting)),
+                downstream::onError);
         }
     }
 
     class BulkheadSubscriber extends AbstractSubscriber<T> {
 
-        BulkheadSubscriber(Subscriber<? super T> downstreamSubscriber) {
+        @Nullable
+        private final PermissionAwaitingSubscription awaiting;
+
+        BulkheadSubscriber(Subscriber<? super T> downstreamSubscriber,
+            @Nullable PermissionAwaitingSubscription awaiting) {
             super(downstreamSubscriber);
+            this.awaiting = awaiting;
+        }
+
+        @Override
+        protected void hookOnSubscribe() {
+            if (awaiting == null) {
+                super.hookOnSubscribe();
+            } else {
+                awaiting.setSubscription(this);
+            }
         }
 
         @Override
@@ -68,5 +93,4 @@ class FlowableBulkhead<T> extends Flowable<T> {
             bulkhead.releasePermission();
         }
     }
-
 }
