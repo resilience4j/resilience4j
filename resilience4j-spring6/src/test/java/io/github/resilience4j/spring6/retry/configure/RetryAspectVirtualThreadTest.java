@@ -1,0 +1,107 @@
+/*
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.github.resilience4j.spring6.retry.configure;
+
+import io.github.resilience4j.core.ThreadType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Verifies that {@link RetryAspect}'s fallback scheduler honors the
+ * {@code resilience4j.thread.type} system property when no
+ * {@code ContextAwareScheduledThreadPoolExecutor} bean is provided.
+ */
+class RetryAspectVirtualThreadTest {
+
+    private static final String SYS_PROP_KEY = "resilience4j.thread.type";
+    private static final String EXPECTED_POOL_NAME = "RetryAspect";
+
+    private String originalProperty;
+    private RetryAspect aspect;
+
+    private static Stream<ThreadType> threadModes() {
+        return Stream.of(ThreadType.PLATFORM, ThreadType.VIRTUAL);
+    }
+
+    private void setUp(ThreadType threadType) {
+        originalProperty = System.getProperty(SYS_PROP_KEY);
+        System.setProperty(SYS_PROP_KEY, threadType.toString());
+        // Pass null for contextAwareScheduledThreadPoolExecutor to force the
+        // ExecutorServiceFactory fallback path under test.
+        aspect = new RetryAspect(null, null, null, null, null, null);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (aspect != null) {
+            aspect.close();
+        }
+        if (originalProperty != null) {
+            System.setProperty(SYS_PROP_KEY, originalProperty);
+        } else {
+            System.clearProperty(SYS_PROP_KEY);
+        }
+    }
+
+    @ParameterizedTest(name = "threadMode={0}")
+    @MethodSource("threadModes")
+    void fallbackSchedulerShouldUseConfiguredThreadType(ThreadType threadType) throws Exception {
+        setUp(threadType);
+        ScheduledExecutorService executor = extractExecutorService(aspect);
+
+        boolean ranOnVirtual = executor
+            .submit(() -> Thread.currentThread().isVirtual())
+            .get(5, TimeUnit.SECONDS);
+
+        assertThat(ranOnVirtual)
+            .as("RetryAspect fallback scheduler must respect resilience4j.thread.type=%s",
+                threadType)
+            .isEqualTo(threadType == ThreadType.VIRTUAL);
+    }
+
+    @ParameterizedTest(name = "threadMode={0}")
+    @MethodSource("threadModes")
+    void fallbackSchedulerShouldHaveAspectScopedThreadName(ThreadType threadType) throws Exception {
+        setUp(threadType);
+        ScheduledExecutorService executor = extractExecutorService(aspect);
+
+        String threadName = executor
+            .submit(() -> Thread.currentThread().getName())
+            .get(5, TimeUnit.SECONDS);
+
+        assertThat(threadName).contains(EXPECTED_POOL_NAME);
+        if (threadType == ThreadType.VIRTUAL) {
+            assertThat(threadName).contains("-vthread-");
+        } else {
+            assertThat(threadName).contains("-thread-");
+        }
+    }
+
+    private static ScheduledExecutorService extractExecutorService(RetryAspect aspect)
+        throws Exception {
+        Field field = RetryAspect.class.getDeclaredField("retryExecutorService");
+        field.setAccessible(true);
+        return (ScheduledExecutorService) field.get(aspect);
+    }
+}
