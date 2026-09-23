@@ -21,15 +21,24 @@ package io.github.resilience4j.kotlin.bulkhead
 import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.kotlin.isCancellation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.future.await
 import kotlin.coroutines.coroutineContext
 
 /**
- * Decorates and executes the given suspend function [block].
+ * Decorates and executes the given suspend function.
  *
- * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
- * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ * The permission is acquired with [Bulkhead.acquirePermissionAsync], so no thread is blocked while
+ * waiting: when the bulkhead is full and a `maxWaitDuration` greater than zero is configured, the
+ * coroutine suspends until a permission is granted or the wait duration has elapsed. Cancelling the
+ * coroutine while it is waiting withdraws the queued request. Once [block] runs, the permission is
+ * released when it completes, fails or is cancelled.
+ *
+ * @param block the suspend function to execute once a permission has been acquired
+ * @return the result of [block]
+ * @throws io.github.resilience4j.bulkhead.BulkheadFullException if no permission could be acquired
+ *         within `maxWaitDuration`, or immediately when the bulkhead is full and `maxWaitDuration`
+ *         is zero
  */
 suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
     acquirePermissionSuspend()
@@ -66,27 +75,32 @@ fun <T> Bulkhead.executeFunction(block: () -> T): T {
 }
 
 /**
- * Decorates the given suspend function [block] and returns it.
+ * Decorates the given suspend function with this bulkhead. Every invocation of the returned function
+ * acquires a permission like [executeSuspendFunction]: it suspends instead of blocking a thread while
+ * waiting for a permission, and cancelling the calling coroutine withdraws its queued request.
  *
- * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
- * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ * @param block the suspend function to decorate
+ * @return the decorated suspend function
  */
 fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
 }
 
 /**
- * Try to immediately acquire permission from the bulkhead when it is not expected to block.
- *
- * If a wait duration is configured on the bulkhead, then attempt to acquire permission within
- * the confines of a dispatcher specialized for blocking calls.
- *
+ * Acquires a permission without blocking a thread. When the bulkhead is full and a max wait
+ * duration is configured, the request is queued and this coroutine suspends until the permission
+ * is granted or the wait duration has elapsed, which fails with a
+ * [io.github.resilience4j.bulkhead.BulkheadFullException]. Cancelling the coroutine withdraws the
+ * queued request.
  */
 internal suspend fun Bulkhead.acquirePermissionSuspend() {
-    // Fast path. Avoid dispatch context switch.
-    if (bulkheadConfig.maxWaitDuration.isZero) {
-        acquirePermission()
-    } else {
-        withContext(Dispatchers.IO) { acquirePermission() }
+    val permission = acquirePermissionAsync()
+    try {
+        permission.await()
+    } catch (e: CancellationException) {
+        // The wait was cancelled. A permission granted concurrently has to be handed back; the grant
+        // may still complete the future after this point, so release from its completion.
+        permission.whenComplete { _, failure -> if (failure == null) releasePermission() }
+        throw e
     }
 }
