@@ -221,6 +221,56 @@ class ThreadPoolBulkheadConfigTest {
                 .endsWith("}");
     }
 
+    @Test
+    void fromShouldNotMutateBaseConfig() {
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(4)
+            .coreThreadPoolSize(2)
+            .queueCapacity(10)
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .maxThreadPoolSize(20)
+            .coreThreadPoolSize(8)
+            .queueCapacity(50)
+            .build();
+
+        // derivedConfig must be a different instance
+        assertThat(derivedConfig).isNotSameAs(baseConfig);
+
+        // base config must remain unchanged
+        assertThat(baseConfig.getMaxThreadPoolSize()).isEqualTo(4);
+        assertThat(baseConfig.getCoreThreadPoolSize()).isEqualTo(2);
+        assertThat(baseConfig.getQueueCapacity()).isEqualTo(10);
+
+        // derived config must have the new values
+        assertThat(derivedConfig.getMaxThreadPoolSize()).isEqualTo(20);
+        assertThat(derivedConfig.getCoreThreadPoolSize()).isEqualTo(8);
+        assertThat(derivedConfig.getQueueCapacity()).isEqualTo(50);
+    }
+
+    @Test
+    void fromShouldCopyAllFields() {
+        Duration keepAlive = Duration.ofSeconds(30);
+        ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(10)
+            .coreThreadPoolSize(5)
+            .queueCapacity(20)
+            .keepAliveDuration(keepAlive)
+            .writableStackTraceEnabled(false)
+            .build();
+
+        ThreadPoolBulkheadConfig derivedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+            .maxThreadPoolSize(50)
+            .build();
+
+        // All fields except maxThreadPoolSize should be copied from base
+        assertThat(derivedConfig.getCoreThreadPoolSize()).isEqualTo(5);
+        assertThat(derivedConfig.getQueueCapacity()).isEqualTo(20);
+        assertThat(derivedConfig.getKeepAliveDuration()).isEqualTo(keepAlive);
+        assertThat(derivedConfig.isWritableStackTraceEnabled()).isFalse();
+    }
+
     public static class TestCtxPropagator implements ContextPropagator<Object> {
 
         @Override

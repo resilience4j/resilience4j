@@ -132,7 +132,14 @@ public class ThreadPoolBulkheadConfig {
         private ThreadPoolBulkheadConfig config;
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
-            this.config = bulkheadConfig;
+            config = new ThreadPoolBulkheadConfig();
+            config.maxThreadPoolSize = bulkheadConfig.maxThreadPoolSize;
+            config.coreThreadPoolSize = bulkheadConfig.coreThreadPoolSize;
+            config.queueCapacity = bulkheadConfig.queueCapacity;
+            config.keepAliveDuration = bulkheadConfig.keepAliveDuration;
+            config.writableStackTraceEnabled = bulkheadConfig.writableStackTraceEnabled;
+            config.contextPropagators = new ArrayList<>(bulkheadConfig.contextPropagators);
+            config.rejectedExecutionHandler = bulkheadConfig.rejectedExecutionHandler;
         }
 
         public Builder() {
