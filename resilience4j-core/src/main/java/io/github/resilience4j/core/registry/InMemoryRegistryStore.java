@@ -22,7 +22,9 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -93,18 +95,21 @@ public class InMemoryRegistryStore<E> implements RegistryStore<E> {
         Objects.requireNonNull(key, "Key cannot be null");
         Objects.requireNonNull(value, "Value cannot be null");
 
-        CompletableFuture<E> future = entryMap.putIfAbsent(key, CompletableFuture.completedFuture(value));
-        if (future != null) {
+        CompletableFuture<E> newEntry = CompletableFuture.completedFuture(value);
+        while (true) {
+            CompletableFuture<E> future = entryMap.putIfAbsent(key, newEntry);
+            if (future == null) {
+                return null;
+            }
             try {
                 // Wait for computation to complete and return existing value
                 // join() uses LockSupport.park() internally - no virtual thread pinning
                 return future.join();
-            } catch (Exception e) {
-                // CompletionException from failed computeIfAbsent - treat as "no valid existing value"
-                return null;
+            } catch (CompletionException | CancellationException e) {
+                // Retry insertion after a failed computation without removing a newer entry.
+                entryMap.remove(key, future);
             }
         }
-        return null;  // Successfully inserted new value
     }
 
     @Override
