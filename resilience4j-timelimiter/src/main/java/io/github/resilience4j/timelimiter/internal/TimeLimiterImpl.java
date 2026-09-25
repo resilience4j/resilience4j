@@ -74,7 +74,15 @@ public class TimeLimiterImpl implements TimeLimiter {
         ScheduledExecutorService scheduler, Supplier<F> supplier) {
 
         return () -> {
-            CompletableFuture<T> future = supplier.get().toCompletableFuture();
+            // Apply the timeout to a separate future so the supplied stage can still complete.
+            CompletableFuture<T> future = new CompletableFuture<>();
+            supplier.get().whenComplete((result, throwable) -> {
+                if (throwable == null) {
+                    future.complete(result);
+                } else {
+                    future.completeExceptionally(throwable);
+                }
+            });
             ScheduledFuture<?> timeoutFuture =
                 Timeout
                     .of(future, scheduler, name, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
