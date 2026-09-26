@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
@@ -167,6 +168,52 @@ class CompletionStageRetryTest {
             .isInstanceOf(MaxRetriesExceededException.class)
             .withMessage("Retry 'retry' has exhausted all attempts (3)");
         then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
+    void shouldExposeLastResultOnRetryEventWhenRetryingOnResult() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(completedFuture("retry me"))
+            .willReturn(completedFuture("done"));
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult(s -> s.equals("retry me"))
+            .maxAttempts(3)
+            .build();
+        Retry retry = Retry.of("retry", retryConfig);
+        AtomicReference<Object> lastResult = new AtomicReference<>();
+        retry.getEventPublisher().onRetry(event -> lastResult.set(event.getLastResult()));
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retry,
+            scheduler,
+            helloWorldService::returnHelloWorld
+        );
+
+        String result = awaitResult(supplier.get());
+
+        assertThat(result).isEqualTo("done");
+        assertThat(lastResult.get()).isEqualTo("retry me");
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+    }
+
+    @Test
+    void shouldNotSetLastResultOnRetryEventWhenRetryingOnException() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(CompletableFuture.failedFuture(new HelloWorldException("boom")))
+            .willReturn(completedFuture("done"));
+        Retry retry = Retry.ofDefaults("retry");
+        AtomicReference<Object> lastResult = new AtomicReference<>("sentinel");
+        retry.getEventPublisher().onRetry(event -> lastResult.set(event.getLastResult()));
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retry,
+            scheduler,
+            helloWorldService::returnHelloWorld
+        );
+
+        String result = awaitResult(supplier.get());
+
+        assertThat(result).isEqualTo("done");
+        assertThat(lastResult.get()).isNull();
+        then(helloWorldService).should(times(2)).returnHelloWorld();
     }
 
     @Test

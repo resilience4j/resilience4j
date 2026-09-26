@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -147,6 +148,41 @@ class SupplierRetryTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         assertThat(result).isEqualTo("Hello world");
+    }
+
+    @Test
+    void shouldExposeLastResultOnRetryEventWhenRetryingOnResult() {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        final RetryConfig tryAgain = RetryConfig.<String>custom()
+            .retryOnResult(s -> s.contains("Hello world"))
+            .maxAttempts(2).build();
+        Retry retry = Retry.of("id", tryAgain);
+        AtomicReference<Object> lastResult = new AtomicReference<>();
+        retry.getEventPublisher().onRetry(event -> lastResult.set(event.getLastResult()));
+        Supplier<String> supplier = Retry
+            .decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+        supplier.get();
+
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+        assertThat(lastResult.get()).isEqualTo("Hello world");
+    }
+
+    @Test
+    void shouldNotSetLastResultOnRetryEventWhenRetryingOnException() {
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new HelloWorldException())
+            .willReturn("Hello world");
+        Retry retry = Retry.ofDefaults("id");
+        AtomicReference<Object> lastResult = new AtomicReference<>("sentinel");
+        retry.getEventPublisher().onRetry(event -> lastResult.set(event.getLastResult()));
+        Supplier<String> supplier = Retry
+            .decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+        supplier.get();
+
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+        assertThat(lastResult.get()).isNull();
     }
 
     @Test

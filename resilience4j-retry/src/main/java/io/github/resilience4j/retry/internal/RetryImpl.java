@@ -261,7 +261,7 @@ public class RetryImpl<T> implements Retry {
             if (interval < 0) {
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
             } else {
-                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval, either.getOrNull()));
             }
 
             try {
@@ -281,7 +281,7 @@ public class RetryImpl<T> implements Retry {
             if (interval < 0) {
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
             } else {
-                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval, either.getOrNull()));
             }
 
             try {
@@ -398,7 +398,7 @@ public class RetryImpl<T> implements Retry {
                     consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
                 }
                 Long interval = intervalBiFunction.apply(currentNumOfAttempts, Either.right(result));
-                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval, result));
                 return interval;
             }
 
