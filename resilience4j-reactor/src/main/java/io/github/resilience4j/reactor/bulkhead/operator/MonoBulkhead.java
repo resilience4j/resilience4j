@@ -16,11 +16,12 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
+
+import java.util.concurrent.CompletableFuture;
 
 class MonoBulkhead<T> extends MonoOperator<T, T> {
 
@@ -33,10 +34,19 @@ class MonoBulkhead<T> extends MonoOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if (bulkhead.tryAcquirePermission()) {
-            source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, true));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                Operators.error(actual,
+                    PermissionAwaitingSubscription.permissionFailure(permission));
+            } else {
+                source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, true));
+            }
         } else {
-            Operators.error(actual, BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingSubscription<T> subscription = new PermissionAwaitingSubscription<>(
+                source, bulkhead, actual, true, permission);
+            actual.onSubscribe(subscription);
+            subscription.await();
         }
     }
 }
