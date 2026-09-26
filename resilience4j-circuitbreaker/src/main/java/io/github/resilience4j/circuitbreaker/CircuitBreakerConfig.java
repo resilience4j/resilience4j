@@ -541,9 +541,11 @@ public class CircuitBreakerConfig implements Serializable {
          * Configures CircuitBreaker with a fixed wait duration which controls how long the
          * CircuitBreaker should stay in Half Open state, before it switches to open. This is an
          * optional parameter.
-         *
-         * By default CircuitBreaker will stay in Half Open state until
-         * {@code minimumNumberOfCalls} is completed with either success or failure.
+         * <p>
+         * By default, CircuitBreaker will stay in Half Open state until enough calls have
+         * completed, with either success or failure, to evaluate the failure and slow call
+         * rates: {@code permittedNumberOfCallsInHalfOpenState}, or {@code minimumNumberOfCalls}
+         * if that is lower.
          *
          * @param maxWaitDurationInHalfOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay in Half Open
