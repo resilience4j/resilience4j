@@ -19,6 +19,8 @@ import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConf
 import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
 import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerRefreshScopedRegistryAutoConfiguration;
+import io.github.resilience4j.springboot.micrometer.autoconfigure.TimerAutoConfiguration;
+import io.github.resilience4j.springboot.micrometer.autoconfigure.TimerRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.retry.autoconfigure.RetryAutoConfiguration;
@@ -62,6 +64,16 @@ class RefreshScopedAutoConfigurationTest {
                 CircuitBreakerAutoConfiguration.class,
                 RefreshAutoConfiguration.class))
             .run(context -> assertRefreshScoped(context, "circuitBreakerRegistry"));
+    }
+
+    @Test
+    void refreshScopedTimerRegistry() {
+        contextRunner
+            .withConfiguration(AutoConfigurations.of(
+                TimerRefreshScopedRegistryAutoConfiguration.class,
+                TimerAutoConfiguration.class,
+                RefreshAutoConfiguration.class))
+            .run(context -> assertRefreshScoped(context, "timerRegistry"));
     }
 
     @Test
