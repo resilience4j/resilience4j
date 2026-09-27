@@ -151,6 +151,7 @@ public class HedgeConfig implements Serializable {
             this.windowSize = baseConfig.windowSize;
             this.cutoff = baseConfig.cutoff;
             this.concurrentHedges = baseConfig.concurrentHedges;
+            this.contextPropagators = Arrays.asList(baseConfig.contextPropagators);
         }
 
         public static Builder fromConfig(HedgeConfig baseConfig) {

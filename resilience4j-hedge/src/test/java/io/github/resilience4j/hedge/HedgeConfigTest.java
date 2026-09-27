@@ -23,6 +23,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
 import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 
@@ -56,6 +57,17 @@ class HedgeConfigTest {
 
         then(copiedConfig.getDurationSupplier())
             .isEqualTo(HedgeConfig.HedgeDurationSupplierType.AVERAGE_PLUS);
+    }
+
+    @Test
+    void shouldInitializeContextPropagatorsFromOtherConfig() {
+        ContextPropagator<?> propagator = new ContextPropagator.EmptyContextPropagator<>();
+        HedgeConfig config = HedgeConfig.custom()
+            .withContextPropagators(propagator).build();
+
+        HedgeConfig copiedConfig = HedgeConfig.from(config).build();
+
+        then(copiedConfig.getContextPropagators()).containsExactly(propagator);
     }
 
     @Test
