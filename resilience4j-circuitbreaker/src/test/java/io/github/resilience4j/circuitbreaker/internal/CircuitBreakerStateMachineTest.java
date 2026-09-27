@@ -38,7 +38,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import com.statemachinesystems.mockclock.MockClock;
@@ -933,6 +941,72 @@ class CircuitBreakerStateMachineTest {
         // sleeping for maxWaitDurationInHalfOpenState to expire (maxWaitDurationInHalfOpenState = 1Sec)
         Thread.sleep(2000l);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    void resetCancelsAutomaticTransitionOfHalfOpenState() throws Exception {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+
+        circuitBreaker.reset();
+
+        // sleeping for maxWaitDurationInHalfOpenState to expire (maxWaitDurationInHalfOpenState = 1Sec)
+        Thread.sleep(2000l);
+        assertThat(circuitBreaker.getState()).isEqualTo(CLOSED);
+    }
+
+    @Test
+    void automaticTransitionFromHalfOpenStateDoesNotInterruptEventConsumer() throws Exception {
+        CountDownLatch transitioned = new CountDownLatch(1);
+        AtomicBoolean interrupted = new AtomicBoolean();
+        circuitBreaker.getEventPublisher().onStateTransition(event -> {
+            if (event.getStateTransition() == CircuitBreaker.StateTransition.HALF_OPEN_TO_OPEN) {
+                interrupted.set(Thread.currentThread().isInterrupted());
+                transitioned.countDown();
+            }
+        });
+        circuitBreaker.transitionToOpenState();
+
+        circuitBreaker.transitionToHalfOpenState();
+
+        assertThat(transitioned.await(3, TimeUnit.SECONDS)).isTrue();
+        assertThat(interrupted).isFalse();
+    }
+
+    @Test
+    void concurrentTransitionsDoNotLeaveOrphanedAutomaticTransitions() throws Exception {
+        int threads = 8;
+        List<CircuitBreaker> circuitBreakers = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        try {
+            for (int i = 0; i < 100; i++) {
+                CircuitBreaker toTest = new CircuitBreakerStateMachine("testName" + i, custom()
+                    .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                    .waitDurationInOpenState(Duration.ofMillis(100))
+                    .build());
+                CyclicBarrier barrier = new CyclicBarrier(threads);
+                List<Future<?>> transitions = new ArrayList<>();
+                for (int t = 0; t < threads; t++) {
+                    transitions.add(executor.submit(() -> {
+                        barrier.await();
+                        toTest.transitionToOpenState();
+                        return null;
+                    }));
+                }
+                for (Future<?> transition : transitions) {
+                    transition.get(5, TimeUnit.SECONDS);
+                }
+                // cancels the automatic transition of the current OPEN state only
+                toTest.transitionToForcedOpenState();
+                circuitBreakers.add(toTest);
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        // sleeping for waitDurationInOpenState to expire (waitDurationInOpenState = 100ms)
+        Thread.sleep(500l);
+        assertThat(circuitBreakers).extracting(CircuitBreaker::getState).containsOnly(FORCED_OPEN);
     }
 
     @Test
