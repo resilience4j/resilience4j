@@ -232,8 +232,9 @@ public class FallbackMethod {
     }
 
     private Object getTarget(Method fallback) {
-        boolean isPrivate = Modifier.isPrivate(fallback.getModifiers());
-        if (isPrivate) {
+        int modifiers = fallback.getModifiers();
+        if (Modifier.isPrivate(modifiers) || Modifier.isFinal(modifiers)) {
+            // Private and final methods cannot be delegated by a CGLIB proxy.
             return original;
         }
         if (Proxy.isProxyClass(proxy.getClass())) {
