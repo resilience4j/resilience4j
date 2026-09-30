@@ -115,16 +115,15 @@ public class ThreadPoolBulkheadConfig {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ThreadPoolBulkheadConfig{");
-        sb.append("maxThreadPoolSize=").append(maxThreadPoolSize);
-        sb.append(", coreThreadPoolSize=").append(coreThreadPoolSize);
-        sb.append(", queueCapacity=").append(queueCapacity);
-        sb.append(", keepAliveDuration=").append(keepAliveDuration);
-        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
-        sb.append(", contextPropagators=").append(contextPropagators);
-        sb.append(", rejectExecutionHandle=").append(rejectedExecutionHandler.getClass().getSimpleName());
-        sb.append('}');
-        return sb.toString();
+        return "ThreadPoolBulkheadConfig{" +
+            "maxThreadPoolSize=" + maxThreadPoolSize +
+            ", coreThreadPoolSize=" + coreThreadPoolSize +
+            ", queueCapacity=" + queueCapacity +
+            ", keepAliveDuration=" + keepAliveDuration +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", contextPropagators=" + contextPropagators +
+            ", rejectedExecutionHandler=" + rejectedExecutionHandler.getClass().getSimpleName() +
+            "}";
     }
 
     public static class Builder {
@@ -133,7 +132,14 @@ public class ThreadPoolBulkheadConfig {
         private ThreadPoolBulkheadConfig config;
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
-            this.config = bulkheadConfig;
+            config = new ThreadPoolBulkheadConfig();
+            config.maxThreadPoolSize = bulkheadConfig.maxThreadPoolSize;
+            config.coreThreadPoolSize = bulkheadConfig.coreThreadPoolSize;
+            config.queueCapacity = bulkheadConfig.queueCapacity;
+            config.keepAliveDuration = bulkheadConfig.keepAliveDuration;
+            config.writableStackTraceEnabled = bulkheadConfig.writableStackTraceEnabled;
+            config.contextPropagators = new ArrayList<>(bulkheadConfig.contextPropagators);
+            config.rejectedExecutionHandler = bulkheadConfig.rejectedExecutionHandler;
         }
 
         public Builder() {

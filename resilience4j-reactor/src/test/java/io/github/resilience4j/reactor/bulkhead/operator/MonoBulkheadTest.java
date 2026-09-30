@@ -24,6 +24,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -39,7 +40,8 @@ class MonoBulkheadTest {
 
     @Test
     void shouldEmitEvent() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Mono.just("Event")
@@ -52,7 +54,8 @@ class MonoBulkheadTest {
 
     @Test
     void shouldPropagateError() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
@@ -66,7 +69,9 @@ class MonoBulkheadTest {
 
     @Test
     void shouldEmitErrorWithBulkheadFullException() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         StepVerifier.create(
             Mono.just("Event")
@@ -80,7 +85,9 @@ class MonoBulkheadTest {
 
     @Test
     void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
@@ -92,7 +99,8 @@ class MonoBulkheadTest {
 
     @Test
     void shouldReleaseBulkheadSemaphoreOnCancel() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         StepVerifier.create(
             Mono.just("Event")
@@ -107,7 +115,8 @@ class MonoBulkheadTest {
 
     @Test
     void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
         doThrow(new RuntimeException("BAM!")).when(bulkhead).onComplete();
 
         StepVerifier.create(

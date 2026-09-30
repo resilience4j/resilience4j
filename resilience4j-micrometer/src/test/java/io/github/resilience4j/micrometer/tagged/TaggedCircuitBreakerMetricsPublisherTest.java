@@ -66,6 +66,19 @@ class TaggedCircuitBreakerMetricsPublisherTest {
     }
 
     @Test
+    void shouldUseOneDescriptionPerMetricName() {
+        Map<String, List<Meter>> metersByName = meterRegistry.getMeters().stream()
+            .collect(Collectors.groupingBy(meter -> meter.getId().getName()));
+
+        assertThat(metersByName).containsKeys(DEFAULT_CIRCUIT_BREAKER_CALLS,
+            DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS, DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS);
+        metersByName.forEach((name, meters) ->
+            assertThat(meters).as("Descriptions for %s", name)
+                .extracting(meter -> meter.getId().getDescription())
+                .doesNotContainNull().containsOnly(meters.getFirst().getId().getDescription()));
+    }
+
+    @Test
     void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);

@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -67,6 +68,33 @@ class BulkheadTest {
         assertThat(result).isEqualTo("Hello world");
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    void acquirePermissionAsyncDefaultImplementationShouldBridgeAcquirePermission() {
+        Bulkhead bulkhead = mock(Bulkhead.class);
+        given(bulkhead.acquirePermissionAsync()).willCallRealMethod();
+
+        CompletableFuture<Void> granted = bulkhead.acquirePermissionAsync();
+
+        assertThat(granted).isCompleted();
+        then(bulkhead).should(times(1)).acquirePermission();
+    }
+
+    @Test
+    void acquirePermissionAsyncDefaultImplementationShouldCompleteExceptionallyWhenFull() {
+        Bulkhead bulkhead = mock(Bulkhead.class);
+        given(bulkhead.getBulkheadConfig()).willReturn(config);
+        given(bulkhead.getName()).willReturn("test");
+        given(bulkhead.acquirePermissionAsync()).willCallRealMethod();
+        BulkheadFullException exception = BulkheadFullException
+            .createBulkheadFullException(bulkhead);
+        willThrow(exception).given(bulkhead).acquirePermission();
+
+        CompletableFuture<Void> rejected = bulkhead.acquirePermissionAsync();
+
+        assertThat(rejected).isCompletedExceptionally();
+        assertThatThrownBy(rejected::join).hasCause(exception);
     }
 
     @Test
