@@ -13,6 +13,7 @@ dependencies {
     testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-test"))
     testImplementation(libs.micrometer.observation.test)
+    testImplementation(libs.micrometer.registry.prometheus)
 
     testFixturesImplementation(libs.assertj.core)
 }

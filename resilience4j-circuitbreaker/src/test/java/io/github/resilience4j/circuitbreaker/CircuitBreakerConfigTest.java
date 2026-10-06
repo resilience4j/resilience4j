@@ -576,7 +576,7 @@ class CircuitBreakerConfigTest {
         String result = config.toString();
 
         assertThat(result)
-                .startsWith("CircuitBreakerConfig {")
+                .startsWith("CircuitBreakerConfig{")
                 .contains("slidingWindowSize=5")
                 .contains("recordExceptions=[class java.lang.RuntimeException]")
                 .contains("automaticTransitionFromOpenToHalfOpenEnabled=true")
