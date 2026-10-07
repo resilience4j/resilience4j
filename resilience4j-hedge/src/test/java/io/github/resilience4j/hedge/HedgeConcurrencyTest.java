@@ -14,12 +14,16 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * Concurrency tests for Hedge pattern with both virtual and platform threads.
@@ -39,50 +43,38 @@ class HedgeConcurrencyTest {
     private ScheduledExecutorService hedgeExecutor;
     private ExecutorService testExecutor;
     private HedgeRegistry hedgeRegistry;
+    private final List<Hedge> createdHedges = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
         hedgeExecutor = Executors.newScheduledThreadPool(NUM_THREADS);
         testExecutor = Executors.newFixedThreadPool(NUM_THREADS);
         hedgeRegistry = HedgeRegistry.builder().build();
+        createdHedges.clear();
+    }
+
+    private Hedge track(Hedge hedge) {
+        createdHedges.add(hedge);
+        return hedge;
     }
 
     @AfterEach
     void tearDown() {
-        if (hedgeExecutor != null && !hedgeExecutor.isShutdown()) {
-            hedgeExecutor.shutdown();
-            try {
-                if (!hedgeExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    hedgeExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                hedgeExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
+        for (Hedge hedge : createdHedges) {
+            hedge.close();
         }
+        createdHedges.clear();
 
-        if (testExecutor != null && !testExecutor.isShutdown()) {
-            testExecutor.shutdown();
-            try {
-                if (!testExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    testExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                testExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
+        hedgeRegistry.close();
+        shutdown(hedgeExecutor);
+        shutdown(testExecutor);
     }
 
     @TestTemplate
     void shouldHandleConcurrentHedgeOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge operations with {}", threadType);
 
-        Hedge hedge = Hedge.of(Duration.ofMillis(50));
-
+        Hedge hedge = track(Hedge.of(Duration.ofMillis(50)));
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
         AtomicInteger successCount = new AtomicInteger(0);
@@ -126,9 +118,6 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentHedgeRegistryOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge registry operations with {}", threadType);
 
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -182,17 +171,13 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentEventPublishing(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent event publishing with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(50))
             .build();
 
-        Hedge hedge = Hedge.of(config);
-
+        Hedge hedge = track(Hedge.of(config));
         List<HedgeEvent> events = Collections.synchronizedList(new ArrayList<>());
         hedge.getEventPublisher().onEvent(events::add);
 
@@ -235,17 +220,13 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleRaceConditionsBetweenOperations(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing race conditions with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(30))
             .build();
 
-        Hedge hedge = Hedge.of(config);
-
+        Hedge hedge = track(Hedge.of(config));
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
         AtomicInteger responseCount = new AtomicInteger(0);
@@ -289,17 +270,13 @@ class HedgeConcurrencyTest {
 
     @TestTemplate
     void shouldHandleConcurrentHedgeTriggering(ThreadType threadType) throws Exception {
-        assumeFalse(threadType == ThreadType.VIRTUAL,
-            "Hedge has known issues with virtual threads due to daemon thread limitations");
-
         LOG.info("Testing concurrent hedge triggering with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(30))
             .build();
 
-        Hedge hedge = Hedge.of(config);
-
+        Hedge hedge = track(Hedge.of(config));
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(5);
         AtomicInteger responseCount = new AtomicInteger(0);
@@ -339,5 +316,20 @@ class HedgeConcurrencyTest {
         assertThat(responseCount.get()).isEqualTo(5);
 
         LOG.info("Concurrent hedge triggering test passed with {}", threadType);
+    }
+
+    private static void shutdown(ExecutorService executor) {
+        if (executor == null || executor.isShutdown()) {
+            return;
+        }
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
