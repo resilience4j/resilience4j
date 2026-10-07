@@ -5,6 +5,30 @@ With this starter you can apply rate limiters and circuit breakers to any of you
 
 NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-3[Usage Guide]*
 
+[NOTE]
+====
+**Aspect Order**
+
+The default aspect order is:
+
+`Retry ( CircuitBreaker ( RateLimiter ( TimeLimiter ( Bulkhead ( Function ) ) ) ) )`
+
+This means `Retry` is applied last. Each retry attempt is individually recorded by the `CircuitBreaker`, which allows the circuit to open quickly when a downstream system is unavailable.
+
+You can customize the order using the following properties:
+
+[source,properties]
+----
+resilience4j.retry.retryAspectOrder
+resilience4j.circuitbreaker.circuitBreakerAspectOrder
+resilience4j.ratelimiter.rateLimiterAspectOrder
+resilience4j.timelimiter.timeLimiterAspectOrder
+resilience4j.bulkhead.bulkheadAspectOrder
+----
+
+For more details, see the https://resilience4j.readme.io/docs/getting-started-3[Getting Started guide].
+====
+
 == License
 
 Copyright 2025 Robert Winkler and Bohdan Storozhuk, Artur Havliukovskyi
