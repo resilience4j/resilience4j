@@ -21,6 +21,11 @@ package io.github.resilience4j.hedge;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import org.junit.jupiter.api.Test;
 
 import io.github.resilience4j.core.ContextPropagator;
@@ -68,6 +73,22 @@ class HedgeConfigTest {
         HedgeConfig copiedConfig = HedgeConfig.from(config).build();
 
         then(copiedConfig.getContextPropagators()).containsExactly(propagator);
+    }
+
+    @Test
+    void shouldInitializeFromDeserializedConfig() throws Exception {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {
+            out.writeObject(HedgeConfig.ofDefaults());
+        }
+        HedgeConfig deserialized;
+        try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
+            deserialized = (HedgeConfig) in.readObject();
+        }
+
+        HedgeConfig copiedConfig = HedgeConfig.from(deserialized).build();
+
+        then(copiedConfig.getContextPropagators()).isEmpty();
     }
 
     @Test
