@@ -316,8 +316,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void reset() {
-        CircuitBreakerState previousState = stateReference
-            .getAndUpdate(currentState -> new ClosedState());
+        CircuitBreakerState previousState = swapState(currentState -> new ClosedState());
         if (previousState.getState() != CLOSED) {
             publishStateTransitionEvent(
                 StateTransition.transitionBetween(getName(), previousState.getState(), CLOSED));
@@ -327,13 +326,31 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private void stateTransition(State newState,
         UnaryOperator<CircuitBreakerState> newStateGenerator) {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
+        CircuitBreakerState previousState = swapState(currentState -> {
             StateTransition.transitionBetween(getName(), currentState.getState(), newState);
-            currentState.preTransitionHook();
             return newStateGenerator.apply(currentState);
         });
         publishStateTransitionEvent(
             StateTransition.transitionBetween(getName(), previousState.getState(), newState));
+    }
+
+    /**
+     * Replaces the current state under the lock. State constructors may schedule automatic
+     * transitions, so the generator must run exactly once (unlike an
+     * {@link java.util.concurrent.atomic.AtomicReference#getAndUpdate} retry), and the
+     * replaced state's scheduled transition must be cancelled.
+     */
+    private CircuitBreakerState swapState(UnaryOperator<CircuitBreakerState> newStateGenerator) {
+        lock.lock();
+        try {
+            CircuitBreakerState currentState = stateReference.get();
+            CircuitBreakerState newState = newStateGenerator.apply(currentState);
+            currentState.preTransitionHook();
+            stateReference.set(newState);
+            return currentState;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
@@ -1138,7 +1155,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         private void cancelAutomaticTransition() {
             if (transitionToFuture != null && !transitionToFuture.isDone()) {
-                transitionToFuture.cancel(true);
+                transitionToFuture.cancel(false);
             }
         }
 
