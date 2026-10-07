@@ -12,8 +12,11 @@ public class BulkheadMetricNames {
         DEFAULT_PREFIX + ".available.concurrent.calls";
     public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME =
         DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
+    public static final String DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME =
+        DEFAULT_PREFIX + ".queued.calls";
     private String availableConcurrentCallsMetricName = DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
     private String maxAllowedConcurrentCallsMetricName = DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+    private String queuedCallsMetricName = DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME;
 
     protected BulkheadMetricNames() {
     }
@@ -58,6 +61,16 @@ public class BulkheadMetricNames {
     }
 
     /**
+     * Returns the metric name for the number of calls waiting for a permission, defaults to
+     * {@value DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME}.
+     *
+     * @return The metric name for the number of queued calls.
+     */
+    public String getQueuedCallsMetricName() {
+        return queuedCallsMetricName;
+    }
+
+    /**
      * Helps building custom instance of {@link BulkheadMetricNames}.
      */
     public static class Builder {
@@ -99,6 +112,18 @@ public class BulkheadMetricNames {
          *
          * @return The built {@link BulkheadMetricNames} instance.
          */
+        /**
+         * Overrides the default metric name {@value BulkheadMetricNames#DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME}
+         * with a given one.
+         *
+         * @param queuedCallsMetricName The queued calls metric name.
+         * @return The builder.
+         */
+        public Builder queuedCallsMetricName(String queuedCallsMetricName) {
+            metricNames.queuedCallsMetricName = requireNonNull(queuedCallsMetricName);
+            return this;
+        }
+
         public BulkheadMetricNames build() {
             return metricNames;
         }

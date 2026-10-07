@@ -636,11 +636,98 @@ class SemaphoreBulkheadTest {
 
     private Bulkhead createQueueingBulkhead(String name, ThreadType threadType, int maxConcurrentCalls,
         Duration maxWaitDuration) {
+        return createQueueingBulkhead(name, threadType, maxConcurrentCalls, maxWaitDuration,
+            BulkheadConfig.DEFAULT_MAX_QUEUED_CALLS);
+    }
+
+    private Bulkhead createQueueingBulkhead(String name, ThreadType threadType, int maxConcurrentCalls,
+        Duration maxWaitDuration, int maxQueuedCalls) {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(maxConcurrentCalls)
             .maxWaitDuration(maxWaitDuration)
+            .maxQueuedCalls(maxQueuedCalls)
             .build();
         return Bulkhead.of(name + "-" + threadType, config);
+    }
+
+    @TestTemplate
+    void shouldReportQueuedCallsWhileAsyncPermissionsAreWaiting(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncQueuedCalls", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isZero();
+
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isEqualTo(2);
+
+        bulkhead.onComplete();
+        assertThat(first).isCompleted();
+        assertThat(bulkhead.getMetrics().getQueuedCalls())
+            .as("a granted request leaves the queue in %s", threadType)
+            .isEqualTo(1);
+
+        assertThat(second.cancel(false)).isTrue();
+        assertThat(bulkhead.getMetrics().getQueuedCalls())
+            .as("a cancelled request leaves the queue in %s", threadType)
+            .isZero();
+        bulkhead.onComplete();
+    }
+
+    @TestTemplate
+    void shouldNotCountExpiredAsyncPermissionsAsQueuedCalls(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncQueuedCallsExpiry", threadType, 1,
+            Duration.ofMillis(50));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isEqualTo(1);
+
+        assertThatThrownBy(() -> permission.get(5, SECONDS))
+            .hasCauseInstanceOf(BulkheadFullException.class);
+        await().atMost(2, SECONDS)
+            .untilAsserted(() -> assertThat(bulkhead.getMetrics().getQueuedCalls()).isZero());
+        bulkhead.onComplete();
+    }
+
+    @TestTemplate
+    void shouldRejectAsyncPermissionWhenMaxQueuedCallsIsReached(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncMaxQueuedCalls", threadType, 1,
+            Duration.ofSeconds(10), 1);
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        TestSubscriber<BulkheadEvent.Type> testSubscriber = subscribe(bulkhead);
+
+        CompletableFuture<Void> queued = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> rejected = bulkhead.acquirePermissionAsync();
+
+        assertThat(queued).isNotDone();
+        assertThat(rejected)
+            .as("the request beyond maxQueuedCalls must be rejected immediately in %s", threadType)
+            .isCompletedExceptionally();
+        assertThatThrownBy(rejected::join).hasCauseInstanceOf(BulkheadFullException.class);
+        testSubscriber.assertValues(CALL_REJECTED);
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isEqualTo(1);
+
+        bulkhead.onComplete();
+        assertThat(queued).isCompleted();
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isZero();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldNotQueueAsyncPermissionWhenMaxQueuedCallsIsZero(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncNoQueue", threadType, 1,
+            Duration.ofSeconds(10), 0);
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+
+        assertThat(permission).isCompletedExceptionally();
+        assertThatThrownBy(permission::join).hasCauseInstanceOf(BulkheadFullException.class);
+        assertThat(bulkhead.getMetrics().getQueuedCalls()).isZero();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @TestTemplate

@@ -33,6 +33,7 @@ public class CommonsConfigurationBulkHeadConfiguration extends CommonBulkheadCon
     private static final String MAX_CONCURRENT_CALLS =  "maxConcurrentCalls";
     private static final String MAX_WAIT_DURATION = "maxWaitDuration";
     private static final String WRITABLE_STACK_TRACE_ENABLED = "writableStackTraceEnabled";
+    private static final String MAX_QUEUED_CALLS = "maxQueuedCalls";
     private static final String EVENT_CONSUMER_BUFFER_SIZE = "eventConsumerBufferSize";
 
     private CommonsConfigurationBulkHeadConfiguration(){
@@ -74,6 +75,9 @@ public class CommonsConfigurationBulkHeadConfiguration extends CommonBulkheadCon
         }
         if (configuration.containsKey(WRITABLE_STACK_TRACE_ENABLED)) {
             instanceProperties.setWritableStackTraceEnabled(configuration.getBoolean(WRITABLE_STACK_TRACE_ENABLED));
+        }
+        if (configuration.containsKey(MAX_QUEUED_CALLS)) {
+            instanceProperties.setMaxQueuedCalls(configuration.getInt(MAX_QUEUED_CALLS));
         }
         if (configuration.containsKey(Constants.BASE_CONFIG)) {
             instanceProperties.setBaseConfig(configuration.getString(Constants.BASE_CONFIG));

@@ -76,19 +76,22 @@ public abstract class AbstractBulkheadMetricsTest {
             .submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
         assertThat(metricRegistry.getGauges()
             .get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
             .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
         assertThat(metricRegistry.getGauges()
             .get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
             .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+        assertThat(metricRegistry.getGauges()
+            .get("resilience4j.bulkhead.testBulkhead.queued_calls").getValue())
+            .isEqualTo(0);
         // Then release latch and verify result
         countDownLatch.countDown();
         assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorld();
         // Then check metrics again
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
         assertThat(metricRegistry.getGauges()
             .get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
             .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
@@ -113,7 +116,7 @@ public abstract class AbstractBulkheadMetricsTest {
             .submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls")
             .getValue())
             .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
@@ -121,12 +124,15 @@ public abstract class AbstractBulkheadMetricsTest {
             metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls")
                 .getValue())
             .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+        assertThat(metricRegistry.getGauges()
+            .get("testPre.testBulkhead.queued_calls").getValue())
+            .isEqualTo(0);
         // Then release latch and verify result
         countDownLatch.countDown();
         assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorld();
         // Then check metrics again
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls")
             .getValue())
             .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
