@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -26,7 +27,8 @@ class ObserverBulkheadTest {
 
     @Test
     void shouldEmitAllEvents() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         Observable.fromArray("Event 1", "Event 2")
             .compose(BulkheadOperator.of(bulkhead))
@@ -38,7 +40,8 @@ class ObserverBulkheadTest {
 
     @Test
     void shouldPropagateError() {
-        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        given(bulkhead.acquirePermissionAsync())
+            .willReturn(CompletableFuture.completedFuture(null));
 
         Observable.error(new IOException("BAM!"))
             .compose(BulkheadOperator.of(bulkhead))
@@ -52,7 +55,9 @@ class ObserverBulkheadTest {
 
     @Test
     void shouldEmitErrorWithBulkheadFullException() {
-        given(bulkhead.tryAcquirePermission()).willReturn(false);
+        CompletableFuture<Void> rejectedPermission = CompletableFuture
+            .failedFuture(BulkheadFullException.createBulkheadFullException(bulkhead));
+        given(bulkhead.acquirePermissionAsync()).willReturn(rejectedPermission);
 
         Observable.fromArray("Event 1", "Event 2")
             .compose(BulkheadOperator.of(bulkhead))

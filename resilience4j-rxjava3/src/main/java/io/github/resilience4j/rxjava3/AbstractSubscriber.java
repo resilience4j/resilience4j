@@ -39,8 +39,16 @@ public abstract class AbstractSubscriber<T> implements Subscriber<T>, Subscripti
     @Override
     public void onSubscribe(Subscription s) {
         if (SubscriptionHelper.setOnce(subscription, s)) {
-            downstreamSubscriber.onSubscribe(this);
+            hookOnSubscribe();
         }
+    }
+
+    /**
+     * Hook which is invoked once the upstream subscription has been set. By default it hands this
+     * subscriber to the downstream as its subscription.
+     */
+    protected void hookOnSubscribe() {
+        downstreamSubscriber.onSubscribe(this);
     }
 
     @Override

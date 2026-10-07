@@ -15,17 +15,19 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
-import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.AbstractObserver;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import java.util.concurrent.CompletableFuture;
+
 class ObserverBulkhead<T> extends Observable<T> {
 
-    private final Observable<T> upstream;
     private final Bulkhead bulkhead;
+    private final Observable<T> upstream;
 
     ObserverBulkhead(Observable<T> upstream, Bulkhead bulkhead) {
         this.upstream = upstream;
@@ -34,18 +36,42 @@ class ObserverBulkhead<T> extends Observable<T> {
 
     @Override
     protected void subscribeActual(Observer<? super T> downstream) {
-        if (bulkhead.tryAcquirePermission()) {
-            upstream.subscribe(new BulkheadObserver(downstream));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                downstream.onSubscribe(EmptyDisposable.INSTANCE);
+                downstream.onError(PermissionFailures.of(permission));
+            } else {
+                upstream.subscribe(new BulkheadObserver(downstream, null));
+            }
         } else {
-            downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingDisposable awaiting =
+                new PermissionAwaitingDisposable(bulkhead, permission);
+            downstream.onSubscribe(awaiting);
+            awaiting.await(
+                () -> upstream.subscribe(new BulkheadObserver(downstream, awaiting)),
+                downstream::onError);
         }
     }
 
     class BulkheadObserver extends AbstractObserver<T> {
 
-        BulkheadObserver(Observer<? super T> downstreamObserver) {
+        @Nullable
+        private final PermissionAwaitingDisposable awaiting;
+
+        BulkheadObserver(Observer<? super T> downstreamObserver,
+            @Nullable PermissionAwaitingDisposable awaiting) {
             super(downstreamObserver);
+            this.awaiting = awaiting;
+        }
+
+        @Override
+        protected void hookOnSubscribe() {
+            if (awaiting == null) {
+                super.hookOnSubscribe();
+            } else {
+                awaiting.setUpstream(this);
+            }
         }
 
         @Override
@@ -63,5 +89,4 @@ class ObserverBulkhead<T> extends Observable<T> {
             bulkhead.releasePermission();
         }
     }
-
 }

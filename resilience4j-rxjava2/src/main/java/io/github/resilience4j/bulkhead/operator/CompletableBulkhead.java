@@ -15,17 +15,19 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
-import io.github.resilience4j.AbstractCompletableObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.AbstractCompletableObserver;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import java.util.concurrent.CompletableFuture;
+
 class CompletableBulkhead extends Completable {
 
-    private final Completable upstream;
     private final Bulkhead bulkhead;
+    private final Completable upstream;
 
     CompletableBulkhead(Completable upstream, Bulkhead bulkhead) {
         this.upstream = upstream;
@@ -34,18 +36,42 @@ class CompletableBulkhead extends Completable {
 
     @Override
     protected void subscribeActual(CompletableObserver downstream) {
-        if (bulkhead.tryAcquirePermission()) {
-            upstream.subscribe(new BulkheadCompletableObserver(downstream));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                downstream.onSubscribe(EmptyDisposable.INSTANCE);
+                downstream.onError(PermissionFailures.of(permission));
+            } else {
+                upstream.subscribe(new BulkheadCompletableObserver(downstream, null));
+            }
         } else {
-            downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingDisposable awaiting =
+                new PermissionAwaitingDisposable(bulkhead, permission);
+            downstream.onSubscribe(awaiting);
+            awaiting.await(
+                () -> upstream.subscribe(new BulkheadCompletableObserver(downstream, awaiting)),
+                downstream::onError);
         }
     }
 
     class BulkheadCompletableObserver extends AbstractCompletableObserver {
 
-        BulkheadCompletableObserver(CompletableObserver downstreamObserver) {
+        @Nullable
+        private final PermissionAwaitingDisposable awaiting;
+
+        BulkheadCompletableObserver(CompletableObserver downstreamObserver,
+            @Nullable PermissionAwaitingDisposable awaiting) {
             super(downstreamObserver);
+            this.awaiting = awaiting;
+        }
+
+        @Override
+        protected void hookOnSubscribe() {
+            if (awaiting == null) {
+                super.hookOnSubscribe();
+            } else {
+                awaiting.setUpstream(this);
+            }
         }
 
         @Override
@@ -63,5 +89,4 @@ class CompletableBulkhead extends Completable {
             bulkhead.releasePermission();
         }
     }
-
 }
