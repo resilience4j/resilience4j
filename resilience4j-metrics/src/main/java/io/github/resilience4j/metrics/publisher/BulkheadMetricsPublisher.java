@@ -62,7 +62,7 @@ public class BulkheadMetricsPublisher extends AbstractMetricsPublisher<Bulkhead>
             (Gauge<Integer>) () -> bulkhead.getMetrics().getQueuedCalls());
 
         List<String> metricNames = Arrays
-            .asList(availableConcurrentCalls, maxAllowedConcurrentCalls);
+            .asList(availableConcurrentCalls, maxAllowedConcurrentCalls, queuedCalls);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
