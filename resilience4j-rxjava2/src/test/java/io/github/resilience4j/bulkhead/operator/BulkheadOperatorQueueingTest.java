@@ -225,6 +225,69 @@ class BulkheadOperatorQueueingTest {
 
     @Test
     @Timeout(5)
+    void shouldNotConsumePermitWhenWaitingSubscriberIsCancelled() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        TestSubscriber<Integer> waiting = Flowable.just(1)
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+
+        waiting.cancel();
+        bulkhead.onComplete();
+
+        assertThat(availablePermits(bulkhead))
+            .as("a cancelled waiting subscription must not consume the released permit")
+            .isEqualTo(1);
+        Flowable.just(2).compose(BulkheadOperator.<Integer>of(bulkhead)).test().assertResult(2);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionWhenSubscriberIsCancelledAfterQueuedGrant() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        TestSubscriber<Integer> waiting = Flowable.<Integer>never()
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+
+        bulkhead.onComplete();
+        assertThat(availablePermits(bulkhead))
+            .as("the queued subscription should hold the released permit")
+            .isZero();
+
+        waiting.cancel();
+        assertThat(availablePermits(bulkhead)).isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionWithoutSubscribingWhenGrantRacesSubscriberCancel() {
+        Bulkhead bulkhead = mock(Bulkhead.class);
+        // Models a permission which is granted concurrently with the cancellation: cancelling the
+        // request loses the race and the granted permission has to be released.
+        CompletableFuture<Void> permission = new CompletableFuture<>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return false;
+            }
+        };
+        given(bulkhead.acquirePermissionAsync()).willReturn(permission);
+        AtomicBoolean subscribed = new AtomicBoolean();
+
+        TestSubscriber<Integer> subscriber = Flowable.just(1)
+            .doOnSubscribe(subscription -> subscribed.set(true))
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        subscriber.cancel();
+        permission.complete(null);
+
+        assertThat(subscribed)
+            .as("upstream must not be subscribed for a cancelled subscriber")
+            .isFalse();
+        verify(bulkhead).releasePermission();
+        verify(bulkhead, never()).onComplete();
+    }
+
+    @Test
+    @Timeout(5)
     void shouldReleasePermissionWithoutSubscribingWhenGrantRacesDispose() {
         Bulkhead bulkhead = mock(Bulkhead.class);
         // Models a permission which is granted concurrently with the dispose: cancelling the
