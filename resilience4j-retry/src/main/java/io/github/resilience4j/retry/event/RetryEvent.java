@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.ZonedDateTime;
 
 /**
@@ -59,6 +61,17 @@ public interface RetryEvent {
      * @return the last captured Throwable
      */
     Throwable getLastThrowable();
+
+    /**
+     * Returns the last result which triggered the retry, if the retry was caused by a result
+     * predicate rather than a thrown exception. Returns {@code null} otherwise.
+     *
+     * @return the last result which triggered the retry, or {@code null}
+     */
+    @Nullable
+    default Object getLastResult() {
+        return null;
+    }
 
     /**
      * Event types which are created by a Retry.
