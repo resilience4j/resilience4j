@@ -1,5 +1,12 @@
 apply plugin: "groovy"
 
+// Groovy 4.0.14 (pulled transitively via micronaut-platform 4.1.6) bundles an ASM
+// that cannot read Java 25 class files ("Unsupported class file major version 69"),
+// which breaks compileTestGroovy on the JDK 25 CI matrix entry. 4.0.33 ships ASM 9.8.
+configurations.configureEach {
+    resolutionStrategy.force "org.apache.groovy:groovy:4.0.33"
+}
+
 dependencies {
     annotationProcessor(platform(libs.micronaut.platform))
     annotationProcessor(libs.micronaut.inject.java)
