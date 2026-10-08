@@ -120,6 +120,8 @@ class RefreshScopedAutoConfigurationTest {
                     RetryAutoConfiguration.class,
                     TimeLimiterRefreshScopedRegistryAutoConfiguration.class,
                     TimeLimiterAutoConfiguration.class,
+                    TimerRefreshScopedRegistryAutoConfiguration.class,
+                    TimerAutoConfiguration.class,
                     RefreshAutoConfiguration.class))
                 .withPropertyValues(RefreshAutoConfiguration.REFRESH_SCOPE_ENABLED + ":false")
                 .run(context -> {
@@ -129,6 +131,7 @@ class RefreshScopedAutoConfigurationTest {
                     testNotRefreshScoped(context, "rateLimiterRegistry");
                     testNotRefreshScoped(context, "retryRegistry");
                     testNotRefreshScoped(context, "timeLimiterRegistry");
+                    testNotRefreshScoped(context, "timerRegistry");
                 });
 
     }
