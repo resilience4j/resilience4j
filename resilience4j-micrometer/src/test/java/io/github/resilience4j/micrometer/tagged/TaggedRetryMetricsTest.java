@@ -21,16 +21,21 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_BACKOFF;
 import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TaggedRetryMetricsTest {
 
@@ -58,11 +63,11 @@ class TaggedRetryMetricsTest {
         Retry newRetry = retryRegistry.retry("backendB");
 
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendB")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(5);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendB")).hasSize(5);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(8);
+        assertThat(meters).hasSize(10);
 
         Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
             .functionCounters();
@@ -78,18 +83,19 @@ class TaggedRetryMetricsTest {
     void shouldAddCustomTags() {
         retryRegistry.retry("backendF", Map.of("key1", "value1"));
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendF");
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(5);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(5);
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(8);
+        assertThat(meters).hasSize(10);
         assertThat(meterRegistry.get(DEFAULT_RETRY_CALLS).tag("key1", "value1")).isNotNull();
+        assertThat(meterRegistry.get(DEFAULT_RETRY_BACKOFF).tag("key1", "value1")).isNotNull();
 
     }
 
     @Test
     void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(5);
 
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA");
         retryRegistry.remove("backendA");
@@ -171,6 +177,29 @@ class TaggedRetryMetricsTest {
     }
 
     @Test
+    void backoffTimerReportsTheWaitScheduledBetweenAttempts() {
+        Retry retryWithBackoff = retryRegistry.retry("backendWithBackoff",
+            RetryConfig.custom().maxAttempts(3).waitDuration(Duration.ofMillis(20)).build());
+
+        assertThatThrownBy(() -> retryWithBackoff.executeRunnable(() -> {
+            throw new IllegalStateException("failure");
+        })).isInstanceOf(IllegalStateException.class);
+
+        Timer backoff = meterRegistry.get(DEFAULT_RETRY_BACKOFF)
+            .tag(TagNames.NAME, "backendWithBackoff").timer();
+        assertThat(backoff.count()).isEqualTo(2);
+        assertThat(backoff.totalTime(TimeUnit.MILLISECONDS)).isEqualTo(40);
+    }
+
+    @Test
+    void backoffTimerRecordsNothingWithoutRetryAttempts() {
+        Timer backoff = meterRegistry.get(DEFAULT_RETRY_BACKOFF)
+            .tag(TagNames.NAME, retry.getName()).timer();
+
+        assertThat(backoff.count()).isZero();
+    }
+
+    @Test
     void metricsAreRegisteredWithCustomNames() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
@@ -178,6 +207,7 @@ class TaggedRetryMetricsTest {
         TaggedRetryMetrics.ofRetryRegistry(
             RetryMetricNames.custom()
                 .callsMetricName("custom_calls")
+                .backoffMetricName("custom_backoff")
                 .build(),
             retryRegistry
         ).bindTo(meterRegistry);
@@ -188,6 +218,6 @@ class TaggedRetryMetricsTest {
             .map(Meter.Id::getName)
             .collect(Collectors.toSet());
 
-        assertThat(metricNames).hasSameElementsAs(Collections.singletonList("custom_calls"));
+        assertThat(metricNames).hasSameElementsAs(Arrays.asList("custom_calls", "custom_backoff"));
     }
 }

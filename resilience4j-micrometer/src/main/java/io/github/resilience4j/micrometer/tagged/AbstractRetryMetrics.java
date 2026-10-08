@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +75,17 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
             .tag(TagNames.KIND, "failed_with_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
+
+        Timer backoff = Timer.builder(names.getBackoffMetricName())
+            .description("The wait scheduled between retry attempts")
+            .tag(TagNames.NAME, retry.getName())
+            .tags(customTags)
+            .register(meterRegistry);
+        idSet.add(backoff.getId());
+
+        retry.getEventPublisher()
+            .onRetry(event -> backoff.record(event.getWaitInterval()));
+
         meterIdMap.put(retry.getName(), idSet);
     }
 

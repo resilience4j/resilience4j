@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 public class RetryMetricNames {
 
     public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
+    public static final String DEFAULT_RETRY_BACKOFF = "resilience4j.retry.backoff";
 
     /**
      * Returns a builder for creating custom metric names. Note that names have default values,
@@ -26,6 +27,7 @@ public class RetryMetricNames {
     }
 
     private String callsMetricName = DEFAULT_RETRY_CALLS;
+    private String backoffMetricName = DEFAULT_RETRY_BACKOFF;
 
     protected RetryMetricNames() {
     }
@@ -37,6 +39,16 @@ public class RetryMetricNames {
      */
     public String getCallsMetricName() {
         return callsMetricName;
+    }
+
+    /**
+     * Returns the metric name for the wait scheduled between retry attempts, defaults to
+     * {@value DEFAULT_RETRY_BACKOFF}.
+     *
+     * @return The metric name for the wait scheduled between retry attempts.
+     */
+    public String getBackoffMetricName() {
+        return backoffMetricName;
     }
 
     /**
@@ -55,6 +67,18 @@ public class RetryMetricNames {
          */
         public Builder callsMetricName(String callsMetricName) {
             retryMetricNames.callsMetricName = requireNonNull(callsMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the default metric name {@value RetryMetricNames#DEFAULT_RETRY_BACKOFF} with
+         * a given one.
+         *
+         * @param backoffMetricName The metric name for the wait scheduled between retry attempts.
+         * @return The builder.
+         */
+        public Builder backoffMetricName(String backoffMetricName) {
+            retryMetricNames.backoffMetricName = requireNonNull(backoffMetricName);
             return this;
         }
 
