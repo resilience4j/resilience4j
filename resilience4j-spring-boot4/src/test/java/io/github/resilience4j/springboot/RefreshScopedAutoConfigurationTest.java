@@ -19,6 +19,8 @@ import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConf
 import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
 import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerRefreshScopedRegistryAutoConfiguration;
+import io.github.resilience4j.springboot.micrometer.autoconfigure.TimerAutoConfiguration;
+import io.github.resilience4j.springboot.micrometer.autoconfigure.TimerRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
 import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterRefreshScopedRegistryAutoConfiguration;
 import io.github.resilience4j.springboot.retry.autoconfigure.RetryAutoConfiguration;
@@ -65,6 +67,16 @@ class RefreshScopedAutoConfigurationTest {
     }
 
     @Test
+    void refreshScopedTimerRegistry() {
+        contextRunner
+            .withConfiguration(AutoConfigurations.of(
+                TimerRefreshScopedRegistryAutoConfiguration.class,
+                TimerAutoConfiguration.class,
+                RefreshAutoConfiguration.class))
+            .run(context -> assertRefreshScoped(context, "timerRegistry"));
+    }
+
+    @Test
     void refreshScopedRateLimiterRegistry() {
         contextRunner
             .withConfiguration(AutoConfigurations.of(
@@ -108,6 +120,8 @@ class RefreshScopedAutoConfigurationTest {
                     RetryAutoConfiguration.class,
                     TimeLimiterRefreshScopedRegistryAutoConfiguration.class,
                     TimeLimiterAutoConfiguration.class,
+                    TimerRefreshScopedRegistryAutoConfiguration.class,
+                    TimerAutoConfiguration.class,
                     RefreshAutoConfiguration.class))
                 .withPropertyValues(RefreshAutoConfiguration.REFRESH_SCOPE_ENABLED + ":false")
                 .run(context -> {
@@ -117,6 +131,7 @@ class RefreshScopedAutoConfigurationTest {
                     testNotRefreshScoped(context, "rateLimiterRegistry");
                     testNotRefreshScoped(context, "retryRegistry");
                     testNotRefreshScoped(context, "timeLimiterRegistry");
+                    testNotRefreshScoped(context, "timerRegistry");
                 });
 
     }
