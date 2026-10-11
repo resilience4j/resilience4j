@@ -41,4 +41,9 @@ public class DummyServiceImpl implements DummyService {
         Try.run(() -> Thread.sleep(2000));
         return CompletableFuture.completedFuture("Test result");
     }
+
+    @RateLimiter(name = BACKEND, permits = 10)
+    @Override
+    public void doSomethingExpensive() {
+    }
 }

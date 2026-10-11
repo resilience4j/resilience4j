@@ -13,4 +13,6 @@ public interface DummyService {
     CompletableFuture<String> longDoSomethingAsync() throws InterruptedException;
 
     CompletableFuture<String> doSomethingAsync(boolean throwException) throws IOException;
+
+    void doSomethingExpensive();
 }

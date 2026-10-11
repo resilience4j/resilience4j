@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
@@ -62,6 +63,8 @@ class RateLimiterAutoConfigurationTest {
     private RateLimiterAspect rateLimiterAspect;
     @Autowired
     private DummyService dummyService;
+    @Autowired
+    private EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry;
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -208,5 +211,22 @@ class RateLimiterAutoConfigurationTest {
         RateLimiter backendCustomizer = rateLimiterRegistry.rateLimiter("backendCustomizer");
         assertThat(backendCustomizer.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(200);
 
+    }
+
+    @Test
+    void testPermitsInRateLimiterAnnotation() {
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
+        await()
+            .atMost(2, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+
+        dummyService.doSomethingExpensive();
+
+        assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isZero();
+        assertThat(eventConsumerRegistry.getEventConsumer(DummyService.BACKEND).getBufferedEvents()).last()
+            .satisfies(event -> {
+                assertThat(event.getEventType()).isEqualTo(RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE);
+                assertThat(event.getNumberOfPermits()).isEqualTo(10);
+            });
     }
 }
