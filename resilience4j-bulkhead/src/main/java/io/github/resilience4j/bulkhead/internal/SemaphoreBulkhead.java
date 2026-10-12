@@ -319,7 +319,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         if (grantsInProgress.getAndIncrement() != 0) {
             return;
         }
-        RuntimeException consumerFailure = null;
+        Throwable consumerFailure = null;
         int missed = 1;
         do {
             while (!pendingPermissions.isEmpty() && semaphore.tryAcquire()) {
@@ -330,7 +330,9 @@ public class SemaphoreBulkhead implements Bulkhead {
                 }
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
-                } catch (RuntimeException e) {
+                } catch (Throwable e) {
+                    // Catch Error / sneaky-checked throws as well as RuntimeException so
+                    // grantsInProgress is always reset and later async grants are not stalled.
                     if (consumerFailure == null) {
                         consumerFailure = e;
                     } else {
@@ -342,8 +344,14 @@ public class SemaphoreBulkhead implements Bulkhead {
             }
             missed = grantsInProgress.addAndGet(-missed);
         } while (missed != 0);
+        if (consumerFailure instanceof Error) {
+            throw (Error) consumerFailure;
+        }
+        if (consumerFailure instanceof RuntimeException) {
+            throw (RuntimeException) consumerFailure;
+        }
         if (consumerFailure != null) {
-            throw consumerFailure;
+            throw new RuntimeException(consumerFailure);
         }
     }
 

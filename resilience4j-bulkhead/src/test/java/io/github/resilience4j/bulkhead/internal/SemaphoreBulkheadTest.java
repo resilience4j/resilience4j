@@ -71,6 +71,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 
 @ExtendWith(ThreadModeExtension.class)
@@ -808,6 +809,35 @@ class SemaphoreBulkheadTest {
         assertThat(second)
             .as("later grants must not be blocked by the earlier consumer failure in %s", threadType)
             .isCompleted();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldKeepGrantingWhenPermittedEventConsumerThrowsError(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncConsumerError", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        AtomicBoolean failed = new AtomicBoolean();
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            if (failed.compareAndSet(false, true)) {
+                throw new AssertionError("consumer failed");
+            }
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        Throwable thrown = catchThrowable(bulkhead::onComplete);
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        bulkhead.onComplete();
+
+        assertThat(thrown).isInstanceOf(AssertionError.class);
+        assertThat(first)
+            .as("permission must be granted although the event consumer threw Error in %s", threadType)
+            .isCompleted();
+        assertThat(second)
+            .as("later grants must not stall after Error from the event consumer in %s", threadType)
+            .isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
