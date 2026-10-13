@@ -843,6 +843,41 @@ class SemaphoreBulkheadTest {
     }
 
     @TestTemplate
+    void shouldKeepGrantingWhenPermittedEventConsumerThrowsSneakyCheckedException(
+        ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncConsumerChecked", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        AtomicBoolean failed = new AtomicBoolean();
+        Exception checked = new Exception("consumer failed");
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            if (failed.compareAndSet(false, true)) {
+                sneakyThrow(checked);
+            }
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        Throwable thrown = catchThrowable(bulkhead::onComplete);
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        bulkhead.onComplete();
+
+        assertThat(thrown)
+            .isInstanceOf(RuntimeException.class)
+            .hasCause(checked);
+        assertThat(first)
+            .as("permission must be granted although the event consumer threw checked exception in %s",
+                threadType)
+            .isCompleted();
+        assertThat(second)
+            .as("later grants must not stall after checked exception from the event consumer in %s",
+                threadType)
+            .isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
     void shouldQueueSubMillisecondMaxWaitDurationInsteadOfFailingFast(ThreadType threadType)
         throws InterruptedException {
         Bulkhead bulkhead = createQueueingBulkhead("asyncSubMillisecond", threadType, 1,
@@ -929,6 +964,11 @@ class SemaphoreBulkheadTest {
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
             .as("all permits should be returned in %s", threadType)
             .isEqualTo(maxConcurrentCalls);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void sneakyThrow(Throwable t) throws E {
+        throw (E) t;
     }
 
     private RegistryEventConsumer<Bulkhead> getNoOpsRegistryEventConsumer() {
