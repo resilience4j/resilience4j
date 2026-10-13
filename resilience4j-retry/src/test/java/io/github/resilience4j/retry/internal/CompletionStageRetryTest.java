@@ -328,4 +328,45 @@ class CompletionStageRetryTest {
         assertThat(resultTry.getCause().getCause()).isInstanceOf(RuntimeException.class);
     }
 
+    @Test
+    void shouldStopRetryingAndCompleteWithResultIfIntervalFunctionReturnsLessThanZeroForResult() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(completedFuture("Hello world"));
+        AtomicInteger consumerInvocations = new AtomicInteger();
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult("Hello world"::equals)
+            .consumeResultBeforeRetryAttempt((attempt, result) -> consumerInvocations.incrementAndGet())
+            .intervalFunction(attempt -> -1L)
+            .maxAttempts(3)
+            .build();
+        Retry retry = Retry.of("id", retryConfig);
+        AtomicInteger numberOfRetryEvents = new AtomicInteger();
+        retry.getEventPublisher().onRetry(event -> numberOfRetryEvents.incrementAndGet());
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retry,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
+
+        String result = awaitResult(supplier.get());
+
+        assertThat(result).isEqualTo("Hello world");
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+        assertThat(consumerInvocations).hasValue(0);
+        assertThat(numberOfRetryEvents).hasValue(0);
+    }
+
+    @Test
+    void shouldReturnMinusOneFromOnResultIfIntervalFunctionReturnsAnyNegativeValue() {
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult("Hello world"::equals)
+            .intervalFunction(attempt -> -5L)
+            .maxAttempts(3)
+            .build();
+        Retry.AsyncContext<String> context = Retry.of("id", retryConfig).asyncContext();
+
+        long delay = context.onResult("Hello world");
+
+        assertThat(delay).isEqualTo(-1L);
+    }
+
 }

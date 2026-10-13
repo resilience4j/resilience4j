@@ -192,10 +192,16 @@ public class RetryImpl<T> implements Retry {
                     return false;
                 }
 
+                Either<Throwable, T> either = Either.right(result);
+                long interval = intervalBiFunction.apply(currentNumOfAttempts, either);
+                if (interval < 0) {
+                    return false;
+                }
+
                 if (consumeResultBeforeRetryAttempt != null) {
                     consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
                 }
-                waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
+                waitIntervalAfterRuntimeException(currentNumOfAttempts, either, interval);
                 return true;
             }
 
@@ -277,7 +283,10 @@ public class RetryImpl<T> implements Retry {
         private void waitIntervalAfterRuntimeException(int currentNumOfAttempts, Either<Throwable, T> either) {
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
+            waitIntervalAfterRuntimeException(currentNumOfAttempts, either, interval);
+        }
 
+        private void waitIntervalAfterRuntimeException(int currentNumOfAttempts, Either<Throwable, T> either, long interval) {
             if (interval < 0) {
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
             } else {
@@ -394,10 +403,14 @@ public class RetryImpl<T> implements Retry {
                     return -1;
                 }
 
+                long interval = intervalBiFunction.apply(currentNumOfAttempts, Either.right(result));
+                if (interval < 0) {
+                    return -1;
+                }
+
                 if(consumeResultBeforeRetryAttempt != null){
                     consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
                 }
-                Long interval = intervalBiFunction.apply(currentNumOfAttempts, Either.right(result));
                 publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
                 return interval;
             }
