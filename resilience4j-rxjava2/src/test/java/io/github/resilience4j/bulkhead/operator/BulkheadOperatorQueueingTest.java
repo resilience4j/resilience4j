@@ -23,17 +23,24 @@ import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.disposables.Disposables;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.subscribers.TestSubscriber;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -63,6 +70,21 @@ class BulkheadOperatorQueueingTest {
 
     private static int availablePermits(Bulkhead bulkhead) {
         return bulkhead.getMetrics().getAvailableConcurrentCalls();
+    }
+
+    /**
+     * Captures the errors which RxJava routes to {@link RxJavaPlugins#onError(Throwable)}, i.e.
+     * the ones which could not be delivered to a downstream.
+     */
+    private static List<Throwable> captureUndeliverableErrors() {
+        List<Throwable> errors = new CopyOnWriteArrayList<>();
+        RxJavaPlugins.setErrorHandler(errors::add);
+        return errors;
+    }
+
+    @AfterEach
+    void resetErrorHandler() {
+        RxJavaPlugins.setErrorHandler(null);
     }
 
     @Test
@@ -147,17 +169,19 @@ class BulkheadOperatorQueueingTest {
     @Timeout(5)
     void shouldGrantQueuedSubscriptionsInFifoOrder() {
         Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
-        TestObserver<String> first = Single.just("first")
-            .compose(BulkheadOperator.<String>of(bulkhead)).test();
-        TestObserver<String> second = Single.just("second")
-            .compose(BulkheadOperator.<String>of(bulkhead)).test();
-        first.assertEmpty();
-        second.assertEmpty();
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        Single.just("first").compose(BulkheadOperator.<String>of(bulkhead))
+            .subscribe(value -> results.add(value));
+        Single.just("second").compose(BulkheadOperator.<String>of(bulkhead))
+            .subscribe(value -> results.add(value));
+        assertThat(results).isEmpty();
 
         bulkhead.onComplete();
 
-        first.assertResult("first");
-        second.assertResult("second");
+        assertThat(results)
+            .as("releasing one permission should cascade through the queued subscriptions")
+            .containsExactly("first", "second");
         assertThat(availablePermits(bulkhead)).isEqualTo(1);
     }
 
@@ -313,6 +337,125 @@ class BulkheadOperatorQueueingTest {
             .isFalse();
         verify(bulkhead).releasePermission();
         verify(bulkhead, never()).onComplete();
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionAndSignalErrorWhenQueuedUpstreamSubscribeThrows() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        captureUndeliverableErrors();
+        RuntimeException failure = new RuntimeException("BAM!");
+        TestObserver<Integer> observer = Single.<Integer>unsafeCreate(downstream -> {
+                throw failure;
+            })
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        observer.assertEmpty();
+
+        bulkhead.onComplete();
+
+        // RxJava rethrows an exception thrown by subscribeActual(...) wrapped in a NullPointerException
+        observer.assertError(error -> error instanceof NullPointerException
+            && error.getCause() == failure);
+        assertThat(availablePermits(bulkhead))
+            .as("the permission of a failed upstream subscription must be released")
+            .isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionOnceAndSignalErrorWhenQueuedUpstreamThrowsAfterOnSubscribe() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        captureUndeliverableErrors();
+        RuntimeException failure = new RuntimeException("BAM!");
+        TestObserver<Integer> observer = Single.<Integer>unsafeCreate(downstream -> {
+                downstream.onSubscribe(Disposables.empty());
+                throw failure;
+            })
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        observer.assertEmpty();
+
+        bulkhead.onComplete();
+
+        observer.assertError(error -> error instanceof NullPointerException
+            && error.getCause() == failure);
+        assertThat(availablePermits(bulkhead))
+            .as("the subscribed bulkhead observer releases the permission exactly once")
+            .isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionWithoutSignalWhenQueuedUpstreamSubscribeThrowsAfterDispose() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        List<Throwable> undeliverable = captureUndeliverableErrors();
+        RuntimeException failure = new RuntimeException("BAM!");
+        AtomicReference<TestObserver<Integer>> observerRef = new AtomicReference<>();
+        TestObserver<Integer> observer = Single.<Integer>unsafeCreate(downstream -> {
+                observerRef.get().dispose();
+                throw failure;
+            })
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        observerRef.set(observer);
+
+        bulkhead.onComplete();
+
+        observer.assertEmpty();
+        assertThat(undeliverable)
+            .as("an error which cannot be delivered to a disposed observer goes to RxJavaPlugins")
+            .anySatisfy(error -> assertThat(error)
+                .isInstanceOf(NullPointerException.class)
+                .hasCause(failure));
+        assertThat(availablePermits(bulkhead)).isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionAndSignalErrorWhenQueuedUpstreamPublisherSubscribeThrows() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        captureUndeliverableErrors();
+        RuntimeException failure = new RuntimeException("BAM!");
+        TestSubscriber<Integer> subscriber = Flowable.<Integer>unsafeCreate(downstream -> {
+                throw failure;
+            })
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        subscriber.assertEmpty();
+
+        bulkhead.onComplete();
+
+        subscriber.assertError(error -> error instanceof NullPointerException
+            && error.getCause() == failure);
+        assertThat(availablePermits(bulkhead))
+            .as("the permission of a failed upstream subscription must be released")
+            .isEqualTo(1);
+    }
+
+    @Test
+    @Timeout(5)
+    void shouldReleasePermissionOnceAndSignalErrorWhenQueuedUpstreamPublisherThrowsAfterOnSubscribe() {
+        Bulkhead bulkhead = fullBulkhead(Duration.ofSeconds(10));
+        captureUndeliverableErrors();
+        RuntimeException failure = new RuntimeException("BAM!");
+        Subscription upstream = mock(Subscription.class);
+        TestSubscriber<Integer> subscriber = Flowable.<Integer>unsafeCreate(downstream -> {
+                downstream.onSubscribe(upstream);
+                throw failure;
+            })
+            .compose(BulkheadOperator.<Integer>of(bulkhead))
+            .test();
+        subscriber.assertEmpty();
+
+        bulkhead.onComplete();
+
+        subscriber.assertError(error -> error instanceof NullPointerException
+            && error.getCause() == failure);
+        verify(upstream).cancel();
+        assertThat(availablePermits(bulkhead))
+            .as("the subscribed bulkhead subscriber releases the permission exactly once")
+            .isEqualTo(1);
     }
 
     @Test

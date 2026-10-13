@@ -17,7 +17,9 @@ package io.github.resilience4j.rxjava3.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.exceptions.Exceptions;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -35,6 +37,11 @@ final class PermissionAwaitingDisposable implements Disposable {
     private final AtomicReference<Disposable> upstream = new AtomicReference<>();
     private final Bulkhead bulkhead;
     private final CompletableFuture<Void> permission;
+    /**
+     * Whether the bulkhead observer has been subscribed to the upstream. From then on it owns the
+     * granted permission and releases it on a terminal signal or when it is disposed.
+     */
+    private volatile boolean upstreamSubscribed;
 
     PermissionAwaitingDisposable(Bulkhead bulkhead, CompletableFuture<Void> permission) {
         this.bulkhead = bulkhead;
@@ -60,12 +67,42 @@ final class PermissionAwaitingDisposable implements Disposable {
                 // so hand the permission back instead of subscribing and disposing right away.
                 bulkhead.releasePermission();
             } else {
-                // The bulkhead observer releases the permission on all terminal signals. When the
-                // downstream disposes from here on, setUpstream(...) disposes the incoming
-                // observer, which also releases the permission.
-                subscribeUpstream.run();
+                subscribeUpstream(subscribeUpstream, signalError);
             }
         });
+    }
+
+    private void subscribeUpstream(Runnable subscribeUpstream, Consumer<Throwable> signalError) {
+        try {
+            // The bulkhead observer releases the permission on all terminal signals. When the
+            // downstream disposes from here on, setUpstream(...) disposes the incoming
+            // observer, which also releases the permission.
+            subscribeUpstream.run();
+        } catch (Throwable e) {
+            // RxJava rethrows an exception thrown by subscribeActual(...) instead of signalling
+            // it, and this callback has no caller to rethrow it to. Unless the bulkhead observer
+            // was subscribed before the failure, nothing would release the permission and the
+            // downstream would never receive a terminal signal.
+            Exceptions.throwIfFatal(e);
+            onSubscribeFailure(e, signalError);
+        }
+    }
+
+    private void onSubscribeFailure(Throwable e, Consumer<Throwable> signalError) {
+        Disposable subscribed = upstream.get();
+        boolean terminated = subscribed != null && subscribed != DisposableHelper.DISPOSED
+            && subscribed.isDisposed();
+        // Disposes the bulkhead observer when it was subscribed, which releases the permission
+        // unless the observer has already terminated.
+        boolean active = DisposableHelper.dispose(upstream);
+        if (!upstreamSubscribed) {
+            bulkhead.releasePermission();
+        }
+        if (active && !terminated) {
+            signalError.accept(e);
+        } else {
+            RxJavaPlugins.onError(e);
+        }
     }
 
     /**
@@ -73,6 +110,7 @@ final class PermissionAwaitingDisposable implements Disposable {
      * when the downstream has already disposed.
      */
     void setUpstream(Disposable disposable) {
+        upstreamSubscribed = true;
         DisposableHelper.setOnce(upstream, disposable);
     }
 

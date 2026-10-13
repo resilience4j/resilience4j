@@ -74,7 +74,7 @@ class FlowableBulkhead<T> extends Flowable<T> {
             if (awaiting == null) {
                 super.hookOnSubscribe();
             } else {
-                awaiting.setSubscription(this);
+                awaiting.setUpstream(this);
             }
         }
 

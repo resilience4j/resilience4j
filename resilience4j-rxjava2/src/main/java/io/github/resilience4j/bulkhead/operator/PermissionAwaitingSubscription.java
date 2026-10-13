@@ -15,8 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
+import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.core.lang.Nullable;
+import io.reactivex.exceptions.Exceptions;
 import io.reactivex.internal.subscriptions.SubscriptionArbiter;
+import io.reactivex.plugins.RxJavaPlugins;
 import org.reactivestreams.Subscription;
 
 import java.util.concurrent.CancellationException;
@@ -35,6 +39,12 @@ final class PermissionAwaitingSubscription extends SubscriptionArbiter {
 
     private final transient Bulkhead bulkhead;
     private final transient CompletableFuture<Void> permission;
+    /**
+     * The bulkhead subscriber once it has been subscribed to the upstream. From then on it owns
+     * the granted permission and releases it on a terminal signal or when it is cancelled.
+     */
+    @Nullable
+    private transient volatile AbstractSubscriber<?> upstream;
 
     PermissionAwaitingSubscription(Bulkhead bulkhead, CompletableFuture<Void> permission) {
         super(false);
@@ -46,8 +56,8 @@ final class PermissionAwaitingSubscription extends SubscriptionArbiter {
      * Subscribes the upstream once the permission has been granted, or signals the failure to the
      * downstream. Must be called after the downstream received this subscription via onSubscribe.
      *
-     * @param subscribeUpstream subscribes the upstream with a subscriber which routes its
-     *                          subscription into {@link #setSubscription(Subscription)}
+     * @param subscribeUpstream subscribes the upstream with a subscriber which routes itself
+     *                          into {@link #setUpstream(AbstractSubscriber)}
      * @param signalError       signals a permission failure to the downstream
      */
     void await(Runnable subscribeUpstream, Consumer<Throwable> signalError) {
@@ -61,12 +71,52 @@ final class PermissionAwaitingSubscription extends SubscriptionArbiter {
                 // so hand the permission back instead of subscribing and cancelling right away.
                 bulkhead.releasePermission();
             } else {
-                // The bulkhead subscriber releases the permission on all terminal signals. When
-                // the downstream cancels from here on, setSubscription(...) cancels the incoming
-                // subscriber, which also releases the permission.
-                subscribeUpstream.run();
+                subscribeUpstream(subscribeUpstream, signalError);
             }
         });
+    }
+
+    private void subscribeUpstream(Runnable subscribeUpstream, Consumer<Throwable> signalError) {
+        try {
+            // The bulkhead subscriber releases the permission on all terminal signals. When
+            // the downstream cancels from here on, setUpstream(...) cancels the incoming
+            // subscriber, which also releases the permission.
+            subscribeUpstream.run();
+        } catch (Throwable e) {
+            // RxJava rethrows an exception thrown by subscribeActual(...) instead of signalling
+            // it, and this callback has no caller to rethrow it to. Unless the bulkhead
+            // subscriber was subscribed before the failure, nothing would release the permission
+            // and the downstream would never receive a terminal signal.
+            Exceptions.throwIfFatal(e);
+            onSubscribeFailure(e, signalError);
+        }
+    }
+
+    private void onSubscribeFailure(Throwable e, Consumer<Throwable> signalError) {
+        AbstractSubscriber<?> subscribed = upstream;
+        boolean terminated = subscribed != null && subscribed.isDisposed();
+        boolean active = !isCancelled();
+        // Cancels the bulkhead subscriber when it was subscribed, which releases the permission
+        // unless the subscriber has already terminated.
+        cancel();
+        if (subscribed == null) {
+            bulkhead.releasePermission();
+        }
+        if (active && !terminated) {
+            signalError.accept(e);
+        } else {
+            RxJavaPlugins.onError(e);
+        }
+    }
+
+    /**
+     * Routes the subscribed bulkhead subscriber into this subscription, which replays the
+     * accumulated requests to it. It is cancelled right away when the downstream has already
+     * cancelled.
+     */
+    void setUpstream(AbstractSubscriber<?> subscriber) {
+        upstream = subscriber;
+        setSubscription(subscriber);
     }
 
     @Override
