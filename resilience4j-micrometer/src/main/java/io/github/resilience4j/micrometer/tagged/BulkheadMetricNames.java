@@ -108,11 +108,6 @@ public class BulkheadMetricNames {
         }
 
         /**
-         * Builds {@link BulkheadMetricNames} instance.
-         *
-         * @return The built {@link BulkheadMetricNames} instance.
-         */
-        /**
          * Overrides the default metric name {@value BulkheadMetricNames#DEFAULT_BULKHEAD_QUEUED_CALLS_METRIC_NAME}
          * with a given one.
          *
@@ -124,6 +119,11 @@ public class BulkheadMetricNames {
             return this;
         }
 
+        /**
+         * Builds {@link BulkheadMetricNames} instance.
+         *
+         * @return The built {@link BulkheadMetricNames} instance.
+         */
         public BulkheadMetricNames build() {
             return metricNames;
         }
