@@ -19,6 +19,7 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_REJECTED_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,11 +62,11 @@ class TaggedBulkheadMetricsPublisherTest {
         Bulkhead newBulkhead = bulkheadRegistry.bulkhead("backendB");
 
         assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendA")).hasSize(2);
-        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendB")).hasSize(2);
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendA")).hasSize(3);
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendB")).hasSize(3);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(6);
 
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
@@ -78,7 +80,7 @@ class TaggedBulkheadMetricsPublisherTest {
     @Test
     void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(2);
+        assertThat(meters).hasSize(3);
 
         assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendA");
         bulkheadRegistry.remove("backendA");
@@ -136,12 +138,27 @@ class TaggedBulkheadMetricsPublisherTest {
     }
 
     @Test
+    void rejectedCallsCounterIsIncrementedWhenBulkheadIsFull() {
+        Bulkhead fullBulkhead = bulkheadRegistry.bulkhead("backendFull",
+            BulkheadConfig.custom().maxConcurrentCalls(1).build());
+        fullBulkhead.tryAcquirePermission();
+
+        fullBulkhead.tryAcquirePermission();
+        fullBulkhead.tryAcquirePermission();
+
+        Counter rejected = meterRegistry.get(DEFAULT_BULKHEAD_REJECTED_CALLS_METRIC_NAME)
+            .tag(TagNames.NAME, fullBulkhead.getName()).counter();
+        assertThat(rejected.count()).isEqualTo(2d);
+    }
+
+    @Test
     void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher = new TaggedBulkheadMetricsPublisher(
             BulkheadMetricNames.custom()
                 .availableConcurrentCallsMetricName("custom_available_calls")
                 .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
+                .rejectedCallsMetricName("custom_rejected_calls")
                 .build(), meterRegistry);
 
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry
@@ -156,7 +173,8 @@ class TaggedBulkheadMetricsPublisherTest {
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
             "custom_available_calls",
-            "custom_max_allowed_calls"
+            "custom_max_allowed_calls",
+            "custom_rejected_calls"
         ));
     }
 
@@ -169,7 +187,7 @@ class TaggedBulkheadMetricsPublisherTest {
         oldOne.tryAcquirePermission();
 
         assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
-        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
         Optional<Gauge> successful = findMeterByNamesTag(gauges, oldOne.getName());
@@ -187,7 +205,7 @@ class TaggedBulkheadMetricsPublisherTest {
         newOne.tryAcquirePermission();
 
         assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
-        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
         gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
         successful = findMeterByNamesTag(gauges, newOne.getName());

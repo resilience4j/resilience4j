@@ -17,6 +17,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -59,6 +60,14 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
             .tag(TagNames.NAME, bulkhead.getName())
             .tags(customTags)
             .register(meterRegistry).getId());
+        Counter rejectedCalls = Counter.builder(names.getRejectedCallsMetricName())
+            .description("The number of rejected calls")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry);
+        idSet.add(rejectedCalls.getId());
+
+        bulkhead.getEventPublisher().onCallRejected(event -> rejectedCalls.increment());
 
         meterIdMap.put(bulkhead.getName(), idSet);
 
