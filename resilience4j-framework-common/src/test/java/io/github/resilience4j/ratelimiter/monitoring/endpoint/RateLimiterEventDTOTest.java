@@ -19,9 +19,11 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 import org.junit.jupiter.api.Test;
 
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
+import static io.github.resilience4j.ratelimiter.event.RateLimiterEvent.Type.DRAINED;
 import static io.github.resilience4j.ratelimiter.event.RateLimiterEvent.Type.FAILED_ACQUIRE;
 import static io.github.resilience4j.ratelimiter.event.RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +39,7 @@ class RateLimiterEventDTOTest {
         assertThat(eventDTO.getRateLimiterName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(FAILED_ACQUIRE);
         assertThat(eventDTO.getCreationTime()).isNotNull();
+        assertThat(eventDTO.getNumberOfPermits()).isEqualTo(1);
     }
 
     @Test
@@ -48,5 +51,25 @@ class RateLimiterEventDTOTest {
         assertThat(eventDTO.getRateLimiterName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(SUCCESSFUL_ACQUIRE);
         assertThat(eventDTO.getCreationTime()).isNotNull();
+        assertThat(eventDTO.getNumberOfPermits()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldMapRequestedPermitsOfRateLimiterOnFailureEvent() {
+        RateLimiterOnFailureEvent event = new RateLimiterOnFailureEvent("name", 7);
+
+        RateLimiterEventDTO eventDTO = RateLimiterEventDTO.createRateLimiterEventDTO(event);
+
+        assertThat(eventDTO.getNumberOfPermits()).isEqualTo(7);
+    }
+
+    @Test
+    void shouldMapRateLimiterOnDrainedEvent() {
+        RateLimiterOnDrainedEvent event = new RateLimiterOnDrainedEvent("name", 7);
+
+        RateLimiterEventDTO eventDTO = RateLimiterEventDTO.createRateLimiterEventDTO(event);
+
+        assertThat(eventDTO.getType()).isEqualTo(DRAINED);
+        assertThat(eventDTO.getNumberOfPermits()).isEqualTo(7);
     }
 }
