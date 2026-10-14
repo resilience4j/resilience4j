@@ -729,13 +729,24 @@ public interface Retry {
             });
         }
 
+        private void scheduleRetry(long delay) {
+            scheduler.schedule(() -> {
+                try {
+                    run();
+                } catch (Throwable throwable) {
+                    // A scheduled task's failure must reach the caller, not only its ScheduledFuture.
+                    promise.completeExceptionally(throwable);
+                }
+            }, delay, TimeUnit.MILLISECONDS);
+        }
+
         private void onError(Exception t) {
             final long delay = retryContext.onError(t);
 
             if (delay < 0) {
                 promise.completeExceptionally(t);
             } else {
-                scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+                scheduleRetry(delay);
             }
         }
 
@@ -750,7 +761,7 @@ public interface Retry {
                     promise.completeExceptionally(e);
                 }
             } else {
-                scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+                scheduleRetry(delay);
             }
         }
     }
