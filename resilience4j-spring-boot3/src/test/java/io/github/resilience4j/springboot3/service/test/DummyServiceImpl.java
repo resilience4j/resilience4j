@@ -46,4 +46,10 @@ public class DummyServiceImpl implements DummyService {
     @Override
     public void doSomethingExpensive() {
     }
+
+    @RateLimiter(name = BACKEND, permits = 10)
+    @Override
+    public CompletableFuture<String> doSomethingExpensiveAsync() {
+        return CompletableFuture.completedFuture("Test result");
+    }
 }

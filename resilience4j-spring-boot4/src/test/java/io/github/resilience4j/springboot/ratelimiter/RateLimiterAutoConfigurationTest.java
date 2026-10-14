@@ -41,6 +41,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -223,6 +224,23 @@ class RateLimiterAutoConfigurationTest {
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         dummyService.doSomethingExpensive();
+
+        assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isZero();
+        assertThat(eventConsumerRegistry.getEventConsumer(DummyService.BACKEND).getBufferedEvents()).last()
+            .satisfies(event -> {
+                assertThat(event.getEventType()).isEqualTo(RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE);
+                assertThat(event.getNumberOfPermits()).isEqualTo(10);
+            });
+    }
+
+    @Test
+    void testPermitsInRateLimiterAnnotationWithCompletionStage() throws ExecutionException, InterruptedException {
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
+        await()
+            .atMost(2, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+
+        dummyService.doSomethingExpensiveAsync().get();
 
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isZero();
         assertThat(eventConsumerRegistry.getEventConsumer(DummyService.BACKEND).getBufferedEvents()).last()
