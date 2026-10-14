@@ -57,6 +57,7 @@ public abstract class AbstractRateLimiterEvent implements RateLimiterEvent {
             "type=" + getEventType() +
             ", rateLimiterName='" + getRateLimiterName() + '\'' +
             ", creationTime=" + getCreationTime() +
+            ", numberOfPermits=" + getNumberOfPermits() +
             '}';
     }
 }
