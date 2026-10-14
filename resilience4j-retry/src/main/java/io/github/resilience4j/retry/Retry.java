@@ -710,9 +710,15 @@ public interface Retry {
 
         @Override
         public void run() {
+            if (promise.isCancelled()) {
+                return;
+            }
             final CompletionStage<T> stage = supplier.get();
 
             stage.whenComplete((result, throwable) -> {
+                if (promise.isCancelled()) {
+                    return;
+                }
                 try {
                     if (throwable != null) {
                         if (throwable instanceof Exception) {
