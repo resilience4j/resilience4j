@@ -750,6 +750,15 @@ public interface RateLimiter {
     Metrics getMetrics();
 
     /**
+     * Get the detailed Metrics of this RateLimiter.
+     *
+     * @return the detailed Metrics of this RateLimiter
+     */
+    default Metrics getDetailedMetrics() {
+        return getMetrics();
+    }
+
+    /**
      * Returns an EventPublisher which can be used to register event consumers.
      *
      * @return an EventPublisher
@@ -870,6 +879,26 @@ public interface RateLimiter {
          * @return estimated count of permissions
          */
         int getAvailablePermissions();
+
+        /**
+         * Returns an estimate of duration in nanoseconds to wait for the next permission.
+         * <p>This method is typically used for debugging and testing purposes.
+         *
+         * @return estimated duration in nanoseconds to wait for the next permission
+         */
+        default long getNanosToWait() {
+            return 0;
+        }
+
+        /**
+         * Returns an estimate of current cycle.
+         * <p>This method is typically used for debugging and testing purposes.
+         *
+         * @return estimated current cycle
+         */
+        default long getCycle() {
+            return 0;
+        }
     }
 
     /**
