@@ -19,6 +19,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -34,8 +35,18 @@ public class SpelResolverConfigurationOnMissingBean {
     // delegate conditional auto-configurations to regular spring configuration
     private final SpelResolverConfiguration configuration = new SpelResolverConfiguration();
 
+    /**
+     * Marked {@link Primary} so that resilience4j's own {@code spelResolver} bean below
+     * deterministically picks this bean up when another library (e.g. SpringDoc) also happens
+     * to register a {@link ParameterNameDiscoverer} bean of its own. Depending on
+     * auto-configuration ordering, {@code @ConditionalOnMissingBean} may not detect that
+     * externally-provided bean in time and register this one anyway, leaving two candidates of
+     * the same type in the context; without {@link Primary}, that ambiguity fails context
+     * startup with a {@code NoUniqueBeanDefinitionException}.
+     */
     @Bean
     @ConditionalOnMissingBean
+    @Primary
     public ParameterNameDiscoverer parameterNameDiscoverer() {
         return configuration.parameterNameDiscoverer();
     }
