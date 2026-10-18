@@ -236,6 +236,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result);
             publishCircuitErrorEvent(name, duration, durationUnit, failure);
             stateReference.get().onError(duration, durationUnit, failure);
+            handlePossibleTransition(Either.left(result));
         } else {
             onSuccess(duration, durationUnit);
             if (result != null) {
@@ -644,8 +645,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                 } else if (result.getWaitUntil() != null) {
                     transitionToOpenStateUntil(result.getWaitUntil());
                 } else {
-                    throw new IllegalArgumentException("Transition check resulted in open request but now wait " +
-                        "attribute was set? This should never happen");
+                    transitionToOpenState();
                 }
             }
         }
