@@ -28,6 +28,16 @@ import java.util.function.UnaryOperator;
  * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a
  * permission to subscribe to an upstream Publisher. Otherwise emits a {@link
  * CallNotPermittedException} if the CircuitBreaker is OPEN.
+ * <p>
+ * A subscription that is cancelled before the upstream emits releases its permission and is not
+ * recorded as a call. Keep this in mind when several guarded publishers are combined with an
+ * all-or-nothing operator such as {@link Mono#zip}: when one member fails, the others are
+ * cancelled. In the HALF_OPEN state the CircuitBreaker only leaves the state after
+ * {@code permittedNumberOfCallsInHalfOpenState} calls have been recorded, so once fewer
+ * permissions are left than the zip needs, every new zip is rejected with a
+ * {@link CallNotPermittedException} and no further call is recorded. Configure
+ * {@code maxWaitDurationInHalfOpenState} to bound the time spent in HALF_OPEN, or guard the
+ * combined publisher instead of each member.
  *
  * @param <T> the value type
  */
