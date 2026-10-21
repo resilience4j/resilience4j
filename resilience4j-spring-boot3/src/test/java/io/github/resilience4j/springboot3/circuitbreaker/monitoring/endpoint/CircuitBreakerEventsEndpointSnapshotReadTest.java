@@ -16,6 +16,7 @@
 package io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint;
 
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
@@ -30,6 +31,30 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CircuitBreakerEventsEndpointSnapshotReadTest {
+
+    @Test
+    void shouldFilterByEventTypeRegardlessOfDefaultLocale() {
+        // The event type comes from the URL path; under a Turkish default locale
+        // "ignored_error".toUpperCase() is "İGNORED_ERROR" (dotted İ), not a CircuitBreakerEvent.Type constant
+        InMemoryEventConsumerRegistry registry = new InMemoryEventConsumerRegistry();
+        ThrowingStreamCircularEventConsumer eventConsumer = new ThrowingStreamCircularEventConsumer();
+        eventConsumer.consumeEvent(new CircuitBreakerOnIgnoredErrorEvent("backendA", Duration.ofMillis(5),
+            new RuntimeException("ignored")));
+        eventConsumer.consumeEvent(new CircuitBreakerOnResetEvent("backendA"));
+        registry.add("backendA", eventConsumer);
+        CircuitBreakerEventsEndpoint endpoint = new CircuitBreakerEventsEndpoint(registry);
+
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            CircuitBreakerEventsEndpointResponse response =
+                endpoint.getEventsFilteredByCircuitBreakerNameAndEventType("backendA", "ignored_error");
+
+            assertThat(response.getCircuitBreakerEvents()).hasSize(1);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
 
     @Test
     void shouldUseSnapshotListWhenGettingAllEvents() {

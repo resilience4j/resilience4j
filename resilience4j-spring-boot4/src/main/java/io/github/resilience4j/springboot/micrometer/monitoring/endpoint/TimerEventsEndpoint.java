@@ -27,6 +27,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -73,7 +74,7 @@ public class TimerEventsEndpoint {
     public TimerEventsEndpointResponse getEventsFilteredByTimerNameAndEventType(
             @Selector String name, @Selector String eventType) {
         return new TimerEventsEndpointResponse(getTimerEvents(name).stream()
-                .filter(event -> event.getEventType() == TimerEvent.Type.valueOf(eventType.toUpperCase()))
+                .filter(event -> event.getEventType() == TimerEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT)))
                 .map(TimerEventDTOFactory::createTimerEventDTO)
                 .collect(Collectors.toList()));
     }

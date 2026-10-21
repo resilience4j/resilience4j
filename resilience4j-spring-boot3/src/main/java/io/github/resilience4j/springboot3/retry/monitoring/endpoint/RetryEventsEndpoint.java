@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 
@@ -76,7 +77,7 @@ public class RetryEventsEndpoint {
         @Selector String name, @Selector String eventType) {
         return new RetryEventsEndpointResponse(getRetryEvents(name).stream()
             .filter(
-                event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
+                event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT)))
             .map(RetryEventDTOFactory::createRetryEventDTO)
             .collect(Collectors.toList()));
     }

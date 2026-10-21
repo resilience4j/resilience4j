@@ -28,6 +28,7 @@ import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.function.BiFunction;
 
 import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
@@ -88,7 +89,7 @@ public class CircuitBreakerHystrixServerSideEvent {
         CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
         Flux<CircuitBreakerEvent> eventStream = toFlux(givenCircuitBreaker.getEventPublisher())
             .filter(
-                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
+                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT))
             );
         return Flux.merge(publishEvents(eventStream), getHeartbeatStream());
 

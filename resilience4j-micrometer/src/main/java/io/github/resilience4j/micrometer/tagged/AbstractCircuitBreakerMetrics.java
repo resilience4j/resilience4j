@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.*;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
@@ -56,7 +57,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
                 cb -> cb.getState() == state ? 1 : 0)
                 .description("The states of the circuit breaker")
                 .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(KIND_STATE, state.name().toLowerCase())
+                .tag(KIND_STATE, state.name().toLowerCase(Locale.ROOT))
                 .tags(customTags)
                 .register(meterRegistry).getId());
         }

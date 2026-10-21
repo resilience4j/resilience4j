@@ -65,6 +65,23 @@ class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
+    void stateTagValuesShouldBeAsciiRegardlessOfDefaultLocale() {
+        // Under a Turkish default locale "METRICS_ONLY".toLowerCase() is "metrıcs_only" (dotless ı),
+        // which breaks every dashboard or alert keyed on the documented label values
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            MeterRegistry registry = new SimpleMeterRegistry();
+            TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(registry);
+
+            assertThat(registry.find(DEFAULT_CIRCUIT_BREAKER_STATE).tag("state", "metrics_only").gauge()).isNotNull();
+            assertThat(registry.find(DEFAULT_CIRCUIT_BREAKER_STATE).tag("state", "disabled").gauge()).isNotNull();
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
+    @Test
     void shouldUseOneDescriptionPerMetricName() {
         Map<String, List<Meter>> metersByName = meterRegistry.getMeters().stream()
             .collect(Collectors.groupingBy(meter -> meter.getId().getName()));
