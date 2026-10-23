@@ -19,6 +19,7 @@
 package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
 import io.github.resilience4j.hedge.event.*;
@@ -119,7 +120,7 @@ public class HedgeImpl implements Hedge {
                         hedged.cancel(false);
                         if (t.throwable.isPresent()) {
                             onPrimaryFailure(Duration.ofNanos(duration), t.throwable.get());
-                            throw (RuntimeException) t.throwable.get();
+                            return CheckedSupplier.sneakyThrow(t.throwable.get());
                         } else {
                             onPrimarySuccess(Duration.ofNanos(duration));
                         }
@@ -127,7 +128,7 @@ public class HedgeImpl implements Hedge {
                         supplied.cancel(false);
                         if (t.throwable.isPresent()) {
                             onSecondaryFailure(Duration.ofNanos(duration), t.throwable.get());
-                            throw (RuntimeException) t.throwable.get();
+                            return CheckedSupplier.sneakyThrow(t.throwable.get());
                         } else {
                             onSecondarySuccess(Duration.ofNanos(duration));
                         }

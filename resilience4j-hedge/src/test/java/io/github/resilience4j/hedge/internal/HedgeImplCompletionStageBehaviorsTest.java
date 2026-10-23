@@ -25,16 +25,24 @@ import io.github.resilience4j.hedge.HedgeConfig;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 import io.github.resilience4j.test.TestContextPropagators;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -61,6 +69,49 @@ class HedgeImplCompletionStageBehaviorsTest {
     private static final HedgeBehaviorSpecification SLOW_HEDGE_FAILURE = new HedgeBehaviorSpecification(SLOW_SPEED, HEDGED, HEDGE_RUNTIME_EXCEPTION);
     private final Logger logger = mock(Logger.class);
     private static final ThreadLocal<String> threadLocal = ThreadLocal.withInitial(() -> "UNINITIALIZED");
+
+    static Stream<Arguments> failureCauses() {
+        IOException checked = new IOException("checked failure");
+        AssertionError error = new AssertionError("error failure");
+        IllegalStateException runtime = new IllegalStateException("runtime failure");
+        return Stream.of(
+            Arguments.of(checked, checked),
+            Arguments.of(error, error),
+            Arguments.of(runtime, runtime),
+            Arguments.of(new CompletionException(checked), checked)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("failureCauses")
+    void shouldPreservePrimaryFailureCause(Throwable failure, Throwable expectedCause) {
+        Hedge hedge = Hedge.of(Duration.ofHours(1));
+        Supplier<CompletableFuture<String>> supplier = () -> CompletableFuture.failedFuture(failure);
+
+        CompletableFuture<String> result = hedge.decorateCompletionStage(supplier).get().toCompletableFuture();
+
+        assertThatThrownBy(result::join).isInstanceOf(CompletionException.class)
+            .hasCauseReference(expectedCause);
+        assertThat(hedge.getMetrics().getPrimaryFailureCount()).isOne();
+        assertThat(hedge.getMetrics().getSecondaryFailureCount()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("failureCauses")
+    void shouldPreserveSecondaryFailureCause(Throwable failure, Throwable expectedCause) {
+        Hedge hedge = Hedge.of(Duration.ZERO);
+        CompletableFuture<String> primary = new CompletableFuture<>();
+        AtomicInteger calls = new AtomicInteger();
+        Supplier<CompletableFuture<String>> supplier = () -> calls.getAndIncrement() == 0
+            ? primary : CompletableFuture.failedFuture(failure);
+
+        CompletableFuture<String> result = hedge.decorateCompletionStage(supplier).get().toCompletableFuture();
+
+        assertThatThrownBy(() -> result.get(5, TimeUnit.SECONDS)).isInstanceOf(ExecutionException.class)
+            .hasCauseReference(expectedCause);
+        assertThat(hedge.getMetrics().getPrimaryFailureCount()).isZero();
+        assertThat(hedge.getMetrics().getSecondaryFailureCount()).isOne();
+    }
 
     @Test
     void shouldUsePropagatorsCorrectly() {
