@@ -37,4 +37,11 @@ compileTestKotlin {
     }
 }
 
+test {
+    jacoco {
+        // Lincheck's model checking can't switch threads inside classes instrumented by JaCoCo
+        excludes = ["io.github.resilience4j.core.metrics.*"]
+    }
+}
+
 ext.moduleName = "io.github.resilience4j.kotlin"
