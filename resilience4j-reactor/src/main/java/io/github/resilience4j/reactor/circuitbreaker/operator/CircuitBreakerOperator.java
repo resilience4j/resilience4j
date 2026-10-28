@@ -32,12 +32,14 @@ import java.util.function.UnaryOperator;
  * A subscription that is cancelled before the upstream emits releases its permission and is not
  * recorded as a call. Keep this in mind when several guarded publishers are combined with an
  * all-or-nothing operator such as {@link Mono#zip}: when one member fails, the others are
- * cancelled. In the HALF_OPEN state the CircuitBreaker only leaves the state after
- * {@code permittedNumberOfCallsInHalfOpenState} calls have been recorded, so once fewer
- * permissions are left than the zip needs, every new zip is rejected with a
- * {@link CallNotPermittedException} and no further call is recorded. Configure
- * {@code maxWaitDurationInHalfOpenState} to bound the time spent in HALF_OPEN, or guard the
- * combined publisher instead of each member.
+ * cancelled. In the HALF_OPEN state the CircuitBreaker cannot leave the state until
+ * {@code min(minimumNumberOfCalls, permittedNumberOfCallsInHalfOpenState)} calls have been
+ * recorded. If fewer permissions are left than a zip needs before that, the zip can be rejected
+ * with a {@link CallNotPermittedException}, and its members that did get a permission and have
+ * not emitted yet are cancelled without being recorded (a member that emits a value or
+ * terminates before a sibling is rejected is still recorded). When that happens on every
+ * attempt, the CircuitBreaker stays in HALF_OPEN. Configure {@code maxWaitDurationInHalfOpenState} to bound the time spent in
+ * HALF_OPEN, or guard the combined publisher instead of each member.
  *
  * @param <T> the value type
  */
