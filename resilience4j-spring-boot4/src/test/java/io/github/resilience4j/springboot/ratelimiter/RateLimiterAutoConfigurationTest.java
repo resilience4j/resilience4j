@@ -134,6 +134,7 @@ class RateLimiterAutoConfigurationTest {
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
+        assertThat(lastEvent.getNumberOfPermits()).isEqualTo(1);
 
         await()
             .atMost(2, TimeUnit.SECONDS)
@@ -199,6 +200,7 @@ class RateLimiterAutoConfigurationTest {
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
+        assertThat(lastEvent.getNumberOfPermits()).isEqualTo(1);
 
         await()
             .atMost(2, TimeUnit.SECONDS)
