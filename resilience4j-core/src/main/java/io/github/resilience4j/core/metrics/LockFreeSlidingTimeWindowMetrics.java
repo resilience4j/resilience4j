@@ -207,7 +207,7 @@ public class LockFreeSlidingTimeWindowMetrics implements Metrics {
 
             // This guarantees that only one thread advances the time slice.
             // The time functions as a modification counter, helping us to avoid the ABA problem.
-            if (second != nextSecond || time < tailTimeSlice.time) {
+            if (second != nextSecond || time - tailTimeSlice.time < TIME_SLICE_DURATION_IN_NANOS) {
                 return;
             }
 

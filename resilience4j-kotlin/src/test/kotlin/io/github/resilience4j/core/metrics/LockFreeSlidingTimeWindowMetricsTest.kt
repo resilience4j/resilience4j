@@ -20,56 +20,45 @@ package io.github.resilience4j.core.metrics
 
 import io.github.resilience4j.core.metrics.Metrics.Outcome
 import org.jetbrains.kotlinx.lincheck.annotations.Operation
+import org.jetbrains.kotlinx.lincheck.annotations.Param
 import org.jetbrains.kotlinx.lincheck.check
+import org.jetbrains.kotlinx.lincheck.paramgen.IntGen
 import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.ModelCheckingOptions
 import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 /**
  * Tests the [LockFreeSlidingTimeWindowMetrics] class using the Lincheck framework.
  *
- * Since Lincheck does not account for time, we need to manually and quickly advance the time to ensure
- * the test validates the sliding behavior of the time window (i.e., sliding the window every second).
- * We achieve this by using a static timer that advances the time every 10 ms by a value between 1s and 1.25s
+ * Since Lincheck does not account for time, advancing the clock is modelled as an operation of its own.
+ * Each test instance owns its [ManualClock], so the sequential execution that Lincheck uses to validate
+ * the results observes exactly the same time as the concurrent one. The window is kept small, so it slides
+ * and old records are discarded within a single scenario.
  *
- * It is important to note that the windowSize must be large enough to prevent records from being discarded.
- * This is because the sequential version may run faster or slower than the concurrent version,
- * leading to different results and potential test failures, even if there is no bug in the implementation.
- * This can be verified by commenting out the line where metrics are discarded, which should make the test pass.
- * The required window size depends on the machine's speed, so slower machines may need a larger size.
+ * The time advances by at most one whole second per operation:
+ * - A time slice starts at the time the window was advanced to it, so with sub-second steps the slice boundaries
+ *   depend on when an operation happened to read the clock, and a record can be discarded up to one slice earlier
+ *   in the concurrent execution than in the sequential one. Whole seconds keep the slices aligned in both.
+ * - The window catches up with a larger jump one time slice at a time, so a concurrent snapshot can observe it at
+ *   a second in between. That is fine for a real clock, but not for a jump that is a single atomic operation.
  *
- * The model checking test is ignored because it is extremely slow (~3m) and is most useful during development. Also,
- * to run it you need to disable the Jacoco plugin, as it seems to interfere with the model checking test.
+ * The model checking test is ignored because it is extremely slow (~3m) and is most useful during development.
+ * The metrics classes are excluded from the Jacoco instrumentation of this module, as it interferes with model checking.
  *
  * In contrast, stress testing is faster and can catch rare bugs that require many context switches,
  * making it suitable for regular builds.
  */
 
 class LockFreeSlidingTimeWindowMetricsTest {
-    companion object {
-        private val clock = ManualClock()
-        private val scheduler = Executors.newSingleThreadScheduledExecutor().apply {
-            val interval = 10_000_000L
+    private val clock = ManualClock()
+    private val metrics = LockFreeSlidingTimeWindowMetrics(3, clock)
 
-            scheduleAtFixedRate({
-                clock.advanceByMillis(1000 + Random.nextLong(0, 250))
-            }, interval, interval, TimeUnit.NANOSECONDS)
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun cleanUp() {
-            scheduler.shutdownNow()
-        }
-    }
-
-    private val metrics = LockFreeSlidingTimeWindowMetrics(10, clock)
+    @Operation
+    fun advanceTime(@Param(gen = IntGen::class, conf = "0:1") seconds: Int) =
+        clock.advanceBySeconds(seconds.toLong())
 
     @Operation
     fun record(duration: Long, durationUnit: TimeUnit, outcome: Outcome): Snapshot =
@@ -84,4 +73,28 @@ class LockFreeSlidingTimeWindowMetricsTest {
     @Test
     @Disabled
     fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
+
+    /**
+     * A thread that read the tail before a full window advance, and the clock after it, must not append
+     * a time slice that is less than a time slice after the tail. Otherwise the record of the other thread
+     * is discarded too early, together with the time slice it was recorded in.
+     */
+    @Test
+    fun staleWindowAdvanceDoesNotLoseRecords() = ModelCheckingOptions()
+        .iterations(0)
+        .addCustomScenario {
+            initial {
+                repeat(3) { actor(LockFreeSlidingTimeWindowMetricsTest::advanceTime, 1) }
+            }
+            parallel {
+                thread {
+                    actor(LockFreeSlidingTimeWindowMetricsTest::record, 1L, TimeUnit.MILLISECONDS, Outcome.SUCCESS)
+                    repeat(2) { actor(LockFreeSlidingTimeWindowMetricsTest::advanceTime, 1) }
+                }
+                thread {
+                    actor(LockFreeSlidingTimeWindowMetricsTest::record, 1L, TimeUnit.MILLISECONDS, Outcome.SUCCESS)
+                }
+            }
+        }
+        .check(this::class)
 }
