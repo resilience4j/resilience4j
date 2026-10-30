@@ -161,12 +161,16 @@ public class AtomicRateLimiter implements RateLimiter {
     public void drainPermissions() {
         AtomicRateLimiter.State prev;
         AtomicRateLimiter.State next;
+        int drainedPermissions;
         do {
             prev = state.get();
-            next = calculateNextState(prev.activePermissions, 0, prev);
+            State refreshed = calculateNextState(0, 0, prev);
+            drainedPermissions = Math.max(refreshed.activePermissions, 0);
+            next = new State(refreshed.config, refreshed.activeCycle,
+                refreshed.activePermissions - drainedPermissions, refreshed.nanosToWait);
         } while (!compareAndSet(prev, next));
         if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prev.activePermissions, 0)));
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, drainedPermissions));
         }
     }
 

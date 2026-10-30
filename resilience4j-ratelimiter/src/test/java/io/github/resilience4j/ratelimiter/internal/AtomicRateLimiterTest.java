@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
@@ -529,6 +530,65 @@ class AtomicRateLimiterTest {
     void metrics() {
         setup(Duration.ZERO);
         then(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isZero();
+    }
+
+    @Test
+    void drainPermissionsRefreshedSinceLastCall() {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS), Duration.ZERO, 10);
+        setTimeOnNanos(CYCLE_IN_NANOS);
+        then(rateLimiter.acquirePermission(10)).isTrue();
+        setTimeOnNanos(CYCLE_IN_NANOS * 2 + 10);
+        AtomicReference<RateLimiterOnDrainedEvent> drainedEvent = new AtomicReference<>();
+        rateLimiter.getEventPublisher().onEvent(event -> {
+            if (event instanceof RateLimiterOnDrainedEvent drained) {
+                drainedEvent.set(drained);
+            }
+        });
+
+        rateLimiter.drainPermissions();
+
+        then(metrics.getAvailablePermissions()).isZero();
+        then(rateLimiter.acquirePermission()).isFalse();
+        then(drainedEvent.get().getNumberOfPermits()).isEqualTo(10);
+    }
+
+    @Test
+    void drainPermissionsPublishesNumberOfDrainedPermits() {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS), Duration.ZERO, 10);
+        setTimeOnNanos(CYCLE_IN_NANOS);
+        then(rateLimiter.acquirePermission(4)).isTrue();
+        AtomicReference<RateLimiterOnDrainedEvent> drainedEvent = new AtomicReference<>();
+        rateLimiter.getEventPublisher().onEvent(event -> {
+            if (event instanceof RateLimiterOnDrainedEvent drained) {
+                drainedEvent.set(drained);
+            }
+        });
+
+        rateLimiter.drainPermissions();
+
+        then(metrics.getAvailablePermissions()).isZero();
+        then(drainedEvent.get().getNumberOfPermits()).isEqualTo(6);
+    }
+
+    @Test
+    void drainPermissionsKeepsReservedPermissions() {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS), Duration.ofNanos(CYCLE_IN_NANOS * 2), 10);
+        setTimeOnNanos(CYCLE_IN_NANOS);
+        then(rateLimiter.acquirePermission(10)).isTrue();
+        then(rateLimiter.reservePermission(3)).isEqualTo(CYCLE_IN_NANOS);
+        AtomicReference<RateLimiterOnDrainedEvent> drainedEvent = new AtomicReference<>();
+        rateLimiter.getEventPublisher().onEvent(event -> {
+            if (event instanceof RateLimiterOnDrainedEvent drained) {
+                drainedEvent.set(drained);
+            }
+        });
+
+        rateLimiter.drainPermissions();
+
+        then(metrics.getAvailablePermissions()).isEqualTo(-3);
+        then(drainedEvent.get().getNumberOfPermits()).isZero();
+        setTimeOnNanos(CYCLE_IN_NANOS * 2);
+        then(metrics.getAvailablePermissions()).isEqualTo(7);
     }
 
 }
