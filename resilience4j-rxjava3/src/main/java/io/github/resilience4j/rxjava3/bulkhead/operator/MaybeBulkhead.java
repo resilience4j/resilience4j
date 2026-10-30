@@ -15,17 +15,19 @@
  */
 package io.github.resilience4j.rxjava3.bulkhead.operator;
 
-import io.github.resilience4j.rxjava3.AbstractMaybeObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.rxjava3.AbstractMaybeObserver;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.MaybeObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
 
+import java.util.concurrent.CompletableFuture;
+
 class MaybeBulkhead<T> extends Maybe<T> {
 
-    private final Maybe<T> upstream;
     private final Bulkhead bulkhead;
+    private final Maybe<T> upstream;
 
     MaybeBulkhead(Maybe<T> upstream, Bulkhead bulkhead) {
         this.upstream = upstream;
@@ -34,18 +36,42 @@ class MaybeBulkhead<T> extends Maybe<T> {
 
     @Override
     protected void subscribeActual(MaybeObserver<? super T> downstream) {
-        if (bulkhead.tryAcquirePermission()) {
-            upstream.subscribe(new BulkheadMaybeObserver(downstream));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                downstream.onSubscribe(EmptyDisposable.INSTANCE);
+                downstream.onError(PermissionFailures.of(permission));
+            } else {
+                upstream.subscribe(new BulkheadMaybeObserver(downstream, null));
+            }
         } else {
-            downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingDisposable awaiting =
+                new PermissionAwaitingDisposable(bulkhead, permission);
+            downstream.onSubscribe(awaiting);
+            awaiting.await(
+                () -> upstream.subscribe(new BulkheadMaybeObserver(downstream, awaiting)),
+                downstream::onError);
         }
     }
 
     class BulkheadMaybeObserver extends AbstractMaybeObserver<T> {
 
-        BulkheadMaybeObserver(MaybeObserver<? super T> downstreamObserver) {
+        @Nullable
+        private final PermissionAwaitingDisposable awaiting;
+
+        BulkheadMaybeObserver(MaybeObserver<? super T> downstreamObserver,
+            @Nullable PermissionAwaitingDisposable awaiting) {
             super(downstreamObserver);
+            this.awaiting = awaiting;
+        }
+
+        @Override
+        protected void hookOnSubscribe() {
+            if (awaiting == null) {
+                super.hookOnSubscribe();
+            } else {
+                awaiting.setUpstream(this);
+            }
         }
 
         @Override

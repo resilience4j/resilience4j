@@ -15,12 +15,14 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
-import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.AbstractSingleObserver;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
+import java.util.concurrent.CompletableFuture;
 
 class SingleBulkhead<T> extends Single<T> {
 
@@ -34,18 +36,42 @@ class SingleBulkhead<T> extends Single<T> {
 
     @Override
     protected void subscribeActual(SingleObserver<? super T> downstream) {
-        if (bulkhead.tryAcquirePermission()) {
-            upstream.subscribe(new BulkheadSingleObserver(downstream));
+        CompletableFuture<Void> permission = bulkhead.acquirePermissionAsync();
+        if (permission.isDone()) {
+            if (permission.isCompletedExceptionally()) {
+                downstream.onSubscribe(EmptyDisposable.INSTANCE);
+                downstream.onError(PermissionFailures.of(permission));
+            } else {
+                upstream.subscribe(new BulkheadSingleObserver(downstream, null));
+            }
         } else {
-            downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
+            PermissionAwaitingDisposable awaiting =
+                new PermissionAwaitingDisposable(bulkhead, permission);
+            downstream.onSubscribe(awaiting);
+            awaiting.await(
+                () -> upstream.subscribe(new BulkheadSingleObserver(downstream, awaiting)),
+                downstream::onError);
         }
     }
 
     class BulkheadSingleObserver extends AbstractSingleObserver<T> {
 
-        BulkheadSingleObserver(SingleObserver<? super T> downstreamObserver) {
+        @Nullable
+        private final PermissionAwaitingDisposable awaiting;
+
+        BulkheadSingleObserver(SingleObserver<? super T> downstreamObserver,
+            @Nullable PermissionAwaitingDisposable awaiting) {
             super(downstreamObserver);
+            this.awaiting = awaiting;
+        }
+
+        @Override
+        protected void hookOnSubscribe() {
+            if (awaiting == null) {
+                super.hookOnSubscribe();
+            } else {
+                awaiting.setUpstream(this);
+            }
         }
 
         @Override
