@@ -16,12 +16,13 @@
 package io.github.resilience4j.spring6.retry.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.ExecutorServiceFactory;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -37,7 +38,10 @@ import org.springframework.core.Ordered;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry}
@@ -93,7 +97,9 @@ public class RetryAspect implements Ordered, AutoCloseable {
         this.spelResolver = spelResolver;
         this.retryExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
             contextAwareScheduledThreadPoolExecutor :
-            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+            ExecutorServiceFactory.newScheduledThreadPool(
+                Runtime.getRuntime().availableProcessors(),
+                "RetryAspect");
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
