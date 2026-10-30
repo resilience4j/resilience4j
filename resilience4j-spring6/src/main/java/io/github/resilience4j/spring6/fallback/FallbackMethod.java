@@ -202,11 +202,8 @@ public class FallbackMethod {
      * @throws InvocationTargetException exception
      */
     private Object invoke(Method fallback, Throwable throwable) throws Throwable {
-        boolean accessible = fallback.isAccessible();
         try {
-            if (!accessible) {
-                ReflectionUtils.makeAccessible(fallback);
-            }
+            ReflectionUtils.makeAccessible(fallback);
             Object target = getTarget(fallback);
             if (args.length != 0) {
                 if (fallback.getParameterTypes().length == 1 && Throwable.class
@@ -224,10 +221,6 @@ public class FallbackMethod {
         } catch (InvocationTargetException e) {
             // We want the original fallback-method exception to propagate instead:
             throw e.getCause();
-        } finally {
-            if (!accessible) {
-                fallback.setAccessible(false);
-            }
         }
     }
 

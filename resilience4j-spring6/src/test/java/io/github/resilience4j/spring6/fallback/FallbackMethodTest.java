@@ -18,7 +18,14 @@ package io.github.resilience4j.spring6.fallback;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -97,6 +104,63 @@ class FallbackMethodTest {
             .create("privateFallback", testMethod, new Object[]{"test"}, target, target);
         assertThat(fallbackMethod.fallback(new RuntimeException("err")))
             .isEqualTo("recovered-privateMethod");
+    }
+
+    @Test
+    void shouldCallPrivateFallbackMethodConcurrently() throws Exception {
+        FallbackMethodTest target = new FallbackMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        FallbackMethod fallbackMethod = FallbackMethod
+                .create("privateFallback", testMethod, new Object[]{"test"}, target, target);
+
+        int threadCount = 16;
+        int callsPerThread = 10_000;
+
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
+        List<Future<?>> futures = new ArrayList<>();
+
+        try {
+            for (int i = 0; i < threadCount; i++) {
+                Future<?> future = executor.submit(() -> {
+                    start.await();
+
+                    for (int j = 0; j < callsPerThread; j++) {
+                        try {
+                            Object result = fallbackMethod.fallback(
+                                    new RuntimeException("err")
+                            );
+
+                            if (!"recovered-privateMethod".equals(result)) {
+                                failures.add(
+                                        new AssertionError(
+                                                "Unexpected fallback result: " + result
+                                        )
+                                );
+                            }
+                        } catch (Throwable throwable) {
+                            failures.add(throwable);
+                        }
+                    }
+
+                    return null;
+                });
+
+                futures.add(future);
+            }
+
+            start.countDown();
+
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertThat(failures).isEmpty();
     }
 
     @Test
