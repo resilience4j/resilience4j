@@ -35,6 +35,7 @@ public class AverageDurationSupplier implements HedgeDurationSupplier {
     final boolean shouldMeasureErrors;
     final int factor;
     final FixedSizeSlidingWindowMetrics metrics;
+    private static final Duration MIN_HEDGE_DELAY = Duration.ofMillis(1);
 
     /**
      * @param shouldUseFactorAsPercentage whether to use factor as a percentage
@@ -61,7 +62,7 @@ public class AverageDurationSupplier implements HedgeDurationSupplier {
                 result = getAverageResponseTime().plus(Duration.ofMillis(factor));
             }
         }
-        return result;
+        return  result.compareTo(MIN_HEDGE_DELAY) < 0 ? MIN_HEDGE_DELAY : result;
     }
 
     private Duration getAverageResponseTime() {
