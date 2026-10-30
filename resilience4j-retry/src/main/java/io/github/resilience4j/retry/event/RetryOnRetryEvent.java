@@ -10,16 +10,30 @@ import java.time.Duration;
 public class RetryOnRetryEvent extends AbstractRetryEvent {
 
     private final Duration waitInterval;
+    @Nullable
+    private final Object lastResult;
 
     public RetryOnRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable,
         long waitInterval) {
+        this(name, numberOfAttempts, lastThrowable, waitInterval, null);
+    }
+
+    public RetryOnRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable,
+        long waitInterval, @Nullable Object lastResult) {
         super(name, numberOfAttempts, lastThrowable);
         this.waitInterval = Duration.ofMillis(waitInterval);
+        this.lastResult = lastResult;
     }
 
     @Override
     public Type getEventType() {
         return Type.RETRY;
+    }
+
+    @Override
+    @Nullable
+    public Object getLastResult() {
+        return lastResult;
     }
 
     /**
@@ -33,6 +47,15 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
 
     @Override
     public String toString() {
+        if (lastResult != null) {
+            return String.format(
+                "%s: Retry '%s', waiting %s until attempt '%d'. Last attempt returned result '%s'.",
+                getCreationTime(),
+                getName(),
+                getWaitInterval(),
+                getNumberOfRetryAttempts(),
+                lastResult);
+        }
         return String.format(
             "%s: Retry '%s', waiting %s until attempt '%d'. Last attempt failed with exception '%s'.",
             getCreationTime(),
