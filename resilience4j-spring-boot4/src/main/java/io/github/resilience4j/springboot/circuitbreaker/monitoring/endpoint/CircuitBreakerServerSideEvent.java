@@ -27,6 +27,7 @@ import reactor.core.publisher.Flux;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.function.Function;
 
 import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
@@ -78,7 +79,7 @@ public class CircuitBreakerServerSideEvent {
         CircuitBreaker circuitBreaker = getCircuitBreaker(name);
         Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
             .filter(
-                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
+                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT))
             );
         return Flux.merge(publishEvents(eventStream), getHeartbeatStream());
     }

@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Endpoint(id = "timelimiterevents")
@@ -57,7 +58,7 @@ public class TimeLimiterEventsEndpoint {
     @ReadOperation
     public TimeLimiterEventsEndpointResponse getEventsFilteredByTimeLimiterNameAndEventType(@Selector String name,
                                                                                             @Selector String eventType) {
-        TimeLimiterEvent.Type targetType = TimeLimiterEvent.Type.valueOf(eventType.toUpperCase());
+        TimeLimiterEvent.Type targetType = TimeLimiterEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT));
         return new TimeLimiterEventsEndpointResponse(getTimeLimiterEvents(name).stream()
                 .filter(event -> event.getEventType() == targetType)
                 .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).collect(Collectors.toList()));

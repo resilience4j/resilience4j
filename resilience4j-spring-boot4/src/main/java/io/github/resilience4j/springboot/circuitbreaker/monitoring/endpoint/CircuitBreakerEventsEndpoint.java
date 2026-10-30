@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 
@@ -63,7 +64,7 @@ public class CircuitBreakerEventsEndpoint {
         @Selector String name, @Selector String eventType) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(name).stream()
             .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
-                .valueOf(eventType.toUpperCase()))
+                .valueOf(eventType.toUpperCase(Locale.ROOT)))
             .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
             .collect(Collectors.toList()));
     }

@@ -27,6 +27,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Endpoint(id = "ratelimiterevents")
@@ -60,7 +61,7 @@ public class RateLimiterEventsEndpoint {
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(
         @Selector String name,
         @Selector String eventType) {
-        RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
+        RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase(Locale.ROOT));
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name).stream()
             .filter(event -> event.getEventType() == targetType)
             .map(RateLimiterEventDTO::createRateLimiterEventDTO)

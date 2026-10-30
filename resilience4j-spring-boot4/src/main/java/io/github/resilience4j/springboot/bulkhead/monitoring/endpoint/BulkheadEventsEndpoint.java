@@ -29,6 +29,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Endpoint(id = "bulkheadevents")
@@ -65,7 +66,7 @@ public class BulkheadEventsEndpoint {
         @Selector String bulkheadName, @Selector String eventType) {
         List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
             .filter(event -> event.getEventType() == BulkheadEvent.Type
-                .valueOf(eventType.toUpperCase()))
+                .valueOf(eventType.toUpperCase(Locale.ROOT)))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
             .collect(Collectors.toList());
 
