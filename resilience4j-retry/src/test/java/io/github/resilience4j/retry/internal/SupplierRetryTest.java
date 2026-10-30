@@ -586,4 +586,36 @@ class SupplierRetryTest {
         assertThat(consumerInvocations.get()).isEqualTo(2);
     }
 
+    @Test
+    void shouldStopRetryingAndReturnResultIfIntervalFunctionReturnsLessThanZeroForResult() {
+        CheckedConsumer<Long> previousSleepFunction = RetryImpl.sleepFunction;
+        try {
+            RetryImpl.sleepFunction = Thread::sleep;
+            given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+            AtomicInteger consumerInvocations = new AtomicInteger();
+            RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("Hello world"::equals)
+                .consumeResultBeforeRetryAttempt((attempt, result) -> consumerInvocations.incrementAndGet())
+                .intervalFunction(attempt -> -1L)
+                .maxAttempts(3)
+                .build();
+            Retry retry = Retry.of("id", config);
+            AtomicInteger numberOfRetryEvents = new AtomicInteger();
+            AtomicInteger numberOfErrorEvents = new AtomicInteger();
+            retry.getEventPublisher().onRetry(event -> numberOfRetryEvents.incrementAndGet());
+            retry.getEventPublisher().onError(event -> numberOfErrorEvents.incrementAndGet());
+            Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+            String result = supplier.get();
+
+            assertThat(result).isEqualTo("Hello world");
+            then(helloWorldService).should(times(1)).returnHelloWorld();
+            assertThat(consumerInvocations).hasValue(0);
+            assertThat(numberOfRetryEvents).hasValue(0);
+            assertThat(numberOfErrorEvents).hasValue(0);
+        } finally {
+            RetryImpl.sleepFunction = previousSleepFunction;
+        }
+    }
+
 }
