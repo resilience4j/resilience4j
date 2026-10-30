@@ -813,6 +813,61 @@ class SemaphoreBulkheadTest {
     }
 
     @TestTemplate
+    void shouldKeepGrantingWhenPermittedEventConsumerRethrowsSameException(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncRepeatedConsumerFailure", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        IllegalStateException failure = new IllegalStateException("consumer failed");
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            throw failure;
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> third = bulkhead.acquirePermissionAsync();
+        first.thenRun(bulkhead::onComplete);
+        second.thenRun(bulkhead::onComplete);
+        third.thenRun(bulkhead::onComplete);
+
+        Throwable thrown = Assertions.catchThrowable(bulkhead::onComplete);
+
+        assertThat(first).isCompleted();
+        assertThat(second).isCompleted();
+        assertThat(third).isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(thrown).isSameAs(failure);
+        assertThat(failure.getSuppressed()).isEmpty();
+    }
+
+    @TestTemplate
+    void shouldPreserveDistinctPermittedEventConsumerFailuresWhileDraining(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncDistinctConsumerFailures", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        List<IllegalStateException> failures = new ArrayList<>();
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            IllegalStateException failure = new IllegalStateException("consumer failed " + failures.size());
+            failures.add(failure);
+            throw failure;
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> third = bulkhead.acquirePermissionAsync();
+        first.thenRun(bulkhead::onComplete);
+        second.thenRun(bulkhead::onComplete);
+        third.thenRun(bulkhead::onComplete);
+
+        Throwable thrown = Assertions.catchThrowable(bulkhead::onComplete);
+
+        assertThat(first).isCompleted();
+        assertThat(second).isCompleted();
+        assertThat(third).isCompleted();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(failures).hasSize(3);
+        assertThat(thrown).isSameAs(failures.get(0));
+        assertThat(thrown.getSuppressed()).containsExactly(failures.get(1), failures.get(2));
+    }
+
+    @TestTemplate
     void shouldQueueSubMillisecondMaxWaitDurationInsteadOfFailingFast(ThreadType threadType)
         throws InterruptedException {
         Bulkhead bulkhead = createQueueingBulkhead("asyncSubMillisecond", threadType, 1,

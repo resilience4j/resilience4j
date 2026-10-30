@@ -333,7 +333,7 @@ public class SemaphoreBulkhead implements Bulkhead {
                 } catch (RuntimeException e) {
                     if (consumerFailure == null) {
                         consumerFailure = e;
-                    } else {
+                    } else if (consumerFailure != e) {
                         consumerFailure.addSuppressed(e);
                     }
                 } finally {
