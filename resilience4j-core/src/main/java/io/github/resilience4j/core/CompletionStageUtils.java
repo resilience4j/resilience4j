@@ -97,7 +97,7 @@ public class CompletionStageUtils {
         if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(throwable.getClass()))) {
             try {
                 promise.complete(exceptionHandler.apply(throwable));
-            } catch (Exception fallbackException) {
+            } catch (Throwable fallbackException) {
                 promise.completeExceptionally(fallbackException);
             }
         }else{
@@ -111,7 +111,7 @@ public class CompletionStageUtils {
         if(exceptionType.isAssignableFrom(throwable.getClass())) {
             try {
                 promise.complete(exceptionHandler.apply(throwable));
-            } catch (Exception fallbackException) {
+            } catch (Throwable fallbackException) {
                 promise.completeExceptionally(fallbackException);
             }
         }else{

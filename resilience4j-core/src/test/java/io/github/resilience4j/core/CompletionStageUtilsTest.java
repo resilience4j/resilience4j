@@ -101,6 +101,36 @@ class CompletionStageUtilsTest {
     }
 
     @Test
+    void shouldCompleteExceptionallyWhenTypedFallbackThrowsError() {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        AssertionError fallbackError = new AssertionError("fallback failed");
+
+        CompletableFuture<String> recovered = recover(future, IOException.class, error -> {
+            throw fallbackError;
+        }).toCompletableFuture();
+
+        future.completeExceptionally(new IOException("original failure"));
+
+        assertThat(recovered).isCompletedExceptionally();
+        assertThatThrownBy(recovered::join).hasCause(fallbackError);
+    }
+
+    @Test
+    void shouldCompleteExceptionallyWhenListedFallbackThrowsError() {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        AssertionError fallbackError = new AssertionError("fallback failed");
+
+        CompletableFuture<String> recovered = recover(future, asList(IOException.class), error -> {
+            throw fallbackError;
+        }).toCompletableFuture();
+
+        future.completeExceptionally(new IOException("original failure"));
+
+        assertThat(recovered).isCompletedExceptionally();
+        assertThatThrownBy(recovered::join).hasCause(fallbackError);
+    }
+
+    @Test
     void shouldRecoverFromSpecificExceptions()
         throws Exception {
         CompletableFuture<String> future = new CompletableFuture<>();
