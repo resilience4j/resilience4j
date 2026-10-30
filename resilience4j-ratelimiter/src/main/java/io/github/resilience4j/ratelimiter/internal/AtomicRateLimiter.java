@@ -408,6 +408,7 @@ public class AtomicRateLimiter implements RateLimiter {
      *
      * @return the detailed metrics
      */
+    @Override
     public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
     }

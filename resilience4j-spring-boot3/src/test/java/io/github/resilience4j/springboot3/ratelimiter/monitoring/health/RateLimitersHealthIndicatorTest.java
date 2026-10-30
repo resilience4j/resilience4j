@@ -1,8 +1,8 @@
 package io.github.resilience4j.springboot3.ratelimiter.monitoring.health;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.health.Health;
@@ -27,9 +27,8 @@ class RateLimitersHealthIndicatorTest {
     void health() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
-        AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(
-            AtomicRateLimiter.AtomicRateLimiterMetrics.class);
-        AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
+        RateLimiter.Metrics metrics = mock(RateLimiter.Metrics.class);
+        RateLimiter rateLimiter = mock(RateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
         io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties =
             mock(
@@ -82,8 +81,8 @@ class RateLimitersHealthIndicatorTest {
     void healthIndicatorMaxImpactCanBeOverridden() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
-        AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(AtomicRateLimiter.AtomicRateLimiterMetrics.class);
-        AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
+        RateLimiter.Metrics metrics = mock(RateLimiter.Metrics.class);
+        RateLimiter rateLimiter = mock(RateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
         io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties =
                 mock(io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties.class);

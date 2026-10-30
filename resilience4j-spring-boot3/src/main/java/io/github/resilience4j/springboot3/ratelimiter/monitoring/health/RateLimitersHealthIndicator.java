@@ -18,7 +18,6 @@ package io.github.resilience4j.springboot3.ratelimiter.monitoring.health;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import org.springframework.boot.actuate.health.*;
 
 import java.util.Map;
@@ -80,15 +79,11 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
             return rateLimiterHealth(Status.UP, availablePermissions, numberOfWaitingThreads);
         }
 
-        if (rateLimiter instanceof AtomicRateLimiter) {
-            AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) rateLimiter;
-            AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter
-                .getDetailedMetrics();
-            if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
-                boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(rateLimiter);
+        RateLimiter.Metrics detailedMetrics = rateLimiter.getDetailedMetrics();
+        if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
+            boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(rateLimiter);
 
-                return rateLimiterHealth(allowHealthIndicatorToFail ? Status.DOWN : new Status("RATE_LIMITED"), availablePermissions, numberOfWaitingThreads);
-            }
+            return rateLimiterHealth(allowHealthIndicatorToFail ? Status.DOWN : new Status("RATE_LIMITED"), availablePermissions, numberOfWaitingThreads);
         }
         return rateLimiterHealth(Status.UNKNOWN, availablePermissions, numberOfWaitingThreads);
     }
