@@ -85,6 +85,27 @@ class BulkheadConfigTest {
     }
 
     @Test
+    void buildCustomWithMaxQueuedCalls() {
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxQueuedCalls(7)
+            .build();
+
+        assertThat(config.getMaxQueuedCalls()).isEqualTo(7);
+        assertThat(BulkheadConfig.from(config).build().getMaxQueuedCalls()).isEqualTo(7);
+    }
+
+    @Test
+    void buildWithDefaultMaxQueuedCalls() {
+        assertThat(BulkheadConfig.ofDefaults().getMaxQueuedCalls()).isEqualTo(Integer.MAX_VALUE);
+    }
+
+    @Test
+    void buildWithIllegalMaxQueuedCalls() {
+        assertThatThrownBy(() -> BulkheadConfig.custom().maxQueuedCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void buildWithZeroMaxCurrentCalls() {
         int maxConcurrent = 0;
 
@@ -124,6 +145,7 @@ class BulkheadConfigTest {
             .maxWaitDuration(Duration.ofMillis(maxWait))
             .writableStackTraceEnabled(false)
             .fairCallHandlingStrategyEnabled(false)
+            .maxQueuedCalls(7)
             .build();
 
         String result = config.toString();
@@ -133,6 +155,7 @@ class BulkheadConfigTest {
                 .contains("maxWaitDuration=PT0.555S")
                 .contains("writableStackTraceEnabled=false")
                 .contains("fairCallHandlingEnabled=false")
+                .contains("maxQueuedCalls=7")
                 .endsWith("}");
     }
 }

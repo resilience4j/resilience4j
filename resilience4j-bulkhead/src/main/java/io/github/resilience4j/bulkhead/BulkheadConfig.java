@@ -34,18 +34,21 @@ public class BulkheadConfig implements Serializable {
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     public static final boolean DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED = true;
+    public static final int DEFAULT_MAX_QUEUED_CALLS = Integer.MAX_VALUE;
 
     private final int maxConcurrentCalls;
     private final Duration maxWaitDuration;
     private final boolean writableStackTraceEnabled;
     private final boolean fairCallHandlingEnabled;
+    private final int maxQueuedCalls;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,
-        boolean writableStackTraceEnabled, boolean fairCallHandlingEnabled) {
+        boolean writableStackTraceEnabled, boolean fairCallHandlingEnabled, int maxQueuedCalls) {
         this.maxConcurrentCalls = maxConcurrentCalls;
         this.maxWaitDuration = maxWaitDuration;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
         this.fairCallHandlingEnabled = fairCallHandlingEnabled;
+        this.maxQueuedCalls = maxQueuedCalls;
     }
 
     /**
@@ -91,6 +94,10 @@ public class BulkheadConfig implements Serializable {
         return fairCallHandlingEnabled;
     }
 
+    public int getMaxQueuedCalls() {
+        return maxQueuedCalls;
+    }
+
     @Override
     public String toString() {
         return "BulkheadConfig{" +
@@ -98,6 +105,7 @@ public class BulkheadConfig implements Serializable {
             ", maxWaitDuration=" + maxWaitDuration +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             ", fairCallHandlingEnabled=" + fairCallHandlingEnabled +
+            ", maxQueuedCalls=" + maxQueuedCalls +
             "}";
     }
 
@@ -107,12 +115,14 @@ public class BulkheadConfig implements Serializable {
         private Duration maxWaitDuration;
         private boolean writableStackTraceEnabled;
         private boolean fairCallHandlingEnabled;
+        private int maxQueuedCalls;
 
         public Builder() {
             this.maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
             this.maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
             this.writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
             this.fairCallHandlingEnabled = DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED;
+            this.maxQueuedCalls = DEFAULT_MAX_QUEUED_CALLS;
         }
 
         public Builder(BulkheadConfig bulkheadConfig) {
@@ -120,6 +130,7 @@ public class BulkheadConfig implements Serializable {
             this.maxWaitDuration = bulkheadConfig.getMaxWaitDuration();
             this.writableStackTraceEnabled = bulkheadConfig.isWritableStackTraceEnabled();
             this.fairCallHandlingEnabled = bulkheadConfig.isFairCallHandlingEnabled();
+            this.maxQueuedCalls = bulkheadConfig.getMaxQueuedCalls();
         }
 
         /**
@@ -193,13 +204,37 @@ public class BulkheadConfig implements Serializable {
         }
 
         /**
+         * Configures the maximum number of calls which may wait for a permission when the
+         * bulkhead is full. Only asynchronous permission requests are queued, i.e.
+         * {@link Bulkhead#acquirePermissionAsync()} and the reactive Bulkhead operators combined
+         * with a {@link #maxWaitDuration(Duration)} greater than zero; threads blocked in
+         * {@link Bulkhead#acquirePermission()} do not occupy the queue. Once the queue is full,
+         * further asynchronous requests are rejected immediately with a
+         * {@link BulkheadFullException}.
+         * <p>
+         * The default is {@link Integer#MAX_VALUE}, i.e. the queue is only bounded by the max
+         * wait duration. A value of {@code 0} disables queueing for asynchronous requests.
+         *
+         * @param maxQueuedCalls max number of queued calls
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder maxQueuedCalls(int maxQueuedCalls) {
+            if (maxQueuedCalls < 0) {
+                throw new IllegalArgumentException(
+                    "maxQueuedCalls must be an integer value >= 0");
+            }
+            this.maxQueuedCalls = maxQueuedCalls;
+            return this;
+        }
+
+        /**
          * Builds a BulkheadConfig
          *
          * @return the BulkheadConfig
          */
         public BulkheadConfig build() {
             return new BulkheadConfig(maxConcurrentCalls, maxWaitDuration,
-                writableStackTraceEnabled, fairCallHandlingEnabled);
+                writableStackTraceEnabled, fairCallHandlingEnabled, maxQueuedCalls);
         }
     }
 }

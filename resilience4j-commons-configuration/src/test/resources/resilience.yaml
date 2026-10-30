@@ -91,6 +91,7 @@ resilience4j:
                 maxConcurrentCalls: 20
                 eventConsumerBufferSize: 15
                 writableStackTraceEnabled: true
+                maxQueuedCalls: 5
     ratelimiter:
         configs:
             default:

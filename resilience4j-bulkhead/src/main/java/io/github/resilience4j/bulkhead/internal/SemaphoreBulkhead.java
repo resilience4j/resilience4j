@@ -62,6 +62,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final ConcurrentLinkedQueue<PendingPermission> pendingPermissions =
         new ConcurrentLinkedQueue<>();
     private final AtomicInteger grantsInProgress = new AtomicInteger();
+    private final AtomicInteger queuedCalls = new AtomicInteger();
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Map<String, String> tags;
@@ -195,6 +196,11 @@ public class SemaphoreBulkhead implements Bulkhead {
             return CompletableFuture
                 .failedFuture(BulkheadFullException.createBulkheadFullException(this));
         }
+        if (!reserveQueueSlot()) {
+            publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
+            return CompletableFuture
+                .failedFuture(BulkheadFullException.createBulkheadFullException(this));
+        }
         PendingPermission permission = new PendingPermission();
         ScheduledFuture<?> timeoutTask;
         try {
@@ -207,13 +213,16 @@ public class SemaphoreBulkhead implements Bulkhead {
         } catch (RejectedExecutionException e) {
             // The scheduler was shut down concurrently. Fail before queueing the request, otherwise
             // a request nobody holds would be granted a permit later and leak it.
+            queuedCalls.decrementAndGet();
             return CompletableFuture.failedFuture(e);
         }
         pendingPermissions.offer(permission);
         permission.whenComplete((result, throwable) -> {
             timeoutTask.cancel(false);
             if (throwable != null) {
-                pendingPermissions.remove(permission);
+                if (pendingPermissions.remove(permission)) {
+                    queuedCalls.decrementAndGet();
+                }
                 // A cancelled request was withdrawn by the caller, the Bulkhead did not reject it
                 if (!(throwable instanceof CancellationException)) {
                     publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
@@ -324,7 +333,12 @@ public class SemaphoreBulkhead implements Bulkhead {
         do {
             while (!pendingPermissions.isEmpty() && semaphore.tryAcquire()) {
                 PendingPermission permission = pendingPermissions.poll();
-                if (permission == null || !permission.tryGrant()) {
+                if (permission == null) {
+                    semaphore.release();
+                    continue;
+                }
+                queuedCalls.decrementAndGet();
+                if (!permission.tryGrant()) {
                     semaphore.release();
                     continue;
                 }
@@ -345,6 +359,22 @@ public class SemaphoreBulkhead implements Bulkhead {
         if (consumerFailure != null) {
             throw consumerFailure;
         }
+    }
+
+    /**
+     * Reserves a slot in the queue of waiting permission requests, unless the queue already holds
+     * {@link BulkheadConfig#getMaxQueuedCalls()} requests.
+     */
+    private boolean reserveQueueSlot() {
+        int maxQueuedCalls = config.getMaxQueuedCalls();
+        int queued = queuedCalls.get();
+        while (queued < maxQueuedCalls) {
+            if (queuedCalls.compareAndSet(queued, queued + 1)) {
+                return true;
+            }
+            queued = queuedCalls.get();
+        }
+        return false;
     }
 
     private static long toNanosSaturated(Duration duration) {
@@ -439,6 +469,11 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public int getMaxAllowedConcurrentCalls() {
             return config.getMaxConcurrentCalls();
+        }
+
+        @Override
+        public int getQueuedCalls() {
+            return queuedCalls.get();
         }
     }
 }

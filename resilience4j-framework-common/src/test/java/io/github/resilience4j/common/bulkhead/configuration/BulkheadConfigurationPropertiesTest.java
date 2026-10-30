@@ -73,6 +73,21 @@ class BulkheadConfigurationPropertiesTest {
     }
 
     @Test
+    void createBulkHeadPropertiesWithMaxQueuedCalls() {
+        CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
+        instanceProperties.setMaxQueuedCalls(5);
+        CommonBulkheadConfigurationProperties bulkheadConfigurationProperties = new CommonBulkheadConfigurationProperties();
+        bulkheadConfigurationProperties.getInstances().put("backend", instanceProperties);
+
+        BulkheadConfig bulkheadConfig = bulkheadConfigurationProperties
+            .createBulkheadConfig(instanceProperties, compositeBulkheadCustomizer(), "backend");
+
+        assertThat(bulkheadConfig.getMaxQueuedCalls()).isEqualTo(5);
+        Assertions.assertThatThrownBy(() -> instanceProperties.setMaxQueuedCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void createBulkHeadPropertiesWithSharedConfigs() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();

@@ -21,6 +21,9 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.metrics.AbstractBulkheadMetricsTest;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadMetricsPublisherTest extends AbstractBulkheadMetricsTest {
 
@@ -41,4 +44,22 @@ public class BulkheadMetricsPublisherTest extends AbstractBulkheadMetricsTest {
         return bulkheadRegistry.bulkhead("testBulkhead");
     }
 
+    @Test
+    public void shouldRemoveAllMetricsWhenBulkheadIsRemovedOrReplaced() {
+        MetricRegistry metricRegistry = new MetricRegistry();
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+            .of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(metricRegistry));
+        bulkheadRegistry.bulkhead("testBulkhead");
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
+
+        bulkheadRegistry.replace("testBulkhead",
+            Bulkhead.of("testBulkhead", BulkheadConfig.custom().maxConcurrentCalls(5).build()));
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
+
+        bulkheadRegistry.remove("testBulkhead");
+        assertThat(metricRegistry.getMetrics()).isEmpty();
+
+        bulkheadRegistry.bulkhead("testBulkhead");
+        assertThat(metricRegistry.getMetrics()).hasSize(3);
+    }
 }

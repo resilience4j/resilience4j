@@ -77,6 +77,7 @@ class CommonsConfigurationBulkHeadConfigurationTest {
         assertThat(instanceBackendA.getMaxConcurrentCalls()).isEqualTo(10);
         assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
         assertThat(instanceBackendA.isWritableStackTraceEnabled()).isNull();
+        assertThat(instanceBackendA.getMaxQueuedCalls()).isNull();
     }
 
     private static void assertInstanceBackendB(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendB) {
@@ -84,5 +85,6 @@ class CommonsConfigurationBulkHeadConfigurationTest {
         assertThat(instanceBackendB.getMaxConcurrentCalls()).isEqualTo(20);
         assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(15);
         assertThat(instanceBackendB.isWritableStackTraceEnabled()).isTrue();
+        assertThat(instanceBackendB.getMaxQueuedCalls()).isEqualTo(5);
     }
 }

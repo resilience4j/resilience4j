@@ -52,14 +52,17 @@ public class BulkheadMetricsPublisher extends AbstractMetricsPublisher<Bulkhead>
         //number of available concurrent calls as an integer
         String availableConcurrentCalls = name(prefix, name, AVAILABLE_CONCURRENT_CALLS);
         String maxAllowedConcurrentCalls = name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS);
+        String queuedCalls = name(prefix, name, QUEUED_CALLS);
 
         metricRegistry.register(availableConcurrentCalls,
             (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
         metricRegistry.register(maxAllowedConcurrentCalls,
             (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        metricRegistry.register(queuedCalls,
+            (Gauge<Integer>) () -> bulkhead.getMetrics().getQueuedCalls());
 
         List<String> metricNames = Arrays
-            .asList(availableConcurrentCalls, maxAllowedConcurrentCalls);
+            .asList(availableConcurrentCalls, maxAllowedConcurrentCalls, queuedCalls);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 

@@ -387,8 +387,9 @@ public interface Bulkhead {
      * the Bulkhead is full and {@link BulkheadConfig#getMaxWaitDuration()} is greater than zero,
      * the permission request is queued and granted in FIFO order as running calls complete. If
      * no permission has been granted within the max wait duration, or the Bulkhead is full and
-     * the max wait duration is zero, the future completes exceptionally with a
-     * {@link BulkheadFullException}.
+     * the max wait duration is zero, or the queue already holds
+     * {@link BulkheadConfig#getMaxQueuedCalls()} requests, the future completes exceptionally
+     * with a {@link BulkheadFullException}.
      * <p>
      * Once the future completes successfully, the caller must release the permission with
      * {@link Bulkhead#onComplete()} or {@link Bulkhead#releasePermission()}, exactly like a
@@ -547,6 +548,20 @@ public interface Bulkhead {
          * @return max allowed concurrent calls
          */
         int getMaxAllowedConcurrentCalls();
+
+        /**
+         * Returns the number of calls which are currently waiting for a permission in the queue
+         * of this bulkhead, i.e. asynchronous requests made with
+         * {@link Bulkhead#acquirePermissionAsync()} while the bulkhead was full. Threads blocked
+         * in {@link Bulkhead#acquirePermission()} are not counted. The queue is bounded by
+         * {@link BulkheadConfig#getMaxQueuedCalls()}.
+         *
+         * @return the number of queued calls, {@code 0} unless the implementation queues
+         * asynchronous permission requests
+         */
+        default int getQueuedCalls() {
+            return 0;
+        }
     }
 
     /**
