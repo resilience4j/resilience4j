@@ -16,6 +16,7 @@
 package io.github.resilience4j.spring6.retry.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.ExecutorServiceFactory;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -93,7 +94,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
         this.spelResolver = spelResolver;
         this.retryExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
             contextAwareScheduledThreadPoolExecutor :
-            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+            ExecutorServiceFactory.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), "RetryAspect");
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
