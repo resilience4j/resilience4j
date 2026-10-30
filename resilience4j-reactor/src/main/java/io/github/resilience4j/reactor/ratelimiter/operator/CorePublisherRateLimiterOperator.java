@@ -53,6 +53,7 @@ class CorePublisherRateLimiterOperator<T> {
     private void delaySubscription(CoreSubscriber<? super T> actual, long waitDuration) {
         Mono.delay(Duration.ofNanos(waitDuration))
             .subscribe(delay -> source.subscribe(
-                new RateLimiterSubscriber<>(rateLimiter, actual)));
+                new RateLimiterSubscriber<>(rateLimiter, actual)),
+                error -> Operators.error(actual, error), null, actual.currentContext());
     }
 }
