@@ -253,7 +253,8 @@ final class IntervalFunctionCompanion {
     }
 
     static void checkRandomizationFactor(double randomizationFactor) {
-        if (randomizationFactor < 0.0 || randomizationFactor > 1.0) {
+        if (Double.isNaN(randomizationFactor)
+            || randomizationFactor < 0.0 || randomizationFactor > 1.0) {
             throw new IllegalArgumentException(
                 "Illegal argument randomizationFactor: " + randomizationFactor);
         }

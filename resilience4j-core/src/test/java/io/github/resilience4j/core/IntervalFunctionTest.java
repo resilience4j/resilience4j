@@ -118,6 +118,29 @@ class IntervalFunctionTest {
     }
 
     @Test
+    void shouldRejectNaNRandomizationFactor() {
+        assertThatThrownBy(() -> IntervalFunction.ofRandomized(100, Double.NaN))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofRandomized(Duration.ofMillis(100), Double.NaN))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectNaNExponentialRandomizationFactor() {
+        final Duration initialInterval = Duration.ofMillis(100);
+        final Duration maxInterval = Duration.ofMillis(1000);
+
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(100, 1.5, Double.NaN))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(initialInterval, 1.5, Double.NaN))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(100, 1.5, Double.NaN, 1000))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(initialInterval, 1.5, Double.NaN, maxInterval))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void shouldPassPositiveRandomizationFactor() {
         final Duration duration = Duration.ofMillis(100);
         final float multiplier = 1.5f;
