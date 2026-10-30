@@ -20,6 +20,7 @@ import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -39,7 +40,16 @@ public class SpelResolverConfiguration {
         return new SpelExpressionParser();
     }
 
+    /**
+     * Marked {@link Primary} so that resilience4j's own {@link SpelResolver} deterministically
+     * uses this bean when another library (e.g. SpringDoc) also happens to register a
+     * {@link ParameterNameDiscoverer} bean of its own. Without this, the presence of two
+     * same-typed beans makes the {@code parameterNameDiscoverer} parameter of
+     * {@link #spelResolver} ambiguous and fails context startup with a
+     * {@code NoUniqueBeanDefinitionException}, depending on auto-configuration ordering.
+     */
     @Bean
+    @Primary
     public ParameterNameDiscoverer parameterNameDiscoverer() {
         return new StandardReflectionParameterNameDiscoverer();
     }
