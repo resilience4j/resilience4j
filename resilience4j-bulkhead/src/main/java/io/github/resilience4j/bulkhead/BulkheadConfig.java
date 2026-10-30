@@ -40,7 +40,7 @@ public class BulkheadConfig implements Serializable {
     private final boolean writableStackTraceEnabled;
     private final boolean fairCallHandlingEnabled;
 
-    private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,
+    protected BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,
         boolean writableStackTraceEnabled, boolean fairCallHandlingEnabled) {
         this.maxConcurrentCalls = maxConcurrentCalls;
         this.maxWaitDuration = maxWaitDuration;
