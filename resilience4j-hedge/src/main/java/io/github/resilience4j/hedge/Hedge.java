@@ -25,7 +25,10 @@ import io.github.resilience4j.hedge.internal.HedgeImpl;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -39,7 +42,7 @@ import java.util.function.Supplier;
  * Good candidates for Hedged calls include side-effect-free calls, calls which may have a long response time tail. Do
  * not hedge non-idempotent inserts or other similar calls.
  */
-public interface Hedge {
+public interface Hedge extends AutoCloseable {
 
     String DEFAULT_NAME = "UNDEFINED";
 
@@ -230,6 +233,20 @@ public interface Hedge {
      * @param throwable The throwable which must be recorded
      */
     void onSecondaryFailure(Duration duration, Throwable throwable);
+
+    /**
+     * Shuts down the internal scheduler used to trigger hedged calls and releases
+     * the threads it owns. After this call, {@link #submit} and
+     * {@link #decorateCompletionStage} must not be invoked; doing so results in
+     * a {@link java.util.concurrent.RejectedExecutionException}.
+     * <p>
+     * This override drops the checked {@link Exception} declared by
+     * {@link AutoCloseable#close()}, so {@code Hedge} can be used with
+     * {@code try-with-resources} without additional exception handling.
+     * Implementations must not throw checked exceptions.
+     */
+    @Override
+    void close();
 
     /**
      * An EventPublisher which can be used to register event consumers.
