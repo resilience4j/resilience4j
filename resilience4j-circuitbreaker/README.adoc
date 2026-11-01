@@ -1,0 +1,275 @@
+= Phased HALF_OPEN traffic recovery
+
+Phased recovery is an optional policy for dependencies, such as payment service providers,
+which regain capacity gradually. After OPEN, it admits an increasing percentage of attempted
+calls while the public circuit state remains HALF_OPEN. The ordinary finite-probe HALF_OPEN
+behavior is unchanged when `halfOpenRecoveryConfig` is absent.
+
+[source,java]
+----
+HalfOpenRecoveryConfig recovery = HalfOpenRecoveryConfig.custom()
+    .trafficPercentageStep(5)
+    .minimumPhaseDuration(Duration.ofSeconds(10))
+    .minimumNumberOfCalls(100)
+    .maxFailureRateForAdvance(5)
+    .failureRateThreshold(20)
+    .maxSlowCallRateForAdvance(10)
+    .slowCallRateThreshold(50)
+    .failureStrategy(HalfOpenRecoveryConfig.FailureStrategy.OPEN)
+    .build();
+
+CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+    .halfOpenRecoveryConfig(recovery)
+    .build();
+CircuitBreaker breaker = CircuitBreaker.of("payment-provider", config);
+----
+
+Both recovery modes can coexist in one registry. Ordinary breakers keep the standard
+finite-probe HALF_OPEN behavior; only the named breaker configured with the policy ramps traffic:
+
+[source,java]
+----
+CircuitBreakerConfig standard = CircuitBreakerConfig.ofDefaults();
+CircuitBreakerConfig gradual = CircuitBreakerConfig.from(standard)
+    .halfOpenRecoveryConfig(recovery).build();
+CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(standard);
+CircuitBreaker inventory = registry.circuitBreaker("inventory");
+CircuitBreaker paymentProvider = registry.circuitBreaker("payment-provider", gradual);
+----
+
+== Implementation boundaries
+
+The internal `HalfOpenRecoveryPolicy` owns the ramp plan, evenly distributed admission and
+phase evaluation decisions. It has no scheduler, event publisher or mutable metrics window.
+The state machine owns installation of the current state, timer cancellation, global recovery
+deadline, metrics recording and event publication. An obsolete phase can therefore neither
+install a successor nor retire another recovery cycle's deadline.
+
+The public state remains HALF_OPEN in both modes. Existing registries, decorators, Spring AOP,
+health indicators and metric state labels continue to use the same CircuitBreaker interfaces.
+The policy is an opt-in part of the circuit breaker, not a replacement registry or a separately
+configured request-routing layer.
+
+== Admission and progress
+
+OPEN represents zero admitted traffic. The initial percentage defaults to automatic mode:
+the first HALF_OPEN phase uses the configured step. An omitted `initialTrafficPercentage`,
+or an explicit value of zero, selects this mode; it never creates a zero-traffic HALF_OPEN
+phase, because that phase could not collect the health samples needed to progress.
+
+The step must be between 1 and 100. For example, step 30 produces 30%, 60%, 90%, 100%; step
+45 produces 45%, 90%, 100%; and step 100 produces a single 100% HALF_OPEN phase which must
+still pass its duration and health evaluation before CLOSED. A step of 120 throws a
+configuration error. Only the final calculated target is clamped to 100%, not invalid
+configured step values.
+
+An advanced caller may override the first percentage with `initialTrafficPercentage(5)`,
+for example producing 5%, 35%, 65%, 95%, 100% with step 30. Explicit initial values range
+from 1 to 100; setting zero restores automatic mode, including when overriding an inherited
+explicit value. Configuration copies retain whether the initial percentage is automatic.
+
+Admission is deterministic and evenly distributed: in a stable phase, exactly the target
+percentage of every 100 consecutive attempts is admitted by each circuit breaker instance.
+There is no finite call quota to exhaust. Each retry that invokes the breaker is another
+attempt. Rejected attempts use the existing `CallNotPermittedException` and fallback path;
+the breaker does not select another payment provider itself.
+
+A phase advances only when both conditions hold:
+
+* Its minimum duration has elapsed.
+* Its bounded window of the latest `minimumNumberOfCalls` completed, recorded outcomes
+  has a failure rate at most `maxFailureRateForAdvance` and a slow-call rate at most
+  `maxSlowCallRateForAdvance`.
+
+Healthy progress is evaluated when an outcome is recorded. A new admission after an idle
+period cannot advance a phase using only its old health window; a new recorded outcome
+must satisfy the duration and sample gates. Ignored outcomes and rejected attempts do not
+supply health samples. The 100% phase also needs its own duration and healthy window before
+the breaker transitions to CLOSED. Its window must additionally be strictly below the ordinary
+failure-rate and slow-call-rate thresholds, so recovery cannot close using a health window
+which would already fail the configured ordinary criterion.
+
+Each phase has a fresh health window. As with the existing CircuitBreaker completion API,
+an in-flight call is recorded against the state/phase current when its completion is reported;
+the API does not carry an admission-generation token. Completion counters and timers exposed
+by Micrometer remain cumulative across phase changes.
+
+Consequently, results from calls admitted in an earlier phase can contribute to the current
+phase's window, including the final 100-percent phase. Validation means that the completion
+window is below the configured thresholds while that target is active; it does not guarantee
+that every sampled call was admitted at that target. This preserves the existing call API
+and continuous admission between phases. The effect depends on request latency, phase
+duration, sample size and offered traffic; a smaller percentage step alone does not bound it.
+
+This policy controls a share of attempts within one breaker instance. It does not impose a
+requests-per-second or concurrent-call limit and does not coordinate multiple application
+instances. Bulkhead and RateLimiter can be composed with the circuit breaker for those needs.
+
+== Retry composition
+
+When Retry wraps the circuit breaker, every retry requests another permission. Configure
+Retry to ignore `CallNotPermittedException` when rejected logical requests should remain
+shed. Retrying that exception can admit the same logical request on a later attempt while
+the configured share of breaker attempts is still respected.
+
+[source,java]
+----
+Retry retry = Retry.of("payment-provider", RetryConfig.custom()
+    .ignoreExceptions(CallNotPermittedException.class)
+    .build());
+Supplier<Response> call = Retry.decorateSupplier(retry,
+    CircuitBreaker.decorateSupplier(breaker, paymentProvider::pay));
+----
+
+This leaves retries for other configured failures available. Use RateLimiter or Bulkhead
+when a request-rate or concurrency limit is also needed. The native
+link:../resilience4j-all/src/test/java/io/github/resilience4j/decorators/HalfOpenRecoveryCompositionTest.java[composition tests]
+exercise rejected retries and compare both recovery modes against independently recovering
+capacity models, including a case where the offered load exceeds what the ramp can protect.
+
+== Recovery health and hysteresis
+
+Recovery has its own health bounds. They do not change the ordinary CLOSED failure/slow-call
+thresholds or the standard finite-probe HALF_OPEN policy. A slow call is still classified using
+the enclosing `CircuitBreakerConfig.slowCallDurationThreshold`; only the recovery rate bounds
+are separate.
+
+[cols="1,1,2",options="header"]
+|===
+|Recovery setting |Default |Meaning
+|`maxFailureRateForAdvance` |5% |Inclusive maximum failure rate permitting advancement
+|`failureRateThreshold` |20% |Inclusive failure rate triggering the configured failure strategy
+|`maxSlowCallRateForAdvance` |10% |Inclusive maximum slow-call rate permitting advancement
+|`slowCallRateThreshold` |50% |Inclusive slow-call rate triggering the configured failure strategy
+|===
+
+Both health dimensions must be within their advancement maximum to increase traffic or close.
+Either regression threshold triggers OPEN or STEP_BACK. Below 100%, health between those bounds
+keeps the current target, continues admitting traffic, and updates the same rolling window.
+The final 100% phase is binary: once its duration and full sample are available at a recorded
+completion, it either satisfies both advancement maxima and the ordinary health bounds and
+closes, or applies the configured failure strategy. With STEP_BACK, rejection returns from 100%
+to the preceding target, such as 75%; a single-phase 100% ramp has no preceding target and opens.
+OPEN always reopens. There is no separate draining interval. Both decisions require a complete
+`minimumNumberOfCalls` window;
+advancement and non-severe final rejection additionally require `minimumPhaseDuration`.
+Reaching a recovery regression threshold may still reject the final phase sooner once its full
+sample exists. Bounds must be finite, with
+`0 <= advancement maximum < regression threshold <= 100` for each dimension. Zero is valid
+for an advancement maximum and requires no such recorded errors/slow calls in that window.
+It is not a regression threshold, so a healthy zero-error window never trips merely because
+its rate is zero.
+
+For example, below 100% with 100 recorded outcomes, the default failure bounds permit advancement
+at 0 through 5 errors, hold the phase at 6 through 19 errors, and regress at 20 or more errors.
+At 100%, 6 through 19 errors reject final validation after the minimum duration instead of
+keeping an intermediate health band indefinitely.
+The slow-call criterion can still hold or regress an otherwise successful phase. With fewer
+than 100 outcomes neither health decision is taken. Defaults are starting values rather than
+a claim about a provider's service objective; a window of ten outcomes has ten-percentage-point
+resolution, so one failure already prevents advancement with the default 5% maximum.
+
+== Failures and deadlines
+
+An unhealthy evaluation returns to OPEN by default. `STEP_BACK` instead returns to the preceding
+phase; a failure in the first phase returns to OPEN. Regression restarts that phase's minimum
+duration and health window. Threshold evaluation requires the configured recovery sample size;
+this option does not mean that the first individual failure necessarily trips the circuit.
+A final phase rejected because its health is intermediate, or because it fails the ordinary
+closing criterion, still publishes its normal phase/state transition. It does not publish a
+failure-rate/slow-call-rate-exceeded event unless the corresponding recovery regression
+threshold was actually reached.
+
+`maxWaitDurationInHalfOpenState` covers the entire recovery episode and is not restarted for
+each phase. With gradual recovery and a positive timeout, the target must be OPEN;
+configuration with a CLOSED target is rejected rather than bypassing the ramp. The standard
+finite-probe policy retains both timeout targets. Zero disables this global deadline.
+For example, 20 phases with a ten-second minimum need at least 200 seconds,
+and can need longer when traffic is sparse. Final validation is completion-driven, not driven
+by a separate phase timer: no traffic, incomplete samples or no new completion after the minimum
+duration can leave the phase waiting, including at 100%, until more outcomes arrive or this
+global deadline expires. Zero timeout permits that wait without a deadline. Reset and
+administrative transitions cancel the
+old recovery episode; obsolete timer callbacks cannot change a replacement state.
+
+== Configuration binding
+
+Spring and Commons Configuration support the same nested options:
+
+[source,properties]
+----
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.enabled=true
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.trafficPercentageStep=5
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.minimumPhaseDuration=10s
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.minimumNumberOfCalls=100
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.maxFailureRateForAdvance=5
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.failureRateThreshold=20
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.maxSlowCallRateForAdvance=10
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.slowCallRateThreshold=50
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.failureStrategy=OPEN
+----
+
+Commons Configuration duration values use its duration syntax, for example `PT10S`.
+Unspecified nested settings inherit shared configuration values, including base customizers.
+An optional `halfOpenRecovery.initialTrafficPercentage` overrides the first percentage;
+zero selects automatic mode. An inherited automatic initial percentage follows an instance's
+overridden step, while an inherited explicit initial percentage remains independent.
+An instance can explicitly disable an inherited policy with `halfOpenRecovery.enabled=false`.
+The Java builder equivalent is `halfOpenRecoveryConfig(null)`.
+
+== Observability
+
+`getHalfOpenPhase()` returns one immutable snapshot containing the one-based phase, total
+phase count and permitted traffic percentage. Outside phased recovery, its values are zero.
+Phase events describe entry, advancement and regression; ordinary state events and state
+enum values retain their existing meaning. Event callbacks can cause further transitions,
+and concurrent state changes can occur while an observer processes an event.
+
+Micrometer and Dropwizard add two gauges only for breakers with phased recovery configured:
+`recovery.phase` and `recovery.traffic.percentage`, under their usual metric prefixes. The
+percentage gauge is the configured recovery target, not a measured admission rate; zero
+means inactive even though CLOSED admits all calls. Phase numbers are gauge values, never
+dynamic labels. Existing HALF_OPEN dashboards and health indicators continue to apply.
+
+The repository's `grafana_recovery_dashboard.json` demonstrates both modes in one dashboard,
+including a recovery-mode indicator and target-versus-observed admission. Import and query
+validation instructions are in `resilience4j-micrometer/examples/`.
+
+Breakers configured for phased recovery also collect two cumulative admission counters,
+exposed by the same adapters:
+
+* `admission.attempts`: all public permission requests offered to the breaker.
+* `admission.permitted.attempts`: requests for which permission was granted.
+
+When enabled, the counters span all states of the breaker, including OPEN, CLOSED and disabled modes.
+They are never reset by phase transitions or `reset()`; a replacement breaker instance
+starts at zero. `getAdmissionMetrics()` provides an immutable snapshot in the Java API,
+and returns an empty snapshot for ordinary breakers. Admission collection and its exported
+metrics are enabled only when phased recovery is configured, so ordinary breakers retain
+their existing permission behavior without this optional accounting.
+
+An attempt is counted as it enters `acquirePermission()` or `tryAcquirePermission()`, and a
+permission is counted before that method returns successfully. State-machine delegation
+counts only once. A check still in progress, or one which throws, is included in attempts
+without yet being permitted. Completions, ignored outcomes, cancellation and returned
+permissions do not undo an admission. These counters measure the breaker admission point;
+they do not confirm that a network request subsequently reached the payment provider.
+
+For any interval with attempts, the observed admission percentage is:
+
+----
+100 * increase(permitted attempts) / increase(total attempts)
+----
+
+Use the same time window and labels for both counters. An interval with zero attempts has
+no observed percentage; display no data rather than zero or 100%. For example, an increase
+of 7 permitted attempts and 100 total attempts means 7% observed admission, independently
+of completion times and of the current target gauge. A window spanning multiple recovery
+phases can differ from the latest target. Micrometer exports these as counters, including
+Prometheus `_total` series; Dropwizard exports source-backed counters. Labels remain fixed
+and do not include phases or percentages.
+
+A permission check that spans an interval boundary starts contributing to attempts in the
+earlier interval and to permitted attempts only once granted. The counter series are also
+sampled separately. Very short windows are therefore not an atomic cohort measurement;
+choose a window suitable for the traffic being observed rather than clamp the ratio.

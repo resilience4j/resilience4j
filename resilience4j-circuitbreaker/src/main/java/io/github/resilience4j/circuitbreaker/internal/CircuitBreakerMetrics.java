@@ -22,6 +22,8 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy;
+import io.github.resilience4j.circuitbreaker.HalfOpenRecoveryConfig;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.metrics.*;
 
 import java.time.Clock;
@@ -38,10 +40,29 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private final long slowCallDurationThresholdInNanos;
     private final LongAdder numberOfNotPermittedCalls;
     private int minimumNumberOfCalls;
+    @Nullable
+    private final HalfOpenRecoveryConfig recoveryConfig;
+    @Nullable
+    private final CircuitBreakerConfig closedValidationConfig;
 
     private CircuitBreakerMetrics(int slidingWindowSize,
         CircuitBreakerConfig.SlidingWindowType slidingWindowType,
         CircuitBreakerConfig circuitBreakerConfig) {
+        this(slidingWindowSize, slidingWindowType, circuitBreakerConfig, null);
+    }
+
+    private CircuitBreakerMetrics(int slidingWindowSize,
+        CircuitBreakerConfig.SlidingWindowType slidingWindowType,
+        CircuitBreakerConfig circuitBreakerConfig, @Nullable HalfOpenRecoveryConfig recoveryConfig) {
+        this(slidingWindowSize, slidingWindowType, circuitBreakerConfig, recoveryConfig, false);
+    }
+
+    private CircuitBreakerMetrics(int slidingWindowSize,
+        CircuitBreakerConfig.SlidingWindowType slidingWindowType,
+        CircuitBreakerConfig circuitBreakerConfig, @Nullable HalfOpenRecoveryConfig recoveryConfig,
+        boolean finalRecoveryPhase) {
+        this.recoveryConfig = recoveryConfig;
+        this.closedValidationConfig = finalRecoveryPhase ? circuitBreakerConfig : null;
         if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
             this.metrics = buildCountBasedMetrics(
                 slidingWindowSize,
@@ -57,8 +78,10 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
             );
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
-        this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
-        this.slowCallRateThreshold = circuitBreakerConfig.getSlowCallRateThreshold();
+        this.failureRateThreshold = recoveryConfig == null
+            ? circuitBreakerConfig.getFailureRateThreshold() : recoveryConfig.getFailureRateThreshold();
+        this.slowCallRateThreshold = recoveryConfig == null
+            ? circuitBreakerConfig.getSlowCallRateThreshold() : recoveryConfig.getSlowCallRateThreshold();
         this.slowCallDurationThresholdInNanos = circuitBreakerConfig.getSlowCallDurationThreshold()
             .toNanos();
         this.numberOfNotPermittedCalls = new LongAdder();
@@ -78,6 +101,24 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState,
             CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+    }
+
+    static CircuitBreakerMetrics forHalfOpenRecovery(int minimumNumberOfCalls,
+        CircuitBreakerConfig circuitBreakerConfig) {
+        return forHalfOpenRecovery(minimumNumberOfCalls, circuitBreakerConfig, false);
+    }
+
+    static CircuitBreakerMetrics forHalfOpenRecovery(int minimumNumberOfCalls,
+        CircuitBreakerConfig circuitBreakerConfig, boolean finalRecoveryPhase) {
+        CircuitBreakerMetrics metrics = new CircuitBreakerMetrics(minimumNumberOfCalls,
+            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig,
+            circuitBreakerConfig.getHalfOpenRecoveryConfig(), finalRecoveryPhase);
+        metrics.minimumNumberOfCalls = minimumNumberOfCalls;
+        return metrics;
+    }
+
+    Result checkIfThresholdsExceeded() {
+        return checkIfThresholdsExceeded(metrics.getSnapshot());
     }
 
     static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
@@ -155,6 +196,21 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
         if (slowCallsInPercentage >= slowCallRateThreshold) {
             return Result.SLOW_CALL_RATE_ABOVE_THRESHOLDS;
+        }
+        // Admission and completion can be concurrent. Classify both bounds from the same
+        // recorded snapshot rather than reading the mutable window again in the policy.
+        if (recoveryConfig != null) {
+            if (failureRateInPercentage > recoveryConfig.getMaxFailureRateForAdvance()
+                || slowCallsInPercentage > recoveryConfig.getMaxSlowCallRateForAdvance()) {
+                return Result.RECOVERY_HOLD;
+            }
+            // The final phase must also satisfy the ordinary CLOSED health bounds. This
+            // is a final validation criterion, not an additional early regression trigger.
+            if (closedValidationConfig != null
+                && (failureRateInPercentage >= closedValidationConfig.getFailureRateThreshold()
+                    || slowCallsInPercentage >= closedValidationConfig.getSlowCallRateThreshold())) {
+                return Result.RECOVERY_HOLD;
+            }
         }
         return Result.BELOW_THRESHOLDS;
     }
@@ -259,6 +315,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     enum Result {
         BELOW_THRESHOLDS,
+        RECOVERY_HOLD,
         FAILURE_RATE_ABOVE_THRESHOLDS,
         SLOW_CALL_RATE_ABOVE_THRESHOLDS,
         ABOVE_THRESHOLDS,

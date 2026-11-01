@@ -19,6 +19,7 @@ package io.github.resilience4j.metrics.publisher;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.metrics.internal.FunctionCounter;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -84,7 +85,29 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
         List<String> metricNames = Arrays
             .asList(state, successful, failed, notPermitted, numberOfBufferedCalls, failureRate,
                 slow, slowSuccess, slowFailed, slowCallRate);
-        metricsNameMap.put(name, new HashSet<>(metricNames));
+        HashSet<String> metricNamesSet = new HashSet<>(metricNames);
+        if (circuitBreaker.getCircuitBreakerConfig().getHalfOpenRecoveryConfig() != null) {
+            String admissionAttempts = name(prefix, name, ADMISSION_ATTEMPTS);
+            String admissionPermittedAttempts = name(prefix, name, ADMISSION_PERMITTED_ATTEMPTS);
+            metricRegistry.register(admissionAttempts,
+                new FunctionCounter(() -> circuitBreaker.getAdmissionMetrics()
+                    .getNumberOfAttempts()));
+            metricRegistry.register(admissionPermittedAttempts,
+                new FunctionCounter(() -> circuitBreaker.getAdmissionMetrics()
+                    .getNumberOfPermittedAttempts()));
+            metricNamesSet.add(admissionAttempts);
+            metricNamesSet.add(admissionPermittedAttempts);
+            String recoveryPhase = name(prefix, name, RECOVERY_PHASE);
+            String recoveryTrafficPercentage = name(prefix, name, RECOVERY_TRAFFIC_PERCENTAGE);
+            metricRegistry.register(recoveryPhase,
+                (Gauge<Integer>) () -> circuitBreaker.getHalfOpenPhase().getPhase());
+            metricRegistry.register(recoveryTrafficPercentage,
+                (Gauge<Integer>) () -> circuitBreaker.getHalfOpenPhase()
+                    .getPermittedTrafficPercentage());
+            metricNamesSet.add(recoveryPhase);
+            metricNamesSet.add(recoveryTrafficPercentage);
+        }
+        metricsNameMap.put(name, metricNamesSet);
     }
 
     @Override

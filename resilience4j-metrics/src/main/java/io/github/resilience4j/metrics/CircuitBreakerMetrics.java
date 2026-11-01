@@ -24,6 +24,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.metrics.internal.FunctionCounter;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,19 @@ public class CircuitBreakerMetrics implements MetricSet {
                 //state as an integer
                 metricRegistry.register(name(prefix, name, STATE),
                     (Gauge<Integer>) () -> circuitBreaker.getState().getOrder());
+                if (circuitBreaker.getCircuitBreakerConfig().getHalfOpenRecoveryConfig() != null) {
+                    metricRegistry.register(name(prefix, name, ADMISSION_ATTEMPTS),
+                        new FunctionCounter(() -> circuitBreaker.getAdmissionMetrics()
+                            .getNumberOfAttempts()));
+                    metricRegistry.register(name(prefix, name, ADMISSION_PERMITTED_ATTEMPTS),
+                        new FunctionCounter(() -> circuitBreaker.getAdmissionMetrics()
+                            .getNumberOfPermittedAttempts()));
+                    metricRegistry.register(name(prefix, name, RECOVERY_PHASE),
+                        (Gauge<Integer>) () -> circuitBreaker.getHalfOpenPhase().getPhase());
+                    metricRegistry.register(name(prefix, name, RECOVERY_TRAFFIC_PERCENTAGE),
+                        (Gauge<Integer>) () -> circuitBreaker.getHalfOpenPhase()
+                            .getPermittedTrafficPercentage());
+                }
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
                 metricRegistry.register(name(prefix, name, FAILED),

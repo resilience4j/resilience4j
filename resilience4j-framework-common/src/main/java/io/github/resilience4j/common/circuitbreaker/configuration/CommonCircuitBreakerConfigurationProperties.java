@@ -47,68 +47,82 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         if (instanceProperties == null) {
             instanceProperties = configs.get(DEFAULT);
         } else if (configs.get(DEFAULT) != null) {
-            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
+            mergeProperties(instanceProperties, configs.get(DEFAULT));
         }
         return Optional.ofNullable(instanceProperties);
     }
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(String instanceName,
-             @Nullable InstanceProperties instanceProperties,
-             CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
-
-        CircuitBreakerConfig baseConfig = null;
-        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
-            baseConfig = createBaseConfig(instanceName, instanceProperties, customizer);
-        } else if (configs.get(instanceName) != null) {
-            baseConfig = createDirectConfig(instanceName, instanceProperties, customizer);
-        } else if (configs.get(DEFAULT) != null) {
-            baseConfig = createDefaultConfig(instanceProperties, customizer);
-        }
-
-        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, customizer, instanceName);
+    private static void mergeProperties(InstanceProperties instance, InstanceProperties base) {
+        ConfigUtils.mergePropertiesIfAny(instance, base);
     }
 
-    private CircuitBreakerConfig createBaseConfig(String instanceName,
-            InstanceProperties instanceProperties,
-            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+    public CircuitBreakerConfig createCircuitBreakerConfig(String instanceName,
+        @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+        return resolveConfig(instanceName, instanceProperties, customizer, new HashSet<>()).config();
+    }
 
-        String baseConfigName = instanceProperties.getBaseConfig();
-        if (instanceName.equals(baseConfigName)) {
+    private record ResolvedConfig(CircuitBreakerConfig config,
+        @Nullable HalfOpenRecoveryProperties recoveryProperties) {
+    }
+
+    private ResolvedConfig resolveConfig(String instanceName, @Nullable InstanceProperties properties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer, Set<String> resolving) {
+        if (!resolving.add(instanceName)) {
             throw new IllegalStateException("Circular reference detected in instance config: " + instanceName);
         }
-
-        InstanceProperties baseProperties = configs.get(baseConfigName);
-        if (baseProperties == null) {
-            throw new ConfigurationNotFoundException(baseConfigName);
+        try {
+            ResolvedConfig base = null;
+            if (properties != null && StringUtils.isNotEmpty(properties.getBaseConfig())) {
+                String baseName = properties.getBaseConfig();
+                InstanceProperties baseProperties = configs.get(baseName);
+                if (baseProperties == null) {
+                    throw new ConfigurationNotFoundException(baseName);
+                }
+                base = resolveConfig(baseName, baseProperties, customizer, resolving);
+                mergeProperties(properties, baseProperties);
+            } else if (configs.get(instanceName) != null) {
+                InstanceProperties direct = configs.get(instanceName);
+                if (properties != null) {
+                    mergeProperties(properties, direct);
+                }
+                CircuitBreakerConfig directConfig = buildConfig(null, direct, customizer, instanceName,
+                    direct.getHalfOpenRecovery());
+                base = resolvedConfig(directConfig, direct.getHalfOpenRecovery());
+            } else if (configs.get(DEFAULT) != null) {
+                InstanceProperties defaults = configs.get(DEFAULT);
+                base = resolveConfig(DEFAULT, defaults, customizer, resolving);
+                if (properties != null) {
+                    mergeProperties(properties, defaults);
+                }
+            }
+            HalfOpenRecoveryProperties recovery = HalfOpenRecoveryProperties.merge(
+                properties == null ? null : properties.getHalfOpenRecovery(),
+                base == null ? null : base.recoveryProperties());
+            CircuitBreakerConfig config = buildConfig(base == null ? null : base.config(), properties,
+                customizer, instanceName, recovery);
+            return resolvedConfig(config, recovery);
+        } finally {
+            resolving.remove(instanceName);
         }
-
-        ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        return createCircuitBreakerConfig(baseConfigName, baseProperties, customizer);
     }
 
-    private CircuitBreakerConfig createDirectConfig(String instanceName,
-            @Nullable InstanceProperties instanceProperties,
-            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
-
-        if (instanceProperties != null) {
-            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(instanceName));
+    private static ResolvedConfig resolvedConfig(CircuitBreakerConfig config,
+        @Nullable HalfOpenRecoveryProperties properties) {
+        if (config.getHalfOpenRecoveryConfig() != null) {
+            return new ResolvedConfig(config,
+                HalfOpenRecoveryProperties.fromConfig(config.getHalfOpenRecoveryConfig()));
         }
-        return buildConfig(custom(), configs.get(instanceName), customizer, instanceName);
+        // Preserve latent settings when disabled, without modifying shared property beans.
+        return new ResolvedConfig(config, properties == null ? null : HalfOpenRecoveryProperties.merge(
+            new HalfOpenRecoveryProperties().setEnabled(false), properties));
     }
 
-    private CircuitBreakerConfig createDefaultConfig(
-            @Nullable InstanceProperties instanceProperties,
-            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
-
-        if (instanceProperties != null) {
-            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
-        }
-        return createCircuitBreakerConfig(DEFAULT, configs.get(DEFAULT), customizer);
-    }
-
-    private CircuitBreakerConfig buildConfig(Builder builder, @Nullable InstanceProperties properties,
+    private CircuitBreakerConfig buildConfig(@Nullable CircuitBreakerConfig baseConfig,
+        @Nullable InstanceProperties properties,
         CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
-        String instanceName) {
+        String instanceName, @Nullable HalfOpenRecoveryProperties recoveryProperties) {
+        Builder builder = baseConfig == null ? custom() : from(baseConfig);
         if (properties != null) {
             if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
                 && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
@@ -191,6 +205,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 builder.initialState(properties.getInitialState());
             }
 
+        }
+        if (recoveryProperties != null) {
+            builder.halfOpenRecoveryConfig(recoveryProperties.toConfig(
+                baseConfig == null ? null : baseConfig.getHalfOpenRecoveryConfig()));
         }
         compositeCircuitBreakerCustomizer.getCustomizer(instanceName).ifPresent(
             circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
@@ -332,6 +350,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         @Nullable
         private Integer permittedNumberOfCallsInHalfOpenState;
+
+        @Nullable
+        private HalfOpenRecoveryProperties halfOpenRecovery;
 
         @Nullable
         private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
@@ -643,6 +664,28 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
          */
         public InstanceProperties setBaseConfig(String baseConfig) {
             this.baseConfig = baseConfig;
+            return this;
+        }
+
+        /**
+         * Returns this instance's optional phased HALF_OPEN recovery settings.
+         *
+         * @return the recovery properties, or null to inherit without local overrides
+         */
+        @Nullable
+        public HalfOpenRecoveryProperties getHalfOpenRecovery() {
+            return halfOpenRecovery;
+        }
+
+        /**
+         * Sets this instance's phased HALF_OPEN recovery overrides. Use
+         * {@code enabled=false} to disable a policy inherited from shared configuration.
+         *
+         * @param halfOpenRecovery the local overrides, or null to inherit them
+         * @return these instance properties
+         */
+        public InstanceProperties setHalfOpenRecovery(HalfOpenRecoveryProperties halfOpenRecovery) {
+            this.halfOpenRecovery = halfOpenRecovery;
             return this;
         }
 

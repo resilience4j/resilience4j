@@ -17,6 +17,7 @@ package io.github.resilience4j.common.circuitbreaker.monitoring.endpoint;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnHalfOpenPhaseTransitionEvent;
 import io.github.resilience4j.core.lang.Nullable;
 
 public class CircuitBreakerEventDTO {
@@ -33,6 +34,12 @@ public class CircuitBreakerEventDTO {
     private Long durationInMs;
     @Nullable
     private CircuitBreaker.StateTransition stateTransition;
+    @Nullable
+    private CircuitBreaker.HalfOpenPhase previousHalfOpenPhase;
+    @Nullable
+    private CircuitBreaker.HalfOpenPhase halfOpenPhase;
+    @Nullable
+    private CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason halfOpenPhaseTransitionReason;
 
     CircuitBreakerEventDTO() {
     }
@@ -103,5 +110,63 @@ public class CircuitBreakerEventDTO {
 
     public void setStateTransition(CircuitBreaker.StateTransition stateTransition) {
         this.stateTransition = stateTransition;
+    }
+
+    /**
+     * Returns the recovery phase before a phase transition event.
+     *
+     * @return the previous snapshot, or null for other event types
+     */
+    @Nullable
+    public CircuitBreaker.HalfOpenPhase getPreviousHalfOpenPhase() {
+        return previousHalfOpenPhase;
+    }
+
+    /**
+     * Sets the recovery phase preceding a phase transition event.
+     *
+     * @param previousHalfOpenPhase the previous snapshot, or null for other event types
+     */
+    public void setPreviousHalfOpenPhase(CircuitBreaker.HalfOpenPhase previousHalfOpenPhase) {
+        this.previousHalfOpenPhase = previousHalfOpenPhase;
+    }
+
+    /**
+     * Returns the recovery phase entered by a phase transition event.
+     *
+     * @return the current snapshot, or null for other event types
+     */
+    @Nullable
+    public CircuitBreaker.HalfOpenPhase getHalfOpenPhase() {
+        return halfOpenPhase;
+    }
+
+    /**
+     * Sets the recovery phase entered by a phase transition event.
+     *
+     * @param halfOpenPhase the current snapshot, or null for other event types
+     */
+    public void setHalfOpenPhase(CircuitBreaker.HalfOpenPhase halfOpenPhase) {
+        this.halfOpenPhase = halfOpenPhase;
+    }
+
+    /**
+     * Returns why a recovery phase was entered.
+     *
+     * @return the transition reason, or null for other event types
+     */
+    @Nullable
+    public CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason getHalfOpenPhaseTransitionReason() {
+        return halfOpenPhaseTransitionReason;
+    }
+
+    /**
+     * Sets why a recovery phase was entered.
+     *
+     * @param reason the transition reason, or null for other event types
+     */
+    public void setHalfOpenPhaseTransitionReason(
+        CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason reason) {
+        this.halfOpenPhaseTransitionReason = reason;
     }
 }

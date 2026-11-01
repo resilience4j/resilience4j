@@ -38,7 +38,8 @@ import java.util.stream.Collectors;
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
  * <p>
  * A {@link CircuitBreaker} manages the state of a backend system. The CircuitBreaker is implemented
- * via a finite state machine with five states: CLOSED, OPEN, HALF_OPEN, DISABLED AND FORCED_OPEN.
+ * via a finite state machine with six states: CLOSED, OPEN, HALF_OPEN, DISABLED, FORCED_OPEN
+ * and METRICS_ONLY.
  * The CircuitBreaker does not know anything about the backend's state by itself, but uses the
  * information provided by the decorators via {@link CircuitBreaker#onSuccess} and {@link
  * CircuitBreaker#onError} events. Before communicating with the backend, the permission to do so
@@ -597,6 +598,34 @@ public interface CircuitBreaker {
     State getState();
 
     /**
+     * Returns an immutable snapshot of the current phased HALF_OPEN recovery phase.
+     * Ordinary HALF_OPEN recovery and all other states return an inactive snapshot.
+     *
+     * @return the current recovery phase, or an inactive snapshot
+     */
+    default HalfOpenPhase getHalfOpenPhase() {
+        return HalfOpenPhase.inactive();
+    }
+
+    /**
+     * Returns cumulative admission attempts when phased HALF_OPEN recovery is configured.
+     * Ordinary breakers do not collect these optional counters and return an empty snapshot.
+     * Each public permission request is one attempt, including a permission check
+     * still in progress; a granted permission is counted before its call completes.
+     * Counts are collected concurrently, rather than as an atomic snapshot of all callers.
+     * When enabled, collection spans every state. State changes and {@link #reset()}
+     * do not reset these counters. Returning a permission, an ignored outcome or
+     * cancellation does not undo an admission.
+     * These counters measure permission requests, not network requests received by
+     * a backend. Existing custom implementations default to an empty snapshot.
+     *
+     * @return an immutable admission snapshot
+     */
+    default AdmissionMetrics getAdmissionMetrics() {
+        return AdmissionMetrics.empty();
+    }
+
+    /**
      * Returns the CircuitBreakerConfig of this CircuitBreaker.
      *
      * @return the CircuitBreakerConfig of this CircuitBreaker
@@ -963,6 +992,189 @@ public interface CircuitBreaker {
 
         EventPublisher onSlowCallRateExceeded(
             EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> eventConsumer);
+
+        /**
+         * Registers a consumer for transitions between phased HALF_OPEN recovery phases.
+         * The default delegates to the general event subscription so existing custom
+         * publishers do not need to implement an additional method.
+         *
+         * @param eventConsumer the phase transition consumer
+         * @return this publisher
+         * @throws NullPointerException if the consumer is null
+         */
+        default EventPublisher onHalfOpenPhaseTransition(
+            EventConsumer<CircuitBreakerOnHalfOpenPhaseTransitionEvent> eventConsumer) {
+            Objects.requireNonNull(eventConsumer);
+            onEvent(event -> {
+                if (event instanceof CircuitBreakerOnHalfOpenPhaseTransitionEvent transition) {
+                    eventConsumer.consumeEvent(transition);
+                }
+            });
+            return this;
+        }
+    }
+
+    /**
+     * Immutable phase data for phased HALF_OPEN recovery. The phase is one-based and
+     * the permitted traffic percentage is the configured admission target, not an observed rate.
+     * An inactive snapshot has all values set to zero.
+     */
+    final class HalfOpenPhase {
+
+        private static final HalfOpenPhase INACTIVE = new HalfOpenPhase(0, 0, 0);
+        private final int phase;
+        private final int numberOfPhases;
+        private final int permittedTrafficPercentage;
+
+        /**
+         * Creates a snapshot with either three zero values for inactivity or valid
+         * active phase data.
+         *
+         * @param phase the one-based phase, or zero when inactive
+         * @param numberOfPhases the total phase count, or zero when inactive
+         * @param permittedTrafficPercentage the target percentage from 1 to 100,
+         *                                   or zero when inactive
+         * @throws IllegalArgumentException if the values are not all zero and do not
+         *                                  satisfy {@code 1 <= phase <= numberOfPhases}
+         *                                  and a percentage from 1 to 100
+         */
+        public HalfOpenPhase(int phase, int numberOfPhases, int permittedTrafficPercentage) {
+            boolean inactive = phase == 0 && numberOfPhases == 0 && permittedTrafficPercentage == 0;
+            if (!inactive && (phase < 1 || numberOfPhases < phase
+                || permittedTrafficPercentage < 1 || permittedTrafficPercentage > 100)) {
+                throw new IllegalArgumentException(
+                    "An active phase requires 1 <= phase <= numberOfPhases and a traffic percentage between 1 and 100");
+            }
+            this.phase = phase;
+            this.numberOfPhases = numberOfPhases;
+            this.permittedTrafficPercentage = permittedTrafficPercentage;
+        }
+
+        /**
+         * Returns the snapshot used outside phased HALF_OPEN recovery.
+         *
+         * @return an inactive snapshot with all values set to zero
+         */
+        public static HalfOpenPhase inactive() {
+            return INACTIVE;
+        }
+
+        /**
+         * Returns the one-based phase number.
+         *
+         * @return the current phase, or zero when inactive
+         */
+        public int getPhase() {
+            return phase;
+        }
+
+        /**
+         * Returns the number of phases in the configured ramp, including the final
+         * 100-percent validation phase.
+         *
+         * @return the total phase count, or zero when inactive
+         */
+        public int getNumberOfPhases() {
+            return numberOfPhases;
+        }
+
+        /**
+         * Returns the phase's configured admission target, not an observed rate.
+         *
+         * @return the target percentage from 1 to 100, or zero when inactive
+         */
+        public int getPermittedTrafficPercentage() {
+            return permittedTrafficPercentage;
+        }
+
+        /**
+         * Returns whether this snapshot describes a phased HALF_OPEN recovery phase.
+         *
+         * @return true for an active phase, false for the inactive snapshot
+         */
+        public boolean isActive() {
+            return phase > 0;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (!(other instanceof HalfOpenPhase that)) {
+                return false;
+            }
+            return phase == that.phase && numberOfPhases == that.numberOfPhases
+                && permittedTrafficPercentage == that.permittedTrafficPercentage;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(phase, numberOfPhases, permittedTrafficPercentage);
+        }
+
+        @Override
+        public String toString() {
+            return "HalfOpenPhase{phase=" + phase + ", numberOfPhases=" + numberOfPhases
+                + ", permittedTrafficPercentage=" + permittedTrafficPercentage + '}';
+        }
+    }
+
+    /**
+     * Immutable cumulative admission counts, independent of completion metrics and
+     * recovery phase windows. An attempt whose permission check fails exceptionally
+     * is included in total attempts, but is not permitted.
+     */
+    final class AdmissionMetrics {
+
+        private static final AdmissionMetrics EMPTY = new AdmissionMetrics(0, 0);
+        private final long numberOfAttempts;
+        private final long numberOfPermittedAttempts;
+
+        /**
+         * Creates an admission snapshot whose permitted count does not exceed its total.
+         *
+         * @param numberOfAttempts the non-negative count of public permission requests
+         * @param numberOfPermittedAttempts the non-negative count granted permission
+         * @throws IllegalArgumentException if a count is negative or permitted exceeds total
+         */
+        public AdmissionMetrics(long numberOfAttempts, long numberOfPermittedAttempts) {
+            if (numberOfAttempts < 0 || numberOfPermittedAttempts < 0
+                || numberOfPermittedAttempts > numberOfAttempts) {
+                throw new IllegalArgumentException("Admission counts require 0 <= permitted <= attempts");
+            }
+            this.numberOfAttempts = numberOfAttempts;
+            this.numberOfPermittedAttempts = numberOfPermittedAttempts;
+        }
+
+        /**
+         * Returns an admission snapshot with both counts set to zero.
+         *
+         * @return the empty snapshot
+         */
+        public static AdmissionMetrics empty() {
+            return EMPTY;
+        }
+
+        /**
+         * Returns the cumulative count of public permission requests, including
+         * rejected requests and checks still in progress.
+         *
+         * @return the total admission attempts
+         */
+        public long getNumberOfAttempts() {
+            return numberOfAttempts;
+        }
+
+        /**
+         * Returns the cumulative count of requests granted permission, independently
+         * of their subsequent completion or outcome.
+         *
+         * @return the permitted admission attempts
+         */
+        public long getNumberOfPermittedAttempts() {
+            return numberOfPermittedAttempts;
+        }
     }
 
     interface Metrics {
@@ -1021,11 +1233,12 @@ public interface CircuitBreaker {
         int getNumberOfFailedCalls();
 
         /**
-         * Returns the current number of not permitted calls, when the state is OPEN.
+         * Returns the number of calls rejected by the current state's metrics.
          * <p>
-         * The number of denied calls is always 0, when the CircuitBreaker state is CLOSED or
-         * HALF_OPEN. The number of denied calls is only increased when the CircuitBreaker state is
-         * OPEN.
+         * Calls can be rejected in OPEN, FORCED_OPEN and HALF_OPEN, including admission
+         * rejected by a phased recovery traffic target. This value follows the current
+         * metrics window and may reset on a state or recovery phase transition. Exporters
+         * may separately maintain a cumulative counter from call-not-permitted events.
          *
          * @return the current number of not permitted calls
          */

@@ -25,6 +25,13 @@ resilience4j:
                 ignoreExceptions:
                     - java.lang.IllegalStateException
                     - java.lang.IndexOutOfBoundsException
+                halfOpenRecovery:
+                    enabled: true
+                    initialTrafficPercentage: 5
+                    trafficPercentageStep: 5
+                    minimumPhaseDuration: PT5S
+                    minimumNumberOfCalls: 10
+                    failureStrategy: OPEN
             shared:
                 slidingWindowType: COUNT_BASED
                 slidingWindowSize: 100

@@ -60,6 +60,32 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
                 .tags(customTags)
                 .register(meterRegistry).getId());
         }
+        if (circuitBreaker.getCircuitBreakerConfig().getHalfOpenRecoveryConfig() != null) {
+            idSet.add(FunctionCounter.builder(names.getAttemptsMetricName(), circuitBreaker,
+                cb -> cb.getAdmissionMetrics().getNumberOfAttempts())
+                .description("Total number of permission attempts, including rejected and in-progress attempts")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tags(customTags)
+                .register(meterRegistry).getId());
+            idSet.add(FunctionCounter.builder(names.getPermittedAttemptsMetricName(), circuitBreaker,
+                cb -> cb.getAdmissionMetrics().getNumberOfPermittedAttempts())
+                .description("Total number of admission attempts permitted by the circuit breaker")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tags(customTags)
+                .register(meterRegistry).getId());
+            idSet.add(Gauge.builder(names.getRecoveryPhaseMetricName(), circuitBreaker,
+                cb -> cb.getHalfOpenPhase().getPhase())
+                .description("The current phased HALF_OPEN recovery phase, or zero when inactive")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tags(customTags)
+                .register(meterRegistry).getId());
+            idSet.add(Gauge.builder(names.getRecoveryTrafficPercentageMetricName(), circuitBreaker,
+                cb -> cb.getHalfOpenPhase().getPermittedTrafficPercentage())
+                .description("The configured traffic percentage for the current recovery phase, or zero when inactive")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tags(customTags)
+                .register(meterRegistry).getId());
+        }
         idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker,
             cb -> cb.getMetrics().getNumberOfFailedCalls())
             .description("The number of buffered calls stored in the ring buffer")

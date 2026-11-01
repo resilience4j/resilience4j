@@ -4,6 +4,22 @@ Integration of circuit breaker and rate limiter metrics with http://metrics.drop
 
 NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_dropwizard_metrics_exporter[Usage Guide]*
 
+== Phased HALF_OPEN recovery
+
+For circuit breakers with a `halfOpenRecoveryConfig`, the direct adapter and metrics publisher additionally expose `<prefix>.<name>.recovery.phase` and `<prefix>.<name>.recovery.traffic.percentage` as numeric gauges. The percentage is the configured recovery admission target in percentage points, not an observed traffic rate. Both gauges are zero outside phased recovery; a zero target here does not mean that a CLOSED breaker rejects traffic.
+
+Recovery continues to report HALF_OPEN through the existing state gauge (`2`). Existing state values and the ten standard metrics for ordinary circuit breakers are unchanged. The recovery gauges are registered once per enabled breaker and do not create names for individual phases. The metrics publisher removes them when an entry is removed or replaced.
+
+Buffered outcome, failure/slow-call rate and not-permitted gauges follow the current state's metrics; they are not lifetime counters and can reset on a recovery phase transition. Completion callbacks record against the state current when they run, including calls admitted in an earlier phase. The recovery phase transition event carries immutable phase snapshots for consumers that need to retain phase history.
+
+== Observed admission percentage
+
+When recovery is configured, both adapters additionally expose `<prefix>.<name>.admission.attempts` and `<prefix>.<name>.admission.permitted.attempts` as read-only, source-backed Dropwizard counters. Their values are the circuit breaker's lifetime admission attempts across all states, not completed backend calls. The total increases on entry to the public permission API, including checks still in progress or throwing before granting permission; the permitted count increases when permission is granted. The counters are populated even when bound after earlier activity and do not reset on a phase change or `reset()`. A replaced instance has its own counts. Direct mutation of the exported counters is unsupported because the circuit breaker owns their values.
+
+For an interval, compute `100 * delta(admission.permitted.attempts) / delta(admission.attempts)`. The percentage is undefined if there are no attempts in that interval. Do not substitute the configured target gauge or divide completion gauges to infer admission. Record counter values at matching interval boundaries, and account for process/instance replacement before calculating deltas. The configured recovery target gauge remains available separately.
+
+There are fourteen metrics for recovery-enabled circuit breakers and ten for ordinary breakers. New counters use the same prefix/name lifecycle as the existing metrics and add no per-phase metric names or event listeners.
+
 == License
 
 Copyright 2017 Robert Winkler and Bohdan Storozhuk

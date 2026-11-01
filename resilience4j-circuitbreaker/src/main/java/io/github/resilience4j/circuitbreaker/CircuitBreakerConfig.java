@@ -96,6 +96,9 @@ public class CircuitBreakerConfig implements Serializable {
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
     private State transitionToStateAfterWaitDuration = DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION;
+    @Nullable
+    private HalfOpenRecoveryConfig halfOpenRecoveryConfig;
+
     private transient Clock clock = DEFAULT_CLOCK;
     private boolean ignoreExceptionsPrecedenceEnabled = false;
 
@@ -213,6 +216,16 @@ public class CircuitBreakerConfig implements Serializable {
         return transitionToStateAfterWaitDuration;
     }
 
+    /**
+     * Returns the optional traffic recovery policy.
+     *
+     * @return the phased recovery policy, or null for ordinary finite-probe HALF_OPEN
+     */
+    @Nullable
+    public HalfOpenRecoveryConfig getHalfOpenRecoveryConfig() {
+        return halfOpenRecoveryConfig;
+    }
+
     public Clock getClock() {
         return clock;
     }
@@ -260,6 +273,7 @@ public class CircuitBreakerConfig implements Serializable {
             ", minimumNumberOfCalls=" + minimumNumberOfCalls +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             ", automaticTransitionFromOpenToHalfOpenEnabled=" + automaticTransitionFromOpenToHalfOpenEnabled +
+            ", halfOpenRecoveryConfig=" + halfOpenRecoveryConfig +
             ", initialState=" + initialState +
             ", waitIntervalFunctionInOpenState=" + waitIntervalFunctionInOpenState +
             ", slowCallRateThreshold=" + slowCallRateThreshold +
@@ -345,6 +359,9 @@ public class CircuitBreakerConfig implements Serializable {
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
         private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
+        @Nullable
+        private HalfOpenRecoveryConfig halfOpenRecoveryConfig;
+
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
             .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
 
@@ -371,6 +388,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.waitIntervalFunctionInOpenState = baseConfig.waitIntervalFunctionInOpenState;
             this.transitionOnResult = baseConfig.transitionOnResult;
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
+            this.halfOpenRecoveryConfig = baseConfig.halfOpenRecoveryConfig;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.slidingWindowType = baseConfig.slidingWindowType;
             this.slidingWindowSynchronizationStrategy = baseConfig.slidingWindowSynchronizationStrategy;
@@ -578,6 +596,21 @@ public class CircuitBreakerConfig implements Serializable {
                 throw new IllegalArgumentException("transitionToStateAfterWaitDuration must be either OPEN or CLOSED");
             }
             this.transitionToStateAfterWaitDuration = transitionToStateAfterWaitDuration;
+            return this;
+        }
+
+        /**
+         * Enables percentage-based recovery in HALF_OPEN. Null explicitly restores
+         * the legacy finite-probe behavior. Late callbacks retain the upstream
+         * convention of recording their outcome in the current state.
+         * A positive HALF_OPEN timeout must target OPEN when this policy is enabled;
+         * an incompatible CLOSED target is rejected when the configuration is built.
+         *
+         * @param recoveryConfig the recovery policy, or null to disable phased recovery
+         * @return this builder
+         */
+        public Builder halfOpenRecoveryConfig(@Nullable HalfOpenRecoveryConfig recoveryConfig) {
+            this.halfOpenRecoveryConfig = recoveryConfig;
             return this;
         }
 
@@ -994,6 +1027,13 @@ public class CircuitBreakerConfig implements Serializable {
          * @throws IllegalStateException when the parameter is invalid
          */
         public CircuitBreakerConfig build() {
+            if (halfOpenRecoveryConfig != null
+                && maxWaitDurationInHalfOpenState.compareTo(Duration.ZERO) > 0
+                && transitionToStateAfterWaitDuration == State.CLOSED) {
+                throw new IllegalStateException("Gradual HALF_OPEN recovery requires "
+                    + "transitionToStateAfterWaitDuration=OPEN when "
+                    + "maxWaitDurationInHalfOpenState is positive");
+            }
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitIntervalFunctionInOpenState = validateWaitIntervalFunctionInOpenState();
             config.transitionOnResult = transitionOnResult;
@@ -1007,6 +1047,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.slidingWindowSize = slidingWindowSize;
             config.minimumNumberOfCalls = minimumNumberOfCalls;
             config.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+            config.halfOpenRecoveryConfig = halfOpenRecoveryConfig;
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;

@@ -1,0 +1,118 @@
+= Standard and gradual recovery in one dashboard
+
+link:../../grafana_recovery_dashboard.json[The recovery dashboard] is an optional Grafana
+example for the default Micrometer Prometheus metric names. It supplements the repository's
+existing `grafana_dashboard.json`; it does not replace it or change Resilience4j's public
+states. Both ordinary and gradual recovery report `HALF_OPEN`.
+
+== Import and select a circuit breaker
+
+. Configure Prometheus to scrape the application's Micrometer Prometheus endpoint.
+. Import `grafana_recovery_dashboard.json` with Grafana's dashboard import workflow.
+. Select the Prometheus data source for the `DS_PROMETHEUS` input.
+. Select one *Job*, one *Instance* and one *Circuit breaker* from the dependent variables.
+
+The example uses the same Classic JSON model and schema version 41 as the existing
+repository dashboard, with built-in stat, time-series and text panels. The variables use
+the existing repository's Prometheus label-value query convention. No Grafana plugins,
+Prometheus recording rules or application-side metric labels are required.
+
+The scrape must expose the usual `job` and `instance` labels, plus Resilience4j's `name`
+label. Each selector includes all three. Variables deliberately have no multi-select or
+All option. Selectors use exact matches with the Prometheus data source's default
+single-value interpolation, so names such as `DemoService.process` are not regex-escaped
+inside a PromQL string. Admission rates belong to the selected breaker instance rather than an
+implicit average of instances. If your ingestion system uses different identity labels,
+multiple tenants or duplicate scrapes, adapt selectors and matching labels before use.
+Custom circuit breaker tags are retained on the counters. If metric names were renamed
+through `CircuitBreakerMetricNames`, change the expressions to match those names.
+
+== Use with an existing Spring Boot application
+
+In an application using
+`resilience4j-spring-boot3`, add `io.micrometer:micrometer-registry-prometheus` under the
+application's Spring Boot dependency management and expose the scrape endpoint. For example:
+
+[source,properties]
+----
+management.endpoints.web.exposure.include=health,metrics,prometheus
+resilience4j.circuitbreaker.instances.inventory.permittedNumberOfCallsInHalfOpenState=10
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.enabled=true
+resilience4j.circuitbreaker.instances.payment-provider.halfOpenRecovery.trafficPercentageStep=30
+----
+
+The ordinary `inventory` instance and gradual `payment-provider` instance use the usual
+registry/decorators or `@CircuitBreaker` annotation. Configure the Prometheus scrape path
+for that application's context path (normally `/actuator/prometheus`) and select its
+job, instance and breaker name after importing the dashboard.
+
+== Sample scrape configuration
+
+link:prometheus-recovery.yml[The sample scrape configuration] uses job
+`resilience4j-demo`, a 15-second scrape interval and
+`http://localhost:8080/demo/actuator/prometheus`. It is a configuration example,
+not a service launcher. Set its target and metrics path to the application from the
+previous section. The example assumes Prometheus and the application run on the same
+host; use an address reachable from Prometheus when they run elsewhere, such as in
+separate containers.
+
+== Reading the panels
+
+[cols="1,3",options="header"]
+|===
+|Panel |Meaning
+|Public state |The active existing state label, including `half_open` for both recovery modes.
+|Recovery policy |`Gradual` when the optional phase gauge is exported, including when its value is zero; `Standard` otherwise. Missing state scrape data stays no data.
+|Recovery phase |The one-based phase index. Zero means inactive. The total number of phases is available in the Java snapshot but is not exported by this example's gauges.
+|Recovery target |The configured percentage during recovery. Zero is displayed as inactive, including when CLOSED admits all traffic.
+|Observed admission |The permitted/offered admission-counter rate ratio over Grafana's `$__rate_interval`, filtered when there are no attempts.
+|Lifetime attempts and permitted |The source counters, independent of completion times. Reset and phase transitions do not reset them; a new instance starts new counts.
+|Target and observed admission |The target is plotted only while active, alongside the observed admission rate. The latter can include earlier phases or states in its rate window.
+|Admission attempts per second |Offered and permitted rates for the same selected breaker instance.
+|===
+
+For an ordinary breaker, the public state panel works normally and the policy panel
+shows Standard. Its optional phase, target and admission-counter panels have no data
+because those metrics are registered only for recovery-enabled breakers. The dashboard
+does not infer admissions from completed-call timers.
+
+For a gradual breaker, `half_open` plus phase 2 and target 60 means recovery is active at
+that target. In CLOSED the same breaker still shows the configured Gradual policy, phase
+and target become inactive, and its observed admission can be 100%. The mode is derived
+from metric presence, so a zero phase is not mistaken for a Standard policy.
+
+No attempts in the rate interval means no observed percentage, not 0%, 100% or the target.
+The ratio query filters out zero denominators and does not clamp results. Permission
+checks crossing interval boundaries and separate counter scrapes mean very short windows
+are not atomic request cohorts. Counters measure permissions, not network delivery,
+payment success or backend completion.
+
+== Validate without running services
+
+From the repository root:
+
+[source,shell]
+----
+python3 resilience4j-micrometer/examples/verify_recovery_dashboard.py
+python3 resilience4j-micrometer/examples/verify_recovery_dashboard.py --promtool /path/to/promtool
+----
+
+The first command checks JSON structure, panel layout, data source references, variable
+scope and metric names using only the Python standard library. It explicitly reports
+that PromQL was not run if `--promtool` is omitted.
+
+With the official Prometheus `promtool`, the second command also checks every panel's
+PromQL syntax, validates the sample scrape configuration and evaluates generated synthetic fixtures. Expressions are read from the
+dashboard, with the sample rate window set to one minute and sample spacing to 15 seconds.
+The fixtures cover Standard HALF_OPEN, active gradual recovery, a configured gradual
+breaker in CLOSED, idle traffic, pending grants without new offers, counter resets,
+isolation from another instance, and absent scrape data. No service is contacted or
+dashboard deployed. Grafana rendering and live scraping still need validation in the
+target environment; JSON and query checks do not claim a rendered UI test.
+
+== References
+
+* https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/view-dashboard-json-model/[Grafana dashboard JSON models]
+* https://grafana.com/docs/grafana/latest/datasources/prometheus/template-variables/[Grafana Prometheus variables]
+* https://prometheus.io/docs/prometheus/latest/querying/operators/[PromQL vector matching and set operators]
+* https://prometheus.io/docs/prometheus/latest/configuration/unit_testing_rules/[Prometheus expression fixtures]

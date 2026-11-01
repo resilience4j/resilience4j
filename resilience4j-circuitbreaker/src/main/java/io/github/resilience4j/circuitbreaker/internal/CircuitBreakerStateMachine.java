@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.HalfOpenRecoveryConfig;
 import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
@@ -39,7 +40,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -67,7 +68,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final SchedulerFactory schedulerFactory;
     private final Function<Clock, Long> currentTimestampFunction;
     private final TimeUnit timestampUnit;
-    private final ReentrantLock lock = new ReentrantLock();
+    @Nullable
+    private final AdmissionCounters admissionCounters;
 
     /**
      * Creates a circuitBreaker.
@@ -81,6 +83,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = Objects
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
+        this.admissionCounters = circuitBreakerConfig.getHalfOpenRecoveryConfig() == null
+            ? null : new AdmissionCounters();
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = circuitBreakerConfig.getClock();
         this.schedulerFactory = schedulerFactory;
@@ -89,6 +93,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
         this.stateReference = new AtomicReference<>(
                 getCircuitBreakerStateObjectFromState(circuitBreakerConfig.getInitialState()));
+        this.stateReference.get().postTransitionHook();
 
     }
 
@@ -169,8 +174,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public boolean tryAcquirePermission() {
+        if (admissionCounters != null) {
+            admissionCounters.numberOfAttempts.increment();
+        }
         boolean callPermitted = stateReference.get().tryAcquirePermission();
-        if (!callPermitted) {
+        if (callPermitted) {
+            if (admissionCounters != null) {
+                admissionCounters.numberOfPermittedAttempts.increment();
+            }
+        } else {
             publishCallNotPermittedEvent();
         }
         return callPermitted;
@@ -183,8 +195,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void acquirePermission() {
+        if (admissionCounters != null) {
+            admissionCounters.numberOfAttempts.increment();
+        }
         try {
             stateReference.get().acquirePermission();
+            if (admissionCounters != null) {
+                admissionCounters.numberOfPermittedAttempts.increment();
+            }
         } catch (Exception e) {
             publishCallNotPermittedEvent();
             throw e;
@@ -276,6 +294,28 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return this.stateReference.get().getState();
     }
 
+    @Override
+    public HalfOpenPhase getHalfOpenPhase() {
+        return stateReference.get().getHalfOpenPhase();
+    }
+
+    @Override
+    public AdmissionMetrics getAdmissionMetrics() {
+        if (admissionCounters == null) {
+            return AdmissionMetrics.empty();
+        }
+        // Each attempt is recorded before its permission is granted. Read permitted
+        // first so a concurrent grant cannot produce a snapshot with permitted > total.
+        long permitted = admissionCounters.numberOfPermittedAttempts.sum();
+        return new AdmissionMetrics(admissionCounters.numberOfAttempts.sum(), permitted);
+    }
+
+    private static final class AdmissionCounters {
+
+        private final LongAdder numberOfAttempts = new LongAdder();
+        private final LongAdder numberOfPermittedAttempts = new LongAdder();
+    }
+
     /**
      * Get the name of this CircuitBreaker.
      *
@@ -316,8 +356,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void reset() {
-        CircuitBreakerState previousState = stateReference
-            .getAndUpdate(currentState -> new ClosedState());
+        CircuitBreakerState previousState = stateReference.getAndSet(new ClosedState());
+        previousState.preTransitionHook();
         if (previousState.getState() != CLOSED) {
             publishStateTransitionEvent(
                 StateTransition.transitionBetween(getName(), previousState.getState(), CLOSED));
@@ -327,13 +367,49 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private void stateTransition(State newState,
         UnaryOperator<CircuitBreakerState> newStateGenerator) {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            StateTransition.transitionBetween(getName(), currentState.getState(), newState);
-            currentState.preTransitionHook();
-            return newStateGenerator.apply(currentState);
-        });
-        publishStateTransitionEvent(
-            StateTransition.transitionBetween(getName(), previousState.getState(), newState));
+        while (!stateTransitionIfCurrent(stateReference.get(), newState, newStateGenerator)) {
+            // Retry public administrative transitions against the current owner.
+        }
+    }
+
+    private boolean stateTransitionIfCurrent(CircuitBreakerState expectedState, State newState,
+        UnaryOperator<CircuitBreakerState> newStateGenerator) {
+        return stateTransitionIfCurrent(expectedState, newState, newStateGenerator, () -> { });
+    }
+
+    private boolean stateTransitionIfCurrent(CircuitBreakerState expectedState, State newState,
+        UnaryOperator<CircuitBreakerState> newStateGenerator, Runnable onTransitionWon) {
+        if (stateReference.get() != expectedState) {
+            return false;
+        }
+        StateTransition transition = StateTransition.transitionBetween(
+            getName(), expectedState.getState(), newState);
+        // Constructors have no scheduled side effects. Only the CAS winner activates timers.
+        CircuitBreakerState nextState = newStateGenerator.apply(expectedState);
+        if (!stateReference.compareAndSet(expectedState, nextState)) {
+            return false;
+        }
+        expectedState.preTransitionHook();
+        nextState.postTransitionHook();
+        publishStateTransitionEvent(transition);
+        onTransitionWon.run();
+        // Consumers may reset or force another state synchronously. Do not announce
+        // entry into a phase which is no longer current after those callbacks.
+        if (stateReference.get() == nextState
+            && nextState instanceof RecoveryHalfOpenState nextRecovery) {
+            CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason reason;
+            if (!(expectedState instanceof RecoveryHalfOpenState previousRecovery)
+                || previousRecovery.recovery != nextRecovery.recovery) {
+                reason = CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason.ENTERED;
+            } else if (nextRecovery.phase.getIndex() > previousRecovery.phase.getIndex()) {
+                reason = CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason.ADVANCED;
+            } else {
+                reason = CircuitBreakerOnHalfOpenPhaseTransitionEvent.Reason.STEPPED_BACK;
+            }
+            publishEventIfHasConsumer(new CircuitBreakerOnHalfOpenPhaseTransitionEvent(
+                name, expectedState.getHalfOpenPhase(), nextState.getHalfOpenPhase(), reason));
+        }
+        return true;
     }
 
     @Override
@@ -377,8 +453,26 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToHalfOpenState() {
-        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(currentState.attempts()));
+        while (true) {
+            CircuitBreakerState current = stateReference.get();
+            if (current instanceof RecoveryHalfOpenState) {
+                return;
+            }
+            if (stateTransitionIfCurrent(current, HALF_OPEN,
+                old -> createHalfOpenState(old.attempts()))) {
+                return;
+            }
+            // A concurrent transition may already have entered or advanced recovery.
+            // Re-read its owner instead of restarting its phase and global deadline.
+        }
     }
+
+    private CircuitBreakerState createHalfOpenState(int attempts) {
+        HalfOpenRecoveryConfig recovery = circuitBreakerConfig.getHalfOpenRecoveryConfig();
+        return recovery == null ? new HalfOpenState(attempts)
+            : new RecoveryHalfOpenState(new HalfOpenRecovery(attempts, recovery), 0);
+    }
+
 
     private boolean shouldPublishEvents(CircuitBreakerEvent event) {
         return stateReference.get().shouldPublishEvents(event);
@@ -473,7 +567,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             case DISABLED -> new DisabledState();
             case CLOSED -> new ClosedState();
             case METRICS_ONLY -> new MetricsOnlyState();
-            case HALF_OPEN -> new HalfOpenState(1);
+            case HALF_OPEN -> createHalfOpenState(1);
             case FORCED_OPEN -> new ForcedOpenState(1);
             case OPEN -> new OpenState(1, CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig()));
             default -> new ClosedState();
@@ -500,6 +594,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         CircuitBreakerMetrics getMetrics();
 
+        default HalfOpenPhase getHalfOpenPhase() {
+            return HalfOpenPhase.inactive();
+        }
+
+        default void postTransitionHook() {
+            // Activate resources only after this state has been installed.
+        }
+
         /**
          * Should the CircuitBreaker in this state publish events
          *
@@ -510,7 +612,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         /**
-         * This method is invoked before transit to other CircuitBreakerState.
+         * This method retires resources after another state replaces this owner.
          */
         default void preTransitionHook() {
             // noOp
@@ -542,6 +644,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
             registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getName(),
                 onStateTransitionEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onHalfOpenPhaseTransition(
+            EventConsumer<CircuitBreakerOnHalfOpenPhaseTransitionEvent> onHalfOpenPhaseTransitionEventConsumer) {
+            registerConsumer(CircuitBreakerOnHalfOpenPhaseTransitionEvent.class.getName(),
+                onHalfOpenPhaseTransitionEventConsumer);
             return this;
         }
 
@@ -692,7 +802,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isOpen;
 
         @Nullable
-        private final ScheduledFuture<?> transitionToHalfOpenFuture;
+        private volatile ScheduledFuture<?> transitionToHalfOpenFuture;
+        private final long waitDurationInMillis;
 
         OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
             this(attempts, circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(attempts),
@@ -719,14 +830,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.retryAfterWaitDuration = retryAfterWaitDuration;
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
-            if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
-                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                transitionToHalfOpenFuture = scheduledExecutorService
-                    .schedule(this::toHalfOpenState, waitDurationInMillis, TimeUnit.MILLISECONDS);
-            } else {
-                transitionToHalfOpenFuture = null;
-            }
+            this.waitDurationInMillis = waitDurationInMillis;
             isOpen = new AtomicBoolean(true);
+        }
+
+        @Override
+        public void postTransitionHook() {
+            if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()
+                && stateReference.get() == this && isOpen.get()) {
+                transitionToHalfOpenFuture = schedulerFactory.getScheduler()
+                    .schedule(this::toHalfOpenState, waitDurationInMillis, TimeUnit.MILLISECONDS);
+                if (stateReference.get() != this || !isOpen.get()) {
+                    cancelAutomaticTransitionToHalfOpen();
+                }
+            }
         }
 
         /**
@@ -743,12 +860,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                 toHalfOpenState();
                 // Check if the call is allowed to run in HALF_OPEN state after state transition
                 // super.tryAcquirePermission() doesn't work right that's why the code is copied
-                boolean callPermitted = stateReference.get().tryAcquirePermission();
-                if (!callPermitted) {
-                    publishCallNotPermittedEvent();
-                    circuitBreakerMetrics.onCallNotPermitted();
-                }
-                return callPermitted;
+                return stateReference.get().tryAcquirePermission();
             }
             circuitBreakerMetrics.onCallNotPermitted();
             return false;
@@ -814,19 +926,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void preTransitionHook() {
+            isOpen.set(false);
             cancelAutomaticTransitionToHalfOpen();
         }
 
         private void toHalfOpenState() {
-            lock.lock();
-
-            try {
-                if (isOpen.compareAndSet(true, false)) {
-                    transitionToHalfOpenState();
-                }
-            } finally {
-                lock.unlock();
-            }
+            // The state-reference CAS owns the handoff. Marking this state retired
+            // before its successor is installed would make competing callers
+            // recursively delegate back to this still-current OPEN state.
+            stateTransitionIfCurrent(this, HALF_OPEN,
+                currentState -> createHalfOpenState(currentState.attempts()));
         }
 
         private void cancelAutomaticTransitionToHalfOpen() {
@@ -1083,7 +1192,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         @Nullable
-        private final ScheduledFuture<?> transitionToFuture;
+        private volatile ScheduledFuture<?> transitionToFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -1094,14 +1203,19 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
 
-            final long maxWaitDurationInHalfOpenState = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
-            final CircuitBreaker.State transitionState = circuitBreakerConfig.getTransitionToStateAfterWaitDuration();
-            if (maxWaitDurationInHalfOpenState >= 1 && transitionState != null) {
-                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                transitionToFuture = scheduledExecutorService
-                    .schedule(() -> toState(transitionState), maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
-            } else {
-                transitionToFuture = null;
+        }
+
+        @Override
+        public void postTransitionHook() {
+            long waitDuration = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
+            State target = circuitBreakerConfig.getTransitionToStateAfterWaitDuration();
+            if (waitDuration >= 1 && target != null && stateReference.get() == this
+                && isHalfOpen.get()) {
+                transitionToFuture = schedulerFactory.getScheduler()
+                    .schedule(() -> toState(target), waitDuration, TimeUnit.MILLISECONDS);
+                if (stateReference.get() != this || !isHalfOpen.get()) {
+                    cancelAutomaticTransition();
+                }
             }
         }
 
@@ -1133,6 +1247,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void preTransitionHook() {
+            isHalfOpen.set(false);
             cancelAutomaticTransition();
         }
 
@@ -1144,10 +1259,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         private void toState(State transitionState) {
             if (isHalfOpen.compareAndSet(true, false)) {
-                switch (transitionState) {
-                    case OPEN -> transitionToOpenState();
-                    case CLOSED -> transitionToClosedState();
-                    default -> throw new IllegalArgumentException("Unsuported transition state: " + transitionState);
+                if (transitionState == OPEN) {
+                    stateTransitionIfCurrent(this, OPEN,
+                        current -> new OpenState(current.attempts() + 1, current.getMetrics()));
+                } else if (transitionState == CLOSED) {
+                    stateTransitionIfCurrent(this, CLOSED, current -> new ClosedState());
+                } else {
+                    throw new IllegalArgumentException("Unsupported transition state: " + transitionState);
                 }
             }
         }
@@ -1186,11 +1304,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @param result the result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if (Result.hasExceededThresholds(result) && isHalfOpen.compareAndSet(true, false)) {
-                transitionToOpenState();
-            }
-            if (result == BELOW_THRESHOLDS && isHalfOpen.compareAndSet(true, false)) {
-                transitionToClosedState();
+            if (Result.hasExceededThresholds(result)) {
+                toState(OPEN);
+            } else if (result == BELOW_THRESHOLDS) {
+                toState(CLOSED);
             }
         }
 
@@ -1200,6 +1317,173 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public CircuitBreaker.State getState() {
             return CircuitBreaker.State.HALF_OPEN;
+        }
+
+        @Override
+        public CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    /** A single recovery cycle owns its one global HALF_OPEN deadline. */
+    private final class HalfOpenRecovery {
+
+        private final int attempts;
+        private final HalfOpenRecoveryPolicy policy;
+        private final AtomicBoolean active = new AtomicBoolean(true);
+        private final AtomicBoolean timerStarted = new AtomicBoolean();
+        @Nullable
+        private final Instant deadline;
+        private volatile ScheduledFuture<?> timeoutFuture;
+
+        private HalfOpenRecovery(int attempts, HalfOpenRecoveryConfig config) {
+            this.attempts = attempts;
+            this.policy = new HalfOpenRecoveryPolicy(config);
+            Duration timeout = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState();
+            deadline = timeout.toMillis() >= 1 ? clock.instant().plus(timeout) : null;
+        }
+
+        private boolean isCurrent() {
+            CircuitBreakerState current = stateReference.get();
+            return active.get() && current instanceof RecoveryHalfOpenState phase
+                && phase.recovery == this;
+        }
+
+        private void startTimeout() {
+            State target = circuitBreakerConfig.getTransitionToStateAfterWaitDuration();
+            if (deadline != null && target != null && isCurrent()
+                && timerStarted.compareAndSet(false, true)) {
+                long waitDuration = Math.max(0, Duration.between(clock.instant(), deadline).toMillis());
+                timeoutFuture = schedulerFactory.getScheduler().schedule(() -> {
+                    while (isCurrent()) {
+                        CircuitBreakerState current = stateReference.get();
+                        if (!(current instanceof RecoveryHalfOpenState phase)
+                            || phase.recovery != this) {
+                            return;
+                        }
+                        if (stateTransitionIfCurrent(current, target, old -> target == CLOSED
+                            ? new ClosedState() : new OpenState(old.attempts() + 1, old.getMetrics()))) {
+                            return;
+                        }
+                    }
+                }, waitDuration, TimeUnit.MILLISECONDS);
+                if (!isCurrent()) {
+                    cancelTimeout();
+                }
+            }
+        }
+
+        private void cancelTimeout() {
+            active.set(false);
+            ScheduledFuture<?> future = timeoutFuture;
+            if (future != null && !future.isDone()) {
+                future.cancel(false);
+            }
+        }
+    }
+
+    private final class RecoveryHalfOpenState implements CircuitBreakerState {
+
+        private final HalfOpenRecovery recovery;
+        private final HalfOpenRecoveryPolicy.Phase phase;
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+
+        private RecoveryHalfOpenState(HalfOpenRecovery recovery, int phaseIndex) {
+            this.recovery = recovery;
+            this.phase = recovery.policy.newPhase(phaseIndex, clock.instant());
+            circuitBreakerMetrics = CircuitBreakerMetrics.forHalfOpenRecovery(
+                recovery.policy.getMinimumNumberOfCalls(), circuitBreakerConfig,
+                phase.getSnapshot().getPermittedTrafficPercentage() == 100);
+        }
+
+        @Override
+        public void postTransitionHook() {
+            recovery.startTimeout();
+        }
+
+        @Override
+        public void preTransitionHook() {
+            if (!recovery.isCurrent()) {
+                recovery.cancelTimeout();
+            }
+        }
+
+        @Override
+        public boolean tryAcquirePermission() {
+            // Only a recorded outcome can validate a recovery phase. An offered
+            // call after an idle period must not advance using old health alone.
+            CircuitBreakerState current = stateReference.get();
+            if (current != this) {
+                return current.tryAcquirePermission();
+            }
+            if (phase.tryAcquirePermission()) {
+                return true;
+            }
+            circuitBreakerMetrics.onCallNotPermitted();
+            return false;
+        }
+
+        @Override
+        public void acquirePermission() {
+            if (!tryAcquirePermission()) {
+                throw CallNotPermittedException.createCallNotPermittedException(
+                    CircuitBreakerStateMachine.this);
+            }
+        }
+
+        @Override
+        public void releasePermission() {
+            // Percentage admission has no finite permits to return. Ignored calls
+            // and throwing predicates simply do not contribute health samples.
+        }
+
+        @Override
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
+            evaluate(circuitBreakerMetrics.onError(duration, durationUnit));
+        }
+
+        @Override
+        public void onSuccess(long duration, TimeUnit durationUnit) {
+            evaluate(circuitBreakerMetrics.onSuccess(duration, durationUnit));
+        }
+
+        private void evaluate(Result result) {
+            if (stateReference.get() != this) {
+                return;
+            }
+            switch (phase.evaluate(result, clock)) {
+                case OPEN -> stateTransitionIfCurrent(this, OPEN,
+                    old -> new OpenState(old.attempts() + 1, old.getMetrics()),
+                    () -> publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics));
+                case STEP_BACK -> stateTransitionIfCurrent(this, HALF_OPEN,
+                    old -> new RecoveryHalfOpenState(recovery, phase.getIndex() - 1),
+                    () -> publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics));
+                case ADVANCE -> stateTransitionIfCurrent(this, HALF_OPEN,
+                    old -> new RecoveryHalfOpenState(recovery, phase.getIndex() + 1));
+                case CLOSE -> stateTransitionIfCurrent(this, CLOSED, old -> new ClosedState());
+                case STAY -> {
+                }
+            }
+        }
+
+        @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            // Keep the legacy HALF_OPEN handling of transitionOnResult.
+        }
+
+        @Override
+        public int attempts() {
+            return recovery.attempts;
+        }
+
+        @Override
+        public State getState() {
+            return HALF_OPEN;
+        }
+
+        @Override
+        public HalfOpenPhase getHalfOpenPhase() {
+            return phase.getSnapshot();
         }
 
         @Override

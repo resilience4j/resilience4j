@@ -1,0 +1,905 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus scraping Resilience4j Micrometer metrics",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "uid": "r4j-gradual-recovery",
+  "title": "Resilience4j — Standard and gradual recovery",
+  "description": "Optional gradual recovery shown alongside the existing public states. Select one breaker instance.",
+  "tags": [
+    "resilience4j",
+    "circuitbreaker",
+    "gradual-recovery"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "label": "Job",
+        "description": "One Prometheus scrape job.",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(resilience4j_circuitbreaker_state, job)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(resilience4j_circuitbreaker_state, job)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "current": {},
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "description": "One scrape instance; no implicit fleet aggregation.",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(resilience4j_circuitbreaker_state{job=\"${job}\"}, instance)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(resilience4j_circuitbreaker_state{job=\"${job}\"}, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "current": {},
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "circuitbreaker",
+        "label": "Circuit breaker",
+        "description": "One circuit breaker name on the chosen instance.",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(resilience4j_circuitbreaker_state{job=\"${job}\",instance=\"${instance}\"}, name)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(resilience4j_circuitbreaker_state{job=\"${job}\",instance=\"${instance}\"}, name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "current": {},
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Public state",
+      "description": "The active standard Resilience4j state. Gradual recovery continues to report half_open.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "closed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "open"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "half_open"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "disabled"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "gray"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forced_open"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metrics_only"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max by (state) (resilience4j_circuitbreaker_state{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"} == 1)",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Recovery policy",
+      "description": "Presence of the optional recovery phase metric identifies a configured Gradual policy, even when inactive. Missing state data remains No data.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Standard",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Gradual",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "(count by (job, instance, name) (resilience4j_circuitbreaker_recovery_phase{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}) > bool 0) or on (job, instance, name) (0 * max by (job, instance, name) (resilience4j_circuitbreaker_state{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}))",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Policy",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Recovery phase",
+      "description": "One-based phase index. Zero means recovery is inactive. Ordinary breakers do not export this metric.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Inactive",
+                  "index": 0
+                }
+              }
+            }
+          ],
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "Not enabled"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "resilience4j_circuitbreaker_recovery_phase{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Phase",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Recovery target",
+      "description": "Configured admission target while recovering, not an observed rate. Zero means inactive, even in CLOSED.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Inactive",
+                  "index": 0
+                }
+              }
+            }
+          ],
+          "unit": "percent",
+          "decimals": 0,
+          "noValue": "Not enabled"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "resilience4j_circuitbreaker_recovery_traffic_percentage{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Target",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Observed admission",
+      "description": "Percentage over $__rate_interval from offered/permitted admission counters. No attempts means no observed percentage. Ordinary breakers do not export these counters.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "unit": "percent",
+          "decimals": 1,
+          "noValue": "No attempts / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "(100 * rate(resilience4j_circuitbreaker_admission_permitted_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval]) / rate(resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval])) and (rate(resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval]) > 0)",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Observed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Lifetime attempts",
+      "description": "All public permission API entries since this breaker instance was created. Reset does not reset the counter.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "Not exported"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Attempts",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Lifetime permitted",
+      "description": "Permissions granted since this breaker instance was created, independent of backend completion. Reset does not reset the counter.",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "pluginVersion": "12.0.0",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "Not exported"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "resilience4j_circuitbreaker_admission_permitted_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}",
+          "format": "time_series",
+          "instant": true,
+          "range": false,
+          "legendFormat": "Permitted",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Target is shown only while active. Observed admission spans the rate window and can include earlier phases or states; it is not a backend success rate. No zero-denominator substitution or hard clipping.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "axisSoftMin": 0,
+            "axisSoftMax": 100
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 9
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "pluginVersion": "12.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "resilience4j_circuitbreaker_recovery_traffic_percentage{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"} > 0",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Target",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "(100 * rate(resilience4j_circuitbreaker_admission_permitted_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval]) / rate(resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval])) and (rate(resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval]) > 0)",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Observed",
+          "refId": "B"
+        }
+      ],
+      "title": "Recovery target and observed admission",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Offered and permitted rates for this selected breaker instance. These are admission counts, not completion timers or network delivery measurements.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "axisSoftMin": 0
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 7
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "pluginVersion": "12.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(resilience4j_circuitbreaker_admission_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Offered",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(resilience4j_circuitbreaker_admission_permitted_attempts_total{job=\"${job}\",instance=\"${instance}\",name=\"${circuitbreaker}\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "Permitted",
+          "refId": "B"
+        }
+      ],
+      "title": "Admission attempts per second",
+      "type": "timeseries"
+    },
+    {
+      "id": 10,
+      "title": "Reading this dashboard",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 6
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Standard:** existing state metrics remain available; recovery gauges and admission counters are not exported. **Gradual:** the same public state is enriched with policy, phase, target and observed admission.\n\nChoose one job, instance and circuit breaker. Queries retain counter label sets and do not combine application instances. Custom metric names or a non-standard scrape label model require editing selectors.\n\nA zero recovery target/phase means **inactive**, not zero admitted traffic. The target disappears from the time-series plot outside recovery. The observed rate can be 100% in CLOSED.\n\nNo attempts in the rate window means **no data**, not 0% or the target. Permission checks crossing a window boundary and separate scrapes mean short windows are not atomic request cohorts. Counters measure permissions, not network delivery or payment success."
+      }
+    }
+  ],
+  "links": []
+}

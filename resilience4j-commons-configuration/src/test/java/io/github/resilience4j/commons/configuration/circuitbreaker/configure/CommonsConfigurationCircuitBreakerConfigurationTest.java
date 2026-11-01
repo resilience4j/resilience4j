@@ -18,22 +18,125 @@ package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.HalfOpenRecoveryConfig;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException;
 import io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable;
 import io.github.resilience4j.commons.configuration.util.CommonsConfigurationUtil;
 import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.MapConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CommonsConfigurationCircuitBreakerConfigurationTest {
+
+    @Test
+    void omittedInitialPercentageAndExplicitZeroBothSelectAutomaticInitialization() throws Exception {
+        Configuration source = new MapConfiguration(Map.of(
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.enabled", true,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.trafficPercentageStep", 5,
+            "resilience4j.circuitbreaker.configs.explicit.halfOpenRecovery.enabled", true,
+            "resilience4j.circuitbreaker.configs.explicit.halfOpenRecovery.initialTrafficPercentage", 5,
+            "resilience4j.circuitbreaker.instances.automatic.baseConfig", "shared",
+            "resilience4j.circuitbreaker.instances.automatic.halfOpenRecovery.trafficPercentageStep", 30,
+            "resilience4j.circuitbreaker.instances.reset.baseConfig", "explicit",
+            "resilience4j.circuitbreaker.instances.reset.halfOpenRecovery.initialTrafficPercentage", 0,
+            "resilience4j.circuitbreaker.instances.reset.halfOpenRecovery.trafficPercentageStep", 45));
+        var properties = CommonsConfigurationCircuitBreakerConfiguration.of(source);
+        var customizers = new CompositeCustomizer<
+            io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer>(
+            Collections.emptyList());
+
+        var automatic = properties.createCircuitBreakerConfig("automatic",
+            properties.getInstances().get("automatic"), customizers)
+            .getHalfOpenRecoveryConfig();
+        var reset = properties.createCircuitBreakerConfig("reset",
+            properties.getInstances().get("reset"), customizers)
+            .getHalfOpenRecoveryConfig();
+
+        assertThat(automatic.isInitialTrafficPercentageAutomatic()).isTrue();
+        assertThat(automatic.getInitialTrafficPercentage()).isEqualTo(30);
+        assertThat(reset.isInitialTrafficPercentageAutomatic()).isTrue();
+        assertThat(reset.getInitialTrafficPercentage()).isEqualTo(45);
+    }
+
+    @Test
+    void recoveryHealthBoundsBindWithoutChangingOrdinaryHealth() throws Exception {
+        Configuration source = new MapConfiguration(Map.of(
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.enabled", true,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.maxFailureRateForAdvance", 3f,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.failureRateThreshold", 15f,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.maxSlowCallRateForAdvance", 8f,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.slowCallRateThreshold", 40f,
+            "resilience4j.circuitbreaker.instances.payment.baseConfig", "shared",
+            "resilience4j.circuitbreaker.instances.payment.failureRateThreshold", 75f,
+            "resilience4j.circuitbreaker.instances.payment.halfOpenRecovery.maxFailureRateForAdvance", 0f));
+        var properties = CommonsConfigurationCircuitBreakerConfiguration.of(source);
+        var customizers = new CompositeCustomizer<
+            io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer>(
+            Collections.emptyList());
+        var config = properties.createCircuitBreakerConfig("payment",
+            properties.getInstances().get("payment"), customizers);
+
+        assertThat(config.getFailureRateThreshold()).isEqualTo(75);
+        assertThat(config.getHalfOpenRecoveryConfig().getMaxFailureRateForAdvance()).isZero();
+        assertThat(config.getHalfOpenRecoveryConfig().getFailureRateThreshold()).isEqualTo(15);
+        assertThat(config.getHalfOpenRecoveryConfig().getMaxSlowCallRateForAdvance()).isEqualTo(8);
+        assertThat(config.getHalfOpenRecoveryConfig().getSlowCallRateThreshold()).isEqualTo(40);
+    }
+
+    @Test
+    void configuredStepAboveOneHundredIsRejectedBeforeCreatingTheBreaker() throws Exception {
+        Configuration source = new MapConfiguration(Map.of(
+            "resilience4j.circuitbreaker.instances.invalid.halfOpenRecovery.enabled", true,
+            "resilience4j.circuitbreaker.instances.invalid.halfOpenRecovery.trafficPercentageStep", 120));
+        var properties = CommonsConfigurationCircuitBreakerConfiguration.of(source);
+        var customizers = new CompositeCustomizer<
+            io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer>(
+            Collections.emptyList());
+
+        assertThatThrownBy(() -> properties.createCircuitBreakerConfig("invalid",
+            properties.getInstances().get("invalid"), customizers))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("trafficPercentageStep must be between 1 and 100");
+    }
+
+    @Test
+    void nestedRecoveryPropertiesCanOverrideOrDisableSharedConfiguration() throws Exception {
+        Configuration source = new MapConfiguration(Map.of(
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.enabled", true,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.initialTrafficPercentage", 5,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.trafficPercentageStep", 5,
+            "resilience4j.circuitbreaker.configs.shared.halfOpenRecovery.minimumPhaseDuration", "PT2S",
+            "resilience4j.circuitbreaker.instances.override.baseConfig", "shared",
+            "resilience4j.circuitbreaker.instances.override.halfOpenRecovery.trafficPercentageStep", 10,
+            "resilience4j.circuitbreaker.instances.disabled.baseConfig", "shared",
+            "resilience4j.circuitbreaker.instances.disabled.halfOpenRecovery.enabled", false));
+        var properties = CommonsConfigurationCircuitBreakerConfiguration.of(source);
+        var customizers = new CompositeCustomizer<
+            io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer>(
+            Collections.emptyList());
+
+        var config = properties.createCircuitBreakerConfig("override",
+            properties.getInstances().get("override"), customizers);
+        var disabled = properties.createCircuitBreakerConfig("disabled",
+            properties.getInstances().get("disabled"), customizers);
+
+        assertThat(config.getHalfOpenRecoveryConfig().getInitialTrafficPercentage()).isEqualTo(5);
+        assertThat(config.getHalfOpenRecoveryConfig().getTrafficPercentageStep()).isEqualTo(10);
+        assertThat(config.getHalfOpenRecoveryConfig().getMinimumPhaseDuration()).isEqualTo(Duration.ofSeconds(2));
+        assertThat(disabled.getHalfOpenRecoveryConfig()).isNull();
+    }
 
     @Test
     void fromPropertiesFile() throws Exception {
@@ -86,6 +189,12 @@ class CommonsConfigurationCircuitBreakerConfigurationTest {
         assertThat(configDefault.getRecordExceptions()).containsExactly(IllegalArgumentException.class, NullPointerException.class);
         assertThat(configDefault.getIgnoreExceptionPredicate()).isEqualTo(DummyPredicateThrowable.class);
         assertThat(configDefault.getIgnoreExceptions()).containsExactly(IllegalStateException.class, IndexOutOfBoundsException.class);
+        assertThat(configDefault.getHalfOpenRecovery().getEnabled()).isTrue();
+        assertThat(configDefault.getHalfOpenRecovery().getInitialTrafficPercentage()).isEqualTo(5);
+        assertThat(configDefault.getHalfOpenRecovery().getTrafficPercentageStep()).isEqualTo(5);
+        assertThat(configDefault.getHalfOpenRecovery().getMinimumPhaseDuration()).isEqualTo(Duration.ofSeconds(5));
+        assertThat(configDefault.getHalfOpenRecovery().getMinimumNumberOfCalls()).isEqualTo(10);
+        assertThat(configDefault.getHalfOpenRecovery().getFailureStrategy()).isEqualTo(HalfOpenRecoveryConfig.FailureStrategy.OPEN);
     }
 
     private static void assertConfigShared(CommonCircuitBreakerConfigurationProperties.InstanceProperties configShared) {

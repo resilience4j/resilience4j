@@ -40,6 +40,14 @@ public class CircuitBreakerEventDTOFactory {
                 return newCircuitBreakerEventDTOBuilder(onStateTransitionEvent)
                     .setStateTransition(onStateTransitionEvent.getStateTransition())
                     .build();
+            case HALF_OPEN_PHASE_TRANSITION:
+                CircuitBreakerOnHalfOpenPhaseTransitionEvent phaseEvent =
+                    (CircuitBreakerOnHalfOpenPhaseTransitionEvent) event;
+                CircuitBreakerEventDTO phaseDTO = newCircuitBreakerEventDTOBuilder(phaseEvent).build();
+                phaseDTO.setPreviousHalfOpenPhase(phaseEvent.getPreviousPhase());
+                phaseDTO.setHalfOpenPhase(phaseEvent.getPhase());
+                phaseDTO.setHalfOpenPhaseTransitionReason(phaseEvent.getReason());
+                return phaseDTO;
             case RESET:
                 CircuitBreakerOnResetEvent onResetEvent = (CircuitBreakerOnResetEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onResetEvent)

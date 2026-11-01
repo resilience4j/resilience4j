@@ -17,6 +17,33 @@ public class CircuitBreakerMetricNames {
         DEFAULT_PREFIX + ".failure.rate";
     public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE =
         DEFAULT_PREFIX + ".slow.call.rate";
+
+    /**
+     * Default name for the current phased HALF_OPEN recovery phase gauge.
+     */
+    public static final String DEFAULT_CIRCUIT_BREAKER_RECOVERY_PHASE =
+        DEFAULT_PREFIX + ".recovery.phase";
+
+    /**
+     * Default name for the current recovery admission target percentage gauge.
+     */
+    public static final String DEFAULT_CIRCUIT_BREAKER_RECOVERY_TRAFFIC_PERCENTAGE =
+        DEFAULT_PREFIX + ".recovery.traffic.percentage";
+
+    /**
+     * Default name for the cumulative count of public permission requests.
+     */
+    public static final String DEFAULT_CIRCUIT_BREAKER_ATTEMPTS =
+        DEFAULT_PREFIX + ".admission.attempts";
+
+    /**
+     * Default name for the cumulative count of requests granted permission.
+     */
+    public static final String DEFAULT_CIRCUIT_BREAKER_PERMITTED_ATTEMPTS =
+        DEFAULT_PREFIX + ".admission.permitted.attempts";
+
+    private String attemptsMetricName = DEFAULT_CIRCUIT_BREAKER_ATTEMPTS;
+    private String permittedAttemptsMetricName = DEFAULT_CIRCUIT_BREAKER_PERMITTED_ATTEMPTS;
     private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
     private String notPermittedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS;
     private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
@@ -24,6 +51,9 @@ public class CircuitBreakerMetricNames {
     private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
     private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
     private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+    private String recoveryPhaseMetricName = DEFAULT_CIRCUIT_BREAKER_RECOVERY_PHASE;
+    private String recoveryTrafficPercentageMetricName =
+        DEFAULT_CIRCUIT_BREAKER_RECOVERY_TRAFFIC_PERCENTAGE;
 
     protected CircuitBreakerMetricNames() {
     }
@@ -117,6 +147,42 @@ public class CircuitBreakerMetricNames {
     }
 
     /**
+     * Returns the metric name for the current phased HALF_OPEN recovery phase.
+     *
+     * @return the recovery phase metric name
+     */
+    public String getRecoveryPhaseMetricName() {
+        return recoveryPhaseMetricName;
+    }
+
+    /**
+     * Returns the metric name for the current recovery phase's configured traffic percentage.
+     *
+     * @return the recovery traffic percentage metric name
+     */
+    public String getRecoveryTrafficPercentageMetricName() {
+        return recoveryTrafficPercentageMetricName;
+    }
+
+    /**
+     * Returns the metric name for lifetime admission attempts, including rejected attempts.
+     *
+     * @return the total admission attempts counter name
+     */
+    public String getAttemptsMetricName() {
+        return attemptsMetricName;
+    }
+
+    /**
+     * Returns the metric name for lifetime admission attempts permitted by the breaker.
+     *
+     * @return the permitted admission attempts counter name
+     */
+    public String getPermittedAttemptsMetricName() {
+        return permittedAttemptsMetricName;
+    }
+
+    /**
      * Helps building custom instance of {@link CircuitBreakerMetricNames}.
      */
     public static class Builder {
@@ -204,6 +270,56 @@ public class CircuitBreakerMetricNames {
          */
         public Builder slowCallRateMetricName(String slowCallRateMetricName) {
             metricNames.slowCallRateMetricName = requireNonNull(slowCallRateMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the default recovery phase metric name.
+         *
+         * @param recoveryPhaseMetricName the recovery phase metric name
+         * @return this builder
+         * @throws NullPointerException if the metric name is null
+         */
+        public Builder recoveryPhaseMetricName(String recoveryPhaseMetricName) {
+            metricNames.recoveryPhaseMetricName = requireNonNull(recoveryPhaseMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the default recovery traffic percentage metric name.
+         *
+         * @param recoveryTrafficPercentageMetricName the recovery traffic percentage metric name
+         * @return this builder
+         * @throws NullPointerException if the metric name is null
+         */
+        public Builder recoveryTrafficPercentageMetricName(
+            String recoveryTrafficPercentageMetricName) {
+            metricNames.recoveryTrafficPercentageMetricName =
+                requireNonNull(recoveryTrafficPercentageMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the admission attempts counter name.
+         *
+         * @param attemptsMetricName the metric name
+         * @return this builder
+         * @throws NullPointerException if the metric name is null
+         */
+        public Builder attemptsMetricName(String attemptsMetricName) {
+            metricNames.attemptsMetricName = requireNonNull(attemptsMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the permitted admission attempts counter name.
+         *
+         * @param permittedAttemptsMetricName the metric name
+         * @return this builder
+         * @throws NullPointerException if the metric name is null
+         */
+        public Builder permittedAttemptsMetricName(String permittedAttemptsMetricName) {
+            metricNames.permittedAttemptsMetricName = requireNonNull(permittedAttemptsMetricName);
             return this;
         }
 

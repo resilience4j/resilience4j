@@ -18,7 +18,9 @@ package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.HalfOpenRecoveryConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.HalfOpenRecoveryProperties;
 import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
 import io.github.resilience4j.commons.configuration.util.ClassParseUtil;
 import io.github.resilience4j.commons.configuration.util.Constants;
@@ -150,6 +152,37 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
             instanceProperties.setRandomizedWaitFactor(configuration.getDouble(RANDOMIZED_WAIT_FACTOR));
         if (configuration.containsKey(IGNORE_CLASS_BINDING_EXCEPTIONS))
             instanceProperties.setIgnoreClassBindingExceptions(configuration.getBoolean(IGNORE_CLASS_BINDING_EXCEPTIONS));
+
+        Configuration recoveryConfiguration = configuration.subset("halfOpenRecovery");
+        if (!recoveryConfiguration.isEmpty()) {
+            HalfOpenRecoveryProperties recovery = new HalfOpenRecoveryProperties();
+            if (recoveryConfiguration.containsKey("enabled"))
+                recovery.setEnabled(recoveryConfiguration.getBoolean("enabled"));
+            if (recoveryConfiguration.containsKey("initialTrafficPercentage"))
+                recovery.setInitialTrafficPercentage(
+                    recoveryConfiguration.getInt("initialTrafficPercentage"));
+            if (recoveryConfiguration.containsKey("trafficPercentageStep"))
+                recovery.setTrafficPercentageStep(
+                    recoveryConfiguration.getInt("trafficPercentageStep"));
+            if (recoveryConfiguration.containsKey("minimumPhaseDuration"))
+                recovery.setMinimumPhaseDuration(
+                    recoveryConfiguration.getDuration("minimumPhaseDuration"));
+            if (recoveryConfiguration.containsKey("minimumNumberOfCalls"))
+                recovery.setMinimumNumberOfCalls(
+                    recoveryConfiguration.getInt("minimumNumberOfCalls"));
+            if (recoveryConfiguration.containsKey("failureStrategy"))
+                recovery.setFailureStrategy(recoveryConfiguration.getEnum("failureStrategy",
+                    HalfOpenRecoveryConfig.FailureStrategy.class));
+            if (recoveryConfiguration.containsKey("maxFailureRateForAdvance"))
+                recovery.setMaxFailureRateForAdvance(recoveryConfiguration.getFloat("maxFailureRateForAdvance"));
+            if (recoveryConfiguration.containsKey("failureRateThreshold"))
+                recovery.setFailureRateThreshold(recoveryConfiguration.getFloat("failureRateThreshold"));
+            if (recoveryConfiguration.containsKey("maxSlowCallRateForAdvance"))
+                recovery.setMaxSlowCallRateForAdvance(recoveryConfiguration.getFloat("maxSlowCallRateForAdvance"));
+            if (recoveryConfiguration.containsKey("slowCallRateThreshold"))
+                recovery.setSlowCallRateThreshold(recoveryConfiguration.getFloat("slowCallRateThreshold"));
+            instanceProperties.setHalfOpenRecovery(recovery);
+        }
 
         if(configuration.containsKey(INITIAL_STATE))
             instanceProperties.setInitialState(configuration.getEnum(INITIAL_STATE, CircuitBreaker.State.class));

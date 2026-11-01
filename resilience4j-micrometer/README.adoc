@@ -4,6 +4,47 @@ Integration of bulkhead, circuit breaker, rate limiter and retry metrics with ht
 
 NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/micrometer[Usage Guide]*
 
+== Phased HALF_OPEN recovery
+
+When `CircuitBreakerConfig.halfOpenRecoveryConfig` is configured, both the tagged binder and the metrics publisher expose two additional gauges:
+
+* `resilience4j.circuitbreaker.recovery.phase`: the active recovery phase, starting at one.
+* `resilience4j.circuitbreaker.recovery.traffic.percentage`: the configured admission target for that phase, between 1 and 100 percentage points.
+
+Both values are zero outside phased recovery. The traffic percentage is a recovery target, not an observed admission rate: a CLOSED circuit breaker admits ordinary traffic even though its recovery gauges are zero. The standard `state{state="half_open"}` gauge remains one throughout recovery, and the existing state labels and numeric orders are unchanged.
+
+The new gauges use the existing breaker name and custom tags. Phase and percentage are gauge values, never tags, so moving between phases does not create additional time series. They can be renamed with `CircuitBreakerMetricNames` in the same way as the existing metrics. Breakers without a recovery configuration retain their existing metric set.
+
+The buffered-call and failure/slow-call rate gauges describe the current evaluation window. During phased recovery this is the rolling sample window of completions recorded in the current phase and can reset on a phase transition. As with the existing circuit breaker API, an outcome is recorded against the state current when its completion callback runs; a call admitted in an earlier phase can finish later. A rate of `-1` means that insufficient outcomes have been observed. The event-based call timers and not-permitted counter remain cumulative across phase changes. Call timers count completed outcomes, so combining them with rejected-attempt counts does not measure an exact instantaneous admission percentage while calls are in flight.
+
+== Observed admission percentage
+
+Breakers with a recovery configuration also expose two function counters:
+
+* `resilience4j.circuitbreaker.admission.attempts`: all attempts entering the public permission API, including rejected attempts and permission checks still in progress.
+* `resilience4j.circuitbreaker.admission.permitted.attempts`: attempts for which the public permission API granted permission.
+
+They read the source circuit breaker's lifetime admission counts directly. The total increases on entry to a permission call; the permitted count increases when permission is granted, before any backend outcome arrives. A permission check that is still in progress, or throws before granting permission, contributes only to the total. Counts include CLOSED, OPEN and the administrative states as well as HALF_OPEN. Phase changes, reset, ignored outcomes and permission releases do not reset or increment them. A replacement circuit breaker is a new instance with its own counts. Binding after activity includes the instance's earlier decisions; registration does not add per-admission event listeners.
+
+The configured target gauge remains independent. To observe admission over an interval, use `100 * delta(permitted attempts) / delta(all attempts)` for that interval, rather than divide lifetime totals or completed-call timers. Each retry which asks the breaker for permission is another attempt. These metrics measure permission decisions, not backend success or network delivery.
+
+For example, Prometheus exposes the counters as `resilience4j_circuitbreaker_admission_attempts_total` and `resilience4j_circuitbreaker_admission_permitted_attempts_total`:
+
+[source,promql]
+----
+(
+  100 * increase(resilience4j_circuitbreaker_admission_permitted_attempts_total[1m])
+      / increase(resilience4j_circuitbreaker_admission_attempts_total[1m])
+)
+and (increase(resilience4j_circuitbreaker_admission_attempts_total[1m]) > 0)
+----
+
+The expression compares corresponding label sets and filters out intervals without attempts, for which the ratio is undefined. Display no data rather than report 0% or infer the target. Prometheus interval functions account for resets when a breaker/process is replaced. Both counters have only the normal name/custom labels; there are no phase labels. They can be renamed with `attemptsMetricName` and `permittedAttemptsMetricName` on `CircuitBreakerMetricNames`.
+
+== Dashboard example
+
+link:../grafana_recovery_dashboard.json[The standard and gradual recovery dashboard] shows the public state, configured recovery policy, phase and target alongside observed admission in one view. It derives the policy from the presence of the optional phase metric, without adding a new state or labels. Ordinary breakers keep their normal state panels and have no optional recovery series. See link:examples/README.adoc[import instructions, query semantics and the offline validator] for single-instance selection and synthetic PromQL checks.
+
 == License
 
 Copyright 2018 Julien Hoarau
