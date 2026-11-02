@@ -80,7 +80,7 @@ class ContextAwareScheduledThreadPoolExecutorTest {
         try{
             await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() -> schedule.get());
         } catch (Exception exception) {
-            fail("Must not throw an exception");
+            fail("Must not throw an exception", exception);
         }
         
     }

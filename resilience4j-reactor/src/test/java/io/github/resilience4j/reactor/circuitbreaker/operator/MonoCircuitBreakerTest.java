@@ -216,7 +216,7 @@ class MonoCircuitBreakerTest {
                 .get();
 
         } catch (InterruptedException | ExecutionException e) {
-            fail("Unexpected exception: " + e);
+            fail("Unexpected exception", e);
         }
     }
 }
