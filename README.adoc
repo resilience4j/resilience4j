@@ -435,7 +435,7 @@ public interface BackendService {
 
 // Create a CircuitBreaker (use default configuration)
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-// Create a Retry with at most 3 retries and a fixed time interval between retries of 500ms
+// Create a Retry with at most 3 attempts (1 initial call + 2 retries) and a fixed wait interval of 500ms before each retry
 Retry retry = Retry.ofDefaults("backendName");
 
 // Decorate your call to BackendService.doSomething() with a CircuitBreaker
@@ -521,7 +521,7 @@ There are two isolation strategies and bulkhead implementations.
 ==== SemaphoreBulkhead
 The following example shows how to decorate a lambda expression with a Bulkhead.
 A Bulkhead can be used to limit the amount of parallel executions.
-This bulkhead abstraction should work well across a variety of threading and io models.
+This bulkhead abstraction should work well across a variety of threading and I/O models.
 It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option.
 
 [source,java]
@@ -570,7 +570,7 @@ It can be consumed for logging, assertions and any other purpose.
 === Examples
 
 A `+CircuitBreakerEvent+` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error.
-All events contains additional information like event creation time and processing duration of the call.
+All events contain additional information like event creation time and processing duration of the call.
 If you want to consume events, you have to register an event consumer.
 
 [source,java]
