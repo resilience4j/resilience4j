@@ -235,9 +235,6 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         requireNonNull(destination, ILLEGAL_DESTINATION_ARRAY);
 
         Supplier<T[]> copyRingBuffer = () -> {
-            if (size == 0) {
-                return destination;
-            }
             T[] result = destination;
             if (destination.length < size) {
                 result = (T[]) newInstance(result.getClass().getComponentType(), size);
@@ -248,6 +245,9 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
                 int toTheEnd = ringBuffer.length - headIndex;
                 System.arraycopy(ringBuffer, headIndex, result, 0, toTheEnd);
                 System.arraycopy(ringBuffer, 0, result, toTheEnd, tailIndex + 1);
+            }
+            if (result.length > size) {
+                result[size] = null;
             }
             return result;
         };
