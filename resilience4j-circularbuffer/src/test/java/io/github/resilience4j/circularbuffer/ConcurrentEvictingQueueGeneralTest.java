@@ -277,8 +277,29 @@ class ConcurrentEvictingQueueGeneralTest {
 
         queue.addAll(asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
         Integer[] fourth = {11, 22, 33, 44, 55, 66, 77, 88};
-        assertThat(queue.toArray(fourth)).containsExactly(5, 6, 7, 8, 9, 66, 77, 88);
+        assertThat(queue.toArray(fourth)).containsExactly(5, 6, 7, 8, 9, null, 77, 88);
         queue.clear();
         assertThat(queue).isEmpty();
+    }
+
+    @Test
+    void toPreAllocatedArrayOfEmptyQueue() {
+        Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
+        Integer[] destination = {1, 2};
+
+        Integer[] result = queue.toArray(destination);
+
+        assertThat(result).isSameAs(destination).containsExactly(null, 2);
+    }
+
+    @Test
+    void toPreAllocatedArrayWithSpareSlot() {
+        Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
+        queue.add(1);
+        Integer[] destination = {2, 3, 4};
+
+        Integer[] result = queue.toArray(destination);
+
+        assertThat(result).isSameAs(destination).containsExactly(1, null, 4);
     }
 }
