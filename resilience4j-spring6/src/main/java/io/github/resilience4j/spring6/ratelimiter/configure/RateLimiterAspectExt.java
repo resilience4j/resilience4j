@@ -27,4 +27,21 @@ public interface RateLimiterAspectExt {
 
     Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
         String methodName) throws Throwable;
+
+    /**
+     * Handles an invocation with the number of permits requested by the annotation.
+     * The default implementation delegates to the existing handler for compatibility.
+     * Extensions supporting weighted calls should override this method.
+     *
+     * @param proceedingJoinPoint the intercepted invocation
+     * @param rateLimiter the configured rate limiter
+     * @param methodName the intercepted method name
+     * @param permits the number of permits required by the invocation
+     * @return the decorated result
+     * @throws Throwable if the invocation fails
+     */
+    default Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
+        String methodName, int permits) throws Throwable {
+        return handle(proceedingJoinPoint, rateLimiter, methodName);
+    }
 }
