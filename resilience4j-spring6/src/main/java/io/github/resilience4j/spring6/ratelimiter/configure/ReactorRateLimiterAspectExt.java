@@ -54,13 +54,31 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
         String methodName) throws Throwable {
+        return handleWithPermits(proceedingJoinPoint, rateLimiter, 1);
+    }
+
+    /**
+     * Handles the annotated permit count. Default-weight calls retain the three-argument handler
+     * dispatch; subclasses customizing nondefault weights should override this method.
+     */
+    @Override
+    public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
+        String methodName, int permits) throws Throwable {
+        if (permits == 1) {
+            return handle(proceedingJoinPoint, rateLimiter, methodName);
+        }
+        return handleWithPermits(proceedingJoinPoint, rateLimiter, permits);
+    }
+
+    private Object handleWithPermits(ProceedingJoinPoint proceedingJoinPoint,
+        RateLimiter rateLimiter, int permits) throws Throwable {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter));
+            return fluxReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter, permits));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter));
+            return monoReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter, permits));
         } else {
             logger.error("Unsupported type for Reactor rateLimiter {}",
                 returnValue.getClass().getTypeName());

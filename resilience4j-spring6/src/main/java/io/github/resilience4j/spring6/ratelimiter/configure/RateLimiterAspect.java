@@ -112,18 +112,19 @@ public class RateLimiterAspect implements Ordered {
         String configKey = rateLimiterAnnotation.configuration().isEmpty() ? name : rateLimiterAnnotation.configuration();
         var rateLimiter = getOrCreateRateLimiter(methodName, name, configKey);
         Class<?> returnType = method.getReturnType();
-        final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
+        int permits = rateLimiterAnnotation.permits();
+        final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter, permits);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-        Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
+        Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, int permits)
         throws Throwable {
         if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
             for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
                 if (rateLimiterAspectExt.canHandleReturnType(returnType)) {
                     return rateLimiterAspectExt
-                        .handle(proceedingJoinPoint, rateLimiter, methodName);
+                        .handle(proceedingJoinPoint, rateLimiter, methodName, permits);
                 }
             }
         }
