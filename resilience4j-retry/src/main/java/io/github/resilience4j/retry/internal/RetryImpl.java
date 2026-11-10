@@ -31,6 +31,7 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.*;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -76,7 +77,7 @@ public class RetryImpl<T> implements Retry {
     public RetryImpl(String name, RetryConfig config, Map<String, String> tags) {
         this.name = name;
         this.config = config;
-        this.tags = tags;
+        this.tags = Collections.unmodifiableMap(new HashMap<>(tags));
         this.maxAttempts = config.getMaxAttempts();
         this.failAfterMaxAttempts = config.isFailAfterMaxAttempts();
         this.intervalBiFunction = config.getIntervalBiFunction();

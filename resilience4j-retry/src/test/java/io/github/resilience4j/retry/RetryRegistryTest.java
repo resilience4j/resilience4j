@@ -383,4 +383,24 @@ class RetryRegistryTest {
         assertThat(retry).isNotSameAs(retry2);
         assertThat(retryRegistry.getAllRetries()).hasSize(2);
     }
+
+    @Test
+    void shouldKeepRetryTagsUnmodifiable() {
+        Map<String, String> tags = new HashMap<>();
+        tags.put("env", "dev");
+
+        Retry retry = Retry.of(
+                "test",
+                RetryConfig.ofDefaults(),
+                tags
+        );
+
+        assertThatThrownBy(
+                () -> retry.getTags().put("env", "prod")
+        ).isInstanceOf(UnsupportedOperationException.class);
+
+        tags.put("env", "prod");
+        assertThat(retry.getTags())
+                .containsEntry("env", "dev");
+    }
 }
