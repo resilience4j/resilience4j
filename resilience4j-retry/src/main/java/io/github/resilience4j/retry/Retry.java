@@ -148,16 +148,18 @@ public interface Retry {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
+                T result;
                 try {
-                    T result = supplier.get();
-                    final boolean validationOfResult = context.onResult(result);
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
+                    result = supplier.get();
+                    if (context.onResult(result)) {
+                        continue;
                     }
                 } catch (Exception exception) {
                     context.onError(exception);
+                    continue;
                 }
+                context.onComplete();
+                return result;
             } while (true);
         };
     }
@@ -188,13 +190,13 @@ public interface Retry {
                     runnable.run();
                     final boolean validationOfResult = context.onResult(null);
                     if (!validationOfResult) {
-                        context.onComplete();
                         break;
                     }
                 } catch (Exception exception) {
                     context.onError(exception);
                 }
             } while (true);
+            context.onComplete();
         };
     }
 
@@ -222,16 +224,18 @@ public interface Retry {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
+                R result;
                 try {
-                    R result = function.apply(t);
-                    final boolean validationOfResult = context.onResult(result);
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
+                    result = function.apply(t);
+                    if (context.onResult(result)) {
+                        continue;
                     }
                 } catch (Exception exception) {
                     context.onError(exception);
+                    continue;
                 }
+                context.onComplete();
+                return result;
             } while (true);
         };
     }
@@ -264,13 +268,13 @@ public interface Retry {
                     consumer.accept(t);
                     final boolean validationOfResult = context.onResult(null);
                     if (!validationOfResult) {
-                        context.onComplete();
                         break;
                     }
                 } catch (Exception exception) {
                     context.onError(exception);
                 }
             } while (true);
+            context.onComplete();
         };
     }
 
@@ -297,16 +301,18 @@ public interface Retry {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
+                T result;
                 try {
-                    T result = supplier.get();
-                    final boolean validationOfResult = context.onResult(result);
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
+                    result = supplier.get();
+                    if (context.onResult(result)) {
+                        continue;
                     }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
+                    continue;
                 }
+                context.onComplete();
+                return result;
             } while (true);
         };
     }
@@ -334,16 +340,18 @@ public interface Retry {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
+                T result;
                 try {
-                    T result = supplier.call();
-                    final boolean validationOfResult = context.onResult(result);
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
+                    result = supplier.call();
+                    if (context.onResult(result)) {
+                        continue;
                     }
                 } catch (Exception exception) {
                     context.onError(exception);
+                    continue;
                 }
+                context.onComplete();
+                return result;
             } while (true);
         };
     }
@@ -375,13 +383,13 @@ public interface Retry {
                     runnable.run();
                     final boolean validationOfResult = context.onResult(null);
                     if (!validationOfResult) {
-                        context.onComplete();
                         break;
                     }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
                 }
             } while (true);
+            context.onComplete();
         };
     }
 
@@ -408,16 +416,18 @@ public interface Retry {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
+                R result;
                 try {
-                    R result = function.apply(t);
-                    final boolean validationOfResult = context.onResult(result);
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
+                    result = function.apply(t);
+                    if (context.onResult(result)) {
+                        continue;
                     }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
+                    continue;
                 }
+                context.onComplete();
+                return result;
             } while (true);
         };
     }
@@ -438,13 +448,13 @@ public interface Retry {
                     consumer.accept(t);
                     final boolean validationOfResult = context.onResult(null);
                     if (!validationOfResult) {
-                        context.onComplete();
                         break;
                     }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
                 }
             } while (true);
+            context.onComplete();
         };
     }
 
