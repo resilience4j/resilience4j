@@ -1,5 +1,7 @@
 package io.github.resilience4j.core;
 
+import java.util.Locale;
+
 /**
  * Enumeration for thread types supported by Resilience4j.
  * 
@@ -65,7 +67,7 @@ public enum ThreadType {
             return getDefault();
         }
         
-        String normalized = value.trim().toLowerCase();
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
         
         for (ThreadType type : values()) {
             if (type.value.equals(normalized)) {
