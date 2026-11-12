@@ -2,6 +2,8 @@ package io.github.resilience4j.core;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -70,6 +72,22 @@ class ThreadTypeTest {
     void shouldReturnCorrectStringRepresentation() {
         assertThat(ThreadType.VIRTUAL.toString()).isEqualTo("virtual");
         assertThat(ThreadType.PLATFORM.toString()).isEqualTo("platform");
+    }
+
+    @Test
+    void shouldParseUppercaseValueUnderTurkishLocale() {
+        Locale previous = Locale.getDefault();
+        try {
+            // The Turkish locale lower-cases 'I' to the dotless 'ı', so an
+            // uppercase value such as the RESILIENCE4J_THREAD_TYPE=VIRTUAL
+            // environment variable must not depend on the default locale.
+            Locale.setDefault(new Locale("tr", "TR"));
+
+            assertThat(ThreadType.fromString("VIRTUAL")).isEqualTo(ThreadType.VIRTUAL);
+            assertThat(ThreadType.fromString("PLATFORM")).isEqualTo(ThreadType.PLATFORM);
+        } finally {
+            Locale.setDefault(previous);
+        }
     }
 
     @Test
