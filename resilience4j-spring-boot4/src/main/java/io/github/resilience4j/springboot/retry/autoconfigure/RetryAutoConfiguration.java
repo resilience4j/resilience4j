@@ -19,7 +19,6 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.retry.configure.*;
@@ -34,6 +33,7 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.springboot.retry.monitoring.endpoint.RetryEndpoint;
 import io.github.resilience4j.springboot.retry.monitoring.endpoint.RetryEventsEndpoint;
+import io.github.resilience4j.springboot.scheduled.threadpool.autoconfigure.ContextAwareScheduledThreadPoolAutoConfiguration;
 import io.github.resilience4j.springboot.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,6 +50,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 
 
 /**
@@ -123,11 +124,11 @@ public class RetryAutoConfiguration {
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier(ContextAwareScheduledThreadPoolAutoConfiguration.EXECUTOR_NAME) ScheduledExecutorService scheduledExecutorService
     ) {
         return retryConfiguration
             .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-                fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
+                fallbackExecutor, spelResolver, scheduledExecutorService);
     }
 
     @Bean

@@ -17,7 +17,6 @@ package io.github.resilience4j.springboot3.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -36,6 +35,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -95,10 +95,10 @@ class RetryConfigurationOnMissingBeanTest {
             @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
             FallbackExecutor fallbackExecutor,
             SpelResolver spelResolver,
-            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+            @Autowired(required = false) ScheduledExecutorService scheduledExecutorService
         ) {
             this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry,
-                retryAspectExts, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
+                retryAspectExts, fallbackExecutor, spelResolver, scheduledExecutorService);
             return retryAspect;
         }
 
