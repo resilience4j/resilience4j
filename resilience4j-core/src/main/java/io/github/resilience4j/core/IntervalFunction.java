@@ -94,7 +94,9 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier, long maxIntervalMillis) {
+        checkInterval(initialIntervalMillis);
         checkInterval(maxIntervalMillis);
+        checkMultiplier(multiplier);
         return attempt -> {
             checkAttempt(attempt);
             final long interval = ofExponentialBackoff(initialIntervalMillis, multiplier)
@@ -108,6 +110,8 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier) {
+        checkInterval(initialIntervalMillis);
+        checkMultiplier(multiplier);
         return of(initialIntervalMillis, x -> (long) (x * multiplier));
     }
 
@@ -133,7 +137,9 @@ public interface IntervalFunction extends Function<Integer, Long> {
         double randomizationFactor,
         long maxIntervalMillis
     ) {
+        checkInterval(initialIntervalMillis);
         checkInterval(maxIntervalMillis);
+        checkMultiplier(multiplier);
         checkRandomizationFactor(randomizationFactor);
         return attempt -> {
             checkAttempt(attempt);
@@ -149,6 +155,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
         double randomizationFactor
     ) {
         checkInterval(initialIntervalMillis);
+        checkMultiplier(multiplier);
         checkRandomizationFactor(randomizationFactor);
         return attempt -> {
             checkAttempt(attempt);
@@ -252,10 +259,17 @@ final class IntervalFunctionCompanion {
         }
     }
 
-    static void checkRandomizationFactor(double randomizationFactor) {
-        if (randomizationFactor < 0.0 || randomizationFactor > 1.0) {
+    static void checkMultiplier(double multiplier) {
+        if (!Double.isFinite(multiplier) || multiplier <= 0.0) {
             throw new IllegalArgumentException(
-                "Illegal argument randomizationFactor: " + randomizationFactor);
+                "Illegal argument multiplier: " + multiplier + ". Must be finite and greater than 0.0");
+        }
+    }
+
+    static void checkRandomizationFactor(double randomizationFactor) {
+        if (!Double.isFinite(randomizationFactor) || randomizationFactor < 0.0 || randomizationFactor > 1.0) {
+            throw new IllegalArgumentException(
+                "Illegal argument randomizationFactor: " + randomizationFactor + ". Must be between 0.0 and 1.0 inclusive");
         }
     }
 

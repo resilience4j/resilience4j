@@ -115,6 +115,17 @@ NOTE: Find out full list of modules in our *https://resilience4j.readme.io/docs#
 
 TIP: For core modules package or `+Decorators+` builder see *https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-all[resilience4j-all]*.
 
+=== Retry Configuration Validation
+
+Retry configuration rejects invalid values when the builder method or interval factory is called:
+
+* `maxAttempts` must be at least `1`; this count includes the initial call. One attempt is valid.
+* `waitDuration` must be nonnegative. Zero is valid for a fixed retry wait; negative durations are rejected, including negative durations smaller than one millisecond.
+* Interval factories require an initial interval of at least one millisecond. Exponential backoff multipliers must be finite and greater than `0.0`.
+* Randomization factors must be finite and between `0.0` and `1.0`, inclusive.
+
+These invalid values throw `IllegalArgumentException` before retry execution begins. A maximum interval is a cap and may be below the initial interval. `intervalFunction` and `intervalBiFunction` are alternatives; setting either one replaces the other, so if both setters are called, the last setter takes effect.
+
 == Best Practices
 
 === Instance Management: When to Share vs. Not Share Instances

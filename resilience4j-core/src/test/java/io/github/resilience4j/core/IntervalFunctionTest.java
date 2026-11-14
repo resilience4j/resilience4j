@@ -139,6 +139,38 @@ public class IntervalFunctionTest {
     }
 
     @Test
+    public void shouldRejectInvalidExponentialBackoffMultiplier() {
+        for (double multiplier : new double[]{0.0, -0.1, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
+            assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(100, multiplier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("multiplier");
+            assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(100, multiplier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("multiplier");
+        }
+    }
+
+    @Test
+    public void shouldRejectNonFiniteRandomizationFactor() {
+        assertThatThrownBy(() -> IntervalFunction.ofRandomized(100, Double.NaN))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("randomizationFactor");
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(100, 1.5, Double.POSITIVE_INFINITY))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("randomizationFactor");
+    }
+
+    @Test
+    public void shouldAcceptMultiplierAndMaxIntervalBoundaries() {
+        assertThat(IntervalFunction.ofExponentialBackoff(100, 0.1).apply(2)).isEqualTo(10L);
+        assertThat(IntervalFunction.ofExponentialBackoff(100, 1.0).apply(2)).isEqualTo(100L);
+        assertThat(IntervalFunction.ofExponentialBackoff(100, 1.0, 100).apply(2)).isEqualTo(100L);
+        assertThat(IntervalFunction.ofExponentialBackoff(100, 1.0, 99).apply(2)).isEqualTo(99L);
+        assertThat(IntervalFunction.ofExponentialRandomBackoff(100, 1.0, 0.0, 100).apply(2))
+            .isEqualTo(100L);
+    }
+
+    @Test
     public void generatesRandomizedIntervals() {
         final IntervalFunction f = IntervalFunction.ofRandomized(100, 0.5);
 

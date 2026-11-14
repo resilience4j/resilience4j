@@ -175,7 +175,10 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
     private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         Duration waitDuration = properties.getWaitDuration();
-        if (waitDuration != null && waitDuration.toMillis() >= 0) {
+        if (waitDuration != null && waitDuration.isNegative()) {
+            throw new IllegalArgumentException("waitDuration must be greater than or equal to zero");
+        }
+        if (waitDuration != null) {
             if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
                 Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 configureExponentialBackoffAndRandomizedWait(properties, builder);
@@ -455,9 +458,9 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         public InstanceProperties setExponentialBackoffMultiplier(Double exponentialBackoffMultiplier) {
-            if (exponentialBackoffMultiplier <= 0) {
+            if (exponentialBackoffMultiplier == null || !Double.isFinite(exponentialBackoffMultiplier) || exponentialBackoffMultiplier <= 0.0) {
                 throw new IllegalArgumentException(
-                    "Illegal argument exponentialBackoffMultiplier: " + exponentialBackoffMultiplier + " is less or equal 0");
+                    "Illegal argument exponentialBackoffMultiplier: " + exponentialBackoffMultiplier + ". Must be finite and greater than 0.0");
             }
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
             return this;
@@ -493,9 +496,9 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
-            if (randomizedWaitFactor < 0 || randomizedWaitFactor >= 1) {
+            if (randomizedWaitFactor == null || !Double.isFinite(randomizedWaitFactor) || randomizedWaitFactor < 0 || randomizedWaitFactor > 1) {
                 throw new IllegalArgumentException(
-                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
+                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + ". Must be finite and between 0.0 and 1.0 inclusive");
             }
             this.randomizedWaitFactor = randomizedWaitFactor;
             return this;

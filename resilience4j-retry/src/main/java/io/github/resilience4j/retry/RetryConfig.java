@@ -32,6 +32,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * Configuration for a retry policy. Builder validation rejects fewer than one maximum attempt
+ * and negative wait durations. A zero wait duration and a single maximum attempt are valid.
+ */
 public class RetryConfig implements Serializable {
 
     private static final long serialVersionUID = 3522903275067138911L;
@@ -237,18 +241,21 @@ public class RetryConfig implements Serializable {
         public Builder<T> maxAttempts(int maxAttempts) {
             if (maxAttempts < 1) {
                 throw new IllegalArgumentException(
-                    "maxAttempts must be greater than or equal to 1");
+                    "maxAttempts must be greater than or equal to 1 (the initial call counts as an attempt)");
             }
             this.maxAttempts = maxAttempts;
             return this;
         }
 
         public Builder<T> waitDuration(Duration waitDuration) {
-            if (waitDuration.toMillis() >= 0) {
+            if (waitDuration == null) {
+                throw new IllegalArgumentException("waitDuration must not be null");
+            }
+            if (!waitDuration.isNegative()) {
                 this.intervalBiFunction((attempt, either) -> waitDuration.toMillis());
             } else {
                 throw new IllegalArgumentException(
-                    "waitDuration must be a positive value");
+                    "waitDuration must be greater than or equal to zero");
             }
             return this;
         }

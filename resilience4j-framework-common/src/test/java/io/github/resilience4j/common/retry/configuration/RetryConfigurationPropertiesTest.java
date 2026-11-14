@@ -248,7 +248,7 @@ public class RetryConfigurationPropertiesTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setExponentialBackoffMultiplier(0.0);
+        defaultProperties.setExponentialBackoffMultiplier(-0.5);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -264,9 +264,30 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
+    public void testIllegalArgumentOnRandomizedWaitFactorBiggerThanOne() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setRandomizedWaitFactor(1.0);
+        defaultProperties.setRandomizedWaitFactor(1.001);
+    }
+
+    @Test
+    public void testValidBoundaryValuesOnBackoffConfiguration() {
+        CommonRetryConfigurationProperties.InstanceProperties properties = new CommonRetryConfigurationProperties.InstanceProperties();
+
+        properties.setExponentialBackoffMultiplier(0.1);
+        properties.setRandomizedWaitFactor(1.0);
+
+        assertThat(properties.getExponentialBackoffMultiplier()).isEqualTo(0.1);
+        assertThat(properties.getRandomizedWaitFactor()).isEqualTo(1.0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnNonFiniteExponentialBackoffMultiplier() {
+        new CommonRetryConfigurationProperties.InstanceProperties().setExponentialBackoffMultiplier(Double.NaN);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnNonFiniteRandomizedWaitFactor() {
+        new CommonRetryConfigurationProperties.InstanceProperties().setRandomizedWaitFactor(Double.POSITIVE_INFINITY);
     }
 
     @Test

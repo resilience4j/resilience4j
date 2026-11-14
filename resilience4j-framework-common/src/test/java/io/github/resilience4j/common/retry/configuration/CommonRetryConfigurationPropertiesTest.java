@@ -25,6 +25,14 @@ public class CommonRetryConfigurationPropertiesTest {
     }
 
     @Test
+    public void createRetryConfig_withNegativeWaitDurationFails() {
+        Assertions.assertThatThrownBy(() -> new CommonRetryConfigurationProperties.InstanceProperties()
+            .setWaitDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("waitDuration");
+    }
+
+    @Test
     public void createRetryConfig_withWaitDuration() {
         testCreateRetryConfig(WITH_WAIT_DURATION);
     }
