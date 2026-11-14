@@ -262,62 +262,77 @@ public interface ThreadPoolBulkhead extends AutoCloseable {
         return decorateRunnable(this, runnable).get();
     }
 
+    /**
+     * Thread pool bulkhead metrics.
+     * <p>
+     * When the bulkhead is backed by a custom {@link java.util.concurrent.ExecutorService} that is
+     * not a {@link java.util.concurrent.ThreadPoolExecutor}, all metric methods return {@code -1}.
+     */
     interface Metrics {
 
         /**
-         * Returns the core number of threads.
+         * Returns the core number of threads, or {@code -1} if the underlying executor is not a
+         * {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the core number of threads
+         * @return the core number of threads, or {@code -1} if unavailable
          */
         int getCoreThreadPoolSize();
 
         /**
-         * Returns the current number of threads in the pool.
+         * Returns the current number of threads in the pool, or {@code -1} if the underlying
+         * executor is not a {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the current number of threads
+         * @return the current number of threads, or {@code -1} if unavailable
          */
         int getThreadPoolSize();
 
         /**
-         * Returns the maximum allowed number of threads.
+         * Returns the maximum allowed number of threads, or {@code -1} if the underlying executor
+         * is not a {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the maximum allowed number of threads
+         * @return the maximum allowed number of threads, or {@code -1} if unavailable
          */
         int getMaximumThreadPoolSize();
 
         /**
-         * Returns the number of tasks in the queue.
+         * Returns the number of tasks in the queue, or {@code -1} if the underlying executor is not
+         * a {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the number of tasks in the queue
+         * @return the number of tasks in the queue, or {@code -1} if unavailable
          */
         int getQueueDepth();
 
         /**
-         * Returns the remaining queue capacity.
+         * Returns the remaining queue capacity, or {@code -1} if the underlying executor is not a
+         * {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the remaining queue capacity
+         * @return the remaining queue capacity, or {@code -1} if unavailable
          */
         int getRemainingQueueCapacity();
 
         /**
-         * Returns the queue capacity.
+         * Returns the queue capacity, or {@code -1} if the underlying executor is not a
+         * {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the queue capacity
+         * @return the queue capacity, or {@code -1} if unavailable
          */
         int getQueueCapacity();
 
         /**
-         * Returns the number of actively executing tasks.
+         * Returns the number of actively executing tasks, or {@code -1} if the underlying executor
+         * is not a {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the number of executing tasks
+         * @return the number of executing tasks, or {@code -1} if unavailable
          */
         int getActiveThreadCount();
 
         /**
-         * Returns the maximum number of available threads.
-         * Equivalent to <code>getMaximumThreadPoolSize() - getActiveThreadCount()</code>
+         * Returns the maximum number of available threads, or {@code -1} if the underlying executor
+         * is not a {@link java.util.concurrent.ThreadPoolExecutor}.
+         * Equivalent to <code>getMaximumThreadPoolSize() - getActiveThreadCount()</code> when backed
+         * by a {@link java.util.concurrent.ThreadPoolExecutor}.
          *
-         * @return the maximum number of available threads
+         * @return the maximum number of available threads, or {@code -1} if unavailable
          */
         int getAvailableThreadCount();
     }

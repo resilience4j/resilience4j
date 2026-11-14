@@ -28,9 +28,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.UnaryOperator;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -56,6 +58,8 @@ public class ThreadPoolBulkheadConfig {
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;    
     private List<ContextPropagator> contextPropagators = new ArrayList<>();
     private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.AbortPolicy();
+    private transient ExecutorService executorService;
+    private transient UnaryOperator<ExecutorService> executorServiceDecorator = UnaryOperator.identity();
 
     private ThreadPoolBulkheadConfig() {
     }
@@ -105,12 +109,27 @@ public class ThreadPoolBulkheadConfig {
         return writableStackTraceEnabled;
     }
 
+    /**
+     * @deprecated Use {@link Builder#executorServiceDecorator(UnaryOperator)} or
+     * {@link Builder#executorService(ExecutorService)} with Micrometer {@code context-propagation}
+     * (for example {@code ContextExecutorService::wrap}) instead.
+     */
+    @Deprecated
     public List<ContextPropagator> getContextPropagator() {
         return contextPropagators;
     }
 
     public RejectedExecutionHandler getRejectedExecutionHandler() {
         return rejectedExecutionHandler;
+    }
+
+    @Nullable
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    public UnaryOperator<ExecutorService> getExecutorServiceDecorator() {
+        return executorServiceDecorator;
     }
 
     @Override
@@ -129,6 +148,8 @@ public class ThreadPoolBulkheadConfig {
     public static class Builder {
         private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
         private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
+        private ExecutorService executorService;
+        private UnaryOperator<ExecutorService> executorServiceDecorator = UnaryOperator.identity();
         private ThreadPoolBulkheadConfig config;
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
@@ -140,6 +161,8 @@ public class ThreadPoolBulkheadConfig {
             config.writableStackTraceEnabled = bulkheadConfig.writableStackTraceEnabled;
             config.contextPropagators = new ArrayList<>(bulkheadConfig.contextPropagators);
             config.rejectedExecutionHandler = bulkheadConfig.rejectedExecutionHandler;
+            this.executorService = bulkheadConfig.executorService;
+            this.executorServiceDecorator = bulkheadConfig.executorServiceDecorator;
         }
 
         public Builder() {
@@ -180,7 +203,11 @@ public class ThreadPoolBulkheadConfig {
          * Configures the context propagator class.
          *
          * @return the BulkheadConfig.Builder
+         * @deprecated Use {@link #executorServiceDecorator(UnaryOperator)} or
+         * {@link #executorService(ExecutorService)} with Micrometer {@code context-propagation}
+         * (for example {@code ContextExecutorService::wrap}) instead.
          */
+        @Deprecated
         public final Builder contextPropagator(
             @Nullable Class<? extends ContextPropagator>... contextPropagatorClasses) {
             this.contextPropagatorClasses = contextPropagatorClasses != null
@@ -189,6 +216,15 @@ public class ThreadPoolBulkheadConfig {
             return this;
         }
 
+        /**
+         * Configures the context propagator instances.
+         *
+         * @return the BulkheadConfig.Builder
+         * @deprecated Use {@link #executorServiceDecorator(UnaryOperator)} or
+         * {@link #executorService(ExecutorService)} with Micrometer {@code context-propagation}
+         * (for example {@code ContextExecutorService::wrap}) instead.
+         */
+        @Deprecated
         public final Builder contextPropagator(ContextPropagator... contextPropagators) {
             this.contextPropagators = contextPropagators != null ?
                 Arrays.stream(contextPropagators).collect(toList()) :
@@ -256,6 +292,46 @@ public class ThreadPoolBulkheadConfig {
         }
 
         /**
+         * Configures a custom {@link ExecutorService} to execute bulkhead tasks instead of creating
+         * an internal {@link ThreadPoolExecutor}.
+         * <p>
+         * Note that pool sizing, queue capacity, keep-alive duration, and rejected execution handler
+         * settings on this configuration are not applied to an externally supplied
+         * {@link ExecutorService}, and {@link ThreadPoolBulkhead.Metrics} methods will return
+         * {@code -1} if the supplied {@link ExecutorService} is not a {@link ThreadPoolExecutor}.
+         * If you only want to wrap the bulkhead-managed {@link ThreadPoolExecutor} (for example with
+         * Micrometer {@code ContextExecutorService::wrap}), prefer
+         * {@link #executorServiceDecorator(UnaryOperator)} so that pool configuration and metrics
+         * remain intact.
+         *
+         * @param executorService custom executor service, or {@code null} to use the default
+         *                        internal {@link ThreadPoolExecutor}
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder executorService(@Nullable ExecutorService executorService) {
+            this.executorService = executorService;
+            return this;
+        }
+
+        /**
+         * Configures a decorator function applied to the bulkhead's {@link ExecutorService}
+         * (either the internally created {@link ThreadPoolExecutor} or a custom
+         * {@link #executorService(ExecutorService)}).
+         * <p>
+         * For example, passing {@code ContextExecutorService::wrap} decorates the internal
+         * {@link ThreadPoolExecutor} with Micrometer context propagation while keeping pool sizing
+         * settings and {@link ThreadPoolBulkhead.Metrics} intact.
+         *
+         * @param executorServiceDecorator decorator function applied to the underlying executor service
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder executorServiceDecorator(UnaryOperator<ExecutorService> executorServiceDecorator) {
+            this.executorServiceDecorator = Objects.requireNonNull(
+                executorServiceDecorator, "executorServiceDecorator must not be null");
+            return this;
+        }
+
+        /**
          * Builds a BulkheadConfig
          *
          * @return the BulkheadConfig
@@ -274,6 +350,8 @@ public class ThreadPoolBulkheadConfig {
             if (!contextPropagators.isEmpty()){
                 config.contextPropagators.addAll(this.contextPropagators);
             }
+            config.executorService = this.executorService;
+            config.executorServiceDecorator = this.executorServiceDecorator;
 
             return config;
         }

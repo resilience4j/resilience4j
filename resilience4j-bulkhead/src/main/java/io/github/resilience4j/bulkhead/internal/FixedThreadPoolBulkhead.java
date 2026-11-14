@@ -52,7 +52,9 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     private static final String TAGS_MUST_NOTE_BE_NULL = "Tags must not be null";
 
     private final String name;
-    private final ThreadPoolExecutor executorService;
+    private final ExecutorService executorService;
+    @Nullable
+    private final ThreadPoolExecutor threadPoolExecutor;
     private final FixedThreadPoolBulkhead.BulkheadMetrics metrics;
     private final FixedThreadPoolBulkhead.BulkheadEventProcessor eventProcessor;
     private final ThreadPoolBulkheadConfig config;
@@ -80,20 +82,36 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         this.name = name;
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
-        // init thread pool executor
+        ExecutorService configuredExecutor = config.getExecutorService();
+        if (configuredExecutor != null) {
+            this.threadPoolExecutor = configuredExecutor instanceof ThreadPoolExecutor tpe ? tpe : null;
+            this.executorService = requireNonNull(
+                config.getExecutorServiceDecorator().apply(configuredExecutor),
+                "executorServiceDecorator must not return null");
+        } else {
+            ThreadPoolExecutor rawExecutor = initThreadPoolExecutor(name, this.config);
+            this.threadPoolExecutor = rawExecutor;
+            this.executorService = requireNonNull(
+                config.getExecutorServiceDecorator().apply(rawExecutor),
+                "executorServiceDecorator must not return null");
+        }
+        // adding prover jvm executor shutdown
+        this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
+        this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();
+    }
+
+    private static ThreadPoolExecutor initThreadPoolExecutor(String name,
+        ThreadPoolBulkheadConfig config) {
         ThreadFactory threadFactory = ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL
             ? Thread.ofVirtual().name(String.join("-", "bulkhead", name, "v-"), 0).factory()
             : new BulkheadNamingThreadFactory(name);
 
-        this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(),
+        return new ThreadPoolExecutor(config.getCoreThreadPoolSize(),
             config.getMaxThreadPoolSize(),
             config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
             config.getQueueCapacity() == 0 ? new SynchronousQueue<>() : new ArrayBlockingQueue<>(config.getQueueCapacity()),
             threadFactory,
             config.getRejectedExecutionHandler());
-        // adding prover jvm executor shutdown
-        this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
-        this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();
     }
 
     /**
@@ -304,42 +322,44 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 
         @Override
         public int getCoreThreadPoolSize() {
-            return executorService.getCorePoolSize();
+            return threadPoolExecutor != null ? threadPoolExecutor.getCorePoolSize() : -1;
         }
 
         @Override
         public int getThreadPoolSize() {
-            return executorService.getPoolSize();
+            return threadPoolExecutor != null ? threadPoolExecutor.getPoolSize() : -1;
         }
 
         @Override
         public int getMaximumThreadPoolSize() {
-            return executorService.getMaximumPoolSize();
+            return threadPoolExecutor != null ? threadPoolExecutor.getMaximumPoolSize() : -1;
         }
 
         @Override
         public int getQueueDepth() {
-            return executorService.getQueue().size();
+            return threadPoolExecutor != null ? threadPoolExecutor.getQueue().size() : -1;
         }
 
         @Override
         public int getRemainingQueueCapacity() {
-            return executorService.getQueue().remainingCapacity();
+            return threadPoolExecutor != null ? threadPoolExecutor.getQueue().remainingCapacity() : -1;
         }
 
         @Override
         public int getQueueCapacity() {
-            return config.getQueueCapacity();
+            return threadPoolExecutor != null ? config.getQueueCapacity() : -1;
         }
 
         @Override
         public int getActiveThreadCount() {
-            return executorService.getActiveCount();
+            return threadPoolExecutor != null ? threadPoolExecutor.getActiveCount() : -1;
         }
 
         @Override
         public int getAvailableThreadCount() {
-            return getMaximumThreadPoolSize() - getActiveThreadCount();
+            return threadPoolExecutor != null
+                ? getMaximumThreadPoolSize() - getActiveThreadCount()
+                : -1;
         }
     }
 }

@@ -25,8 +25,11 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -269,6 +272,69 @@ class ThreadPoolBulkheadConfigTest {
         assertThat(derivedConfig.getQueueCapacity()).isEqualTo(20);
         assertThat(derivedConfig.getKeepAliveDuration()).isEqualTo(keepAlive);
         assertThat(derivedConfig.isWritableStackTraceEnabled()).isFalse();
+    }
+
+    @Test
+    void executorServiceAndDecoratorConfig() {
+        ThreadPoolBulkheadConfig defaultConfig = ThreadPoolBulkheadConfig.ofDefaults();
+        assertThat(defaultConfig.getExecutorService()).isNull();
+        assertThat(defaultConfig.getExecutorServiceDecorator()).isNotNull();
+
+        ExecutorService customExecutor = Executors.newSingleThreadExecutor();
+        UnaryOperator<ExecutorService> decorator = es -> es;
+        try {
+            ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+                .executorService(customExecutor)
+                .executorServiceDecorator(decorator)
+                .build();
+
+            assertThat(config.getExecutorService()).isSameAs(customExecutor);
+            assertThat(config.getExecutorServiceDecorator()).isSameAs(decorator);
+        } finally {
+            customExecutor.shutdownNow();
+        }
+    }
+
+    @Test
+    void executorServiceDecoratorRejectsNull() {
+        assertThatThrownBy(() -> ThreadPoolBulkheadConfig.custom()
+            .executorServiceDecorator(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("executorServiceDecorator must not be null");
+    }
+
+    @Test
+    void fromShouldPreserveExecutorServiceAndDecoratorWithoutMutatingBaseConfig() {
+        ExecutorService baseExecutor = Executors.newSingleThreadExecutor();
+        ExecutorService derivedExecutor = Executors.newSingleThreadExecutor();
+        UnaryOperator<ExecutorService> baseDecorator = es -> es;
+        UnaryOperator<ExecutorService> derivedDecorator = es -> es;
+        try {
+            ThreadPoolBulkheadConfig baseConfig = ThreadPoolBulkheadConfig.custom()
+                .executorService(baseExecutor)
+                .executorServiceDecorator(baseDecorator)
+                .build();
+
+            ThreadPoolBulkheadConfig copiedConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+                .maxThreadPoolSize(10)
+                .build();
+
+            assertThat(copiedConfig.getExecutorService()).isSameAs(baseExecutor);
+            assertThat(copiedConfig.getExecutorServiceDecorator()).isSameAs(baseDecorator);
+
+            ThreadPoolBulkheadConfig overriddenConfig = ThreadPoolBulkheadConfig.from(baseConfig)
+                .executorService(derivedExecutor)
+                .executorServiceDecorator(derivedDecorator)
+                .build();
+
+            assertThat(overriddenConfig.getExecutorService()).isSameAs(derivedExecutor);
+            assertThat(overriddenConfig.getExecutorServiceDecorator()).isSameAs(derivedDecorator);
+            assertThat(baseConfig.getExecutorService()).isSameAs(baseExecutor);
+            assertThat(baseConfig.getExecutorServiceDecorator()).isSameAs(baseDecorator);
+        } finally {
+            baseExecutor.shutdownNow();
+            derivedExecutor.shutdownNow();
+        }
     }
 
     public static class TestCtxPropagator implements ContextPropagator<Object> {
