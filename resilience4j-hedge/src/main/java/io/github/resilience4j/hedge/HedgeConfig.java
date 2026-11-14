@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ContextPropagator;
@@ -47,8 +48,9 @@ public class HedgeConfig implements Serializable {
     private final int windowSize;
     private final Duration cutoff;
     private final transient ContextPropagator[] contextPropagators;
+    private final transient ScheduledExecutorService executorService;
 
-    private HedgeConfig(int concurrentHedges, HedgeDurationSupplierType durationSupplierType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ContextPropagator[] propagators) {
+    private HedgeConfig(int concurrentHedges, HedgeDurationSupplierType durationSupplierType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ContextPropagator[] propagators, @Nullable ScheduledExecutorService executorService) {
         this.concurrentHedges = concurrentHedges;
         this.durationSupplierType = durationSupplierType;
         this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
@@ -57,6 +59,7 @@ public class HedgeConfig implements Serializable {
         this.windowSize = windowSize;
         this.cutoff = cutoff;
         this.contextPropagators = propagators;
+        this.executorService = executorService;
     }
 
     /**
@@ -81,8 +84,24 @@ public class HedgeConfig implements Serializable {
         return new Builder().build();
     }
 
+    /**
+     * @deprecated Use {@link #getExecutorService()} with a context-propagating
+     * {@link ScheduledExecutorService} (such as Micrometer's {@code ContextExecutorService.wrap(...)}) instead.
+     */
+    @Deprecated
     public ContextPropagator[] getContextPropagators() {
         return contextPropagators;
+    }
+
+    /**
+     * Returns the custom {@link ScheduledExecutorService} configured for hedging, or {@code null}
+     * if the default {@link io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor} should be used.
+     *
+     * @return the configured {@link ScheduledExecutorService}, or {@code null}
+     */
+    @Nullable
+    public ScheduledExecutorService getExecutorService() {
+        return executorService;
     }
 
     public int getConcurrentHedges() {
@@ -139,6 +158,7 @@ public class HedgeConfig implements Serializable {
         private int concurrentHedges = 10;
         private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
         private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
+        private ScheduledExecutorService executorService;
 
         public Builder() {
         }
@@ -151,6 +171,7 @@ public class HedgeConfig implements Serializable {
             this.windowSize = baseConfig.windowSize;
             this.cutoff = baseConfig.cutoff;
             this.concurrentHedges = baseConfig.concurrentHedges;
+            this.executorService = baseConfig.executorService;
         }
 
         public static Builder fromConfig(HedgeConfig baseConfig) {
@@ -184,7 +205,8 @@ public class HedgeConfig implements Serializable {
                 shouldMeasureErrors,
                 windowSize,
                 cutoff,
-                propArray
+                propArray,
+                executorService
             );
         }
 
@@ -219,7 +241,10 @@ public class HedgeConfig implements Serializable {
          *
          * @param contextPropagatorClasses the context propagators to pass to the {@link io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor}
          * @return the HedgeConfig.Builder
+         * @deprecated Use {@link #withExecutorService(ScheduledExecutorService)} with a context-propagating
+         * {@link ScheduledExecutorService} (such as Micrometer's {@code ContextExecutorService.wrap(...)}) instead.
          */
+        @Deprecated
         public final Builder withContextPropagators(
             @Nullable Class<? extends ContextPropagator>... contextPropagatorClasses) {
             this.contextPropagatorClasses = contextPropagatorClasses != null
@@ -228,10 +253,35 @@ public class HedgeConfig implements Serializable {
             return this;
         }
 
+        /**
+         * Configures the context propagators.
+         *
+         * @param contextPropagators the context propagators to pass to the {@link io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor}
+         * @return the HedgeConfig.Builder
+         * @deprecated Use {@link #withExecutorService(ScheduledExecutorService)} with a context-propagating
+         * {@link ScheduledExecutorService} (such as Micrometer's {@code ContextExecutorService.wrap(...)}) instead.
+         */
+        @Deprecated
         public final Builder withContextPropagators(ContextPropagator... contextPropagators) {
             this.contextPropagators = contextPropagators != null ?
                 Arrays.stream(contextPropagators).collect(toList()) :
                 new ArrayList<>();
+            return this;
+        }
+
+        /**
+         * Configures a custom {@link ScheduledExecutorService} to schedule and execute hedged calls.
+         * <p>
+         * When set, {@link Hedge} uses this executor service instead of creating a default
+         * {@link io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor}. For example,
+         * you can wrap an executor using Micrometer's {@code ContextExecutorService.wrap(executor)}
+         * for context propagation.
+         *
+         * @param executorService the {@link ScheduledExecutorService} to use, or {@code null} to use the default
+         * @return the HedgeConfig.Builder
+         */
+        public Builder withExecutorService(@Nullable ScheduledExecutorService executorService) {
+            this.executorService = executorService;
             return this;
         }
 

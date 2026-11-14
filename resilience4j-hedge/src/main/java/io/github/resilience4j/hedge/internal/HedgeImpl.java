@@ -19,6 +19,7 @@
 package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
 import io.github.resilience4j.hedge.event.*;
@@ -45,7 +46,7 @@ public class HedgeImpl implements Hedge {
     private final HedgeEventProcessor eventProcessor;
     private final HedgeDurationSupplier durationSupplier;
     private final HedgeMetrics metrics;
-    private final ContextAwareScheduledThreadPoolExecutor configuredHedgeExecutor;
+    private final ScheduledExecutorService configuredHedgeExecutor;
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig) {
         this(name, hedgeConfig, emptyMap());
@@ -53,18 +54,30 @@ public class HedgeImpl implements Hedge {
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig,
                      Map<String, String> tags) {
+        this(name, hedgeConfig, tags, null);
+    }
+
+    public HedgeImpl(String name, HedgeConfig hedgeConfig,
+                     Map<String, String> tags,
+                     @Nullable ScheduledExecutorService scheduledExecutorService) {
         this.name = name;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.hedgeConfig = hedgeConfig;
         this.eventProcessor = new HedgeEventProcessor();
         this.durationSupplier = HedgeDurationSupplier.fromConfig(hedgeConfig);
         this.metrics = new HedgeMetrics();
-        this.configuredHedgeExecutor =
-            ContextAwareScheduledThreadPoolExecutor
-                .newScheduledThreadPool()
-                .corePoolSize(hedgeConfig.getConcurrentHedges())
-                .contextPropagators(hedgeConfig.getContextPropagators())
-                .build();
+        if (scheduledExecutorService != null) {
+            this.configuredHedgeExecutor = scheduledExecutorService;
+        } else if (hedgeConfig.getExecutorService() != null) {
+            this.configuredHedgeExecutor = hedgeConfig.getExecutorService();
+        } else {
+            this.configuredHedgeExecutor =
+                ContextAwareScheduledThreadPoolExecutor
+                    .newScheduledThreadPool()
+                    .corePoolSize(hedgeConfig.getConcurrentHedges())
+                    .contextPropagators(hedgeConfig.getContextPropagators())
+                    .build();
+        }
     }
 
     @Override
@@ -119,7 +132,7 @@ public class HedgeImpl implements Hedge {
                         hedged.cancel(false);
                         if (t.throwable.isPresent()) {
                             onPrimaryFailure(Duration.ofNanos(duration), t.throwable.get());
-                            throw (RuntimeException) t.throwable.get();
+                            throw wrapOrThrow(t.throwable.get());
                         } else {
                             onPrimarySuccess(Duration.ofNanos(duration));
                         }
@@ -127,7 +140,7 @@ public class HedgeImpl implements Hedge {
                         supplied.cancel(false);
                         if (t.throwable.isPresent()) {
                             onSecondaryFailure(Duration.ofNanos(duration), t.throwable.get());
-                            throw (RuntimeException) t.throwable.get();
+                            throw wrapOrThrow(t.throwable.get());
                         } else {
                             onSecondarySuccess(Duration.ofNanos(duration));
                         }
@@ -135,6 +148,16 @@ public class HedgeImpl implements Hedge {
                     return t.value;
                 });
         };
+    }
+
+    private static RuntimeException wrapOrThrow(Throwable throwable) {
+        if (throwable instanceof RuntimeException runtimeException) {
+            return runtimeException;
+        }
+        if (throwable instanceof Error error) {
+            throw error;
+        }
+        return new CompletionException(throwable);
     }
 
     @Override
@@ -181,7 +204,7 @@ public class HedgeImpl implements Hedge {
 
         @Override
         public int getSecondaryPoolActiveCount() {
-            return configuredHedgeExecutor.getActiveCount();
+            return configuredHedgeExecutor instanceof ThreadPoolExecutor tpe ? tpe.getActiveCount() : -1;
         }
     }
 
