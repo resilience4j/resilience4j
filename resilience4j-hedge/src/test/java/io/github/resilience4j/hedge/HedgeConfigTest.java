@@ -18,8 +18,12 @@
  */
 package io.github.resilience4j.hedge;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.junit.jupiter.api.Test;
 
@@ -108,4 +112,46 @@ class HedgeConfigTest {
 //            .getName())
 //            .isEqualTo("hedge-TEST-1");
 //    }
+
+    @Test
+    void shouldDefaultExecutorServiceToNull() {
+        HedgeConfig config = HedgeConfig.ofDefaults();
+
+        assertThat(config.getExecutorService()).isNull();
+    }
+
+    @Test
+    void shouldConfigureCustomExecutorService() {
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        try {
+            HedgeConfig config = HedgeConfig.custom()
+                .withExecutorService(service)
+                .build();
+
+            assertThat(config.getExecutorService()).isSameAs(service);
+        } finally {
+            service.shutdownNow();
+        }
+    }
+
+    @Test
+    void shouldCopyExecutorServiceFromBaseConfig() {
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        try {
+            HedgeConfig baseConfig = HedgeConfig.custom()
+                .withExecutorService(service)
+                .build();
+
+            HedgeConfig copiedConfig = HedgeConfig.from(baseConfig).build();
+            HedgeConfig overriddenConfig = HedgeConfig.from(baseConfig)
+                .withExecutorService(null)
+                .build();
+
+            assertThat(copiedConfig.getExecutorService()).isSameAs(service);
+            assertThat(overriddenConfig.getExecutorService()).isNull();
+            assertThat(baseConfig.getExecutorService()).isSameAs(service);
+        } finally {
+            service.shutdownNow();
+        }
+    }
 }

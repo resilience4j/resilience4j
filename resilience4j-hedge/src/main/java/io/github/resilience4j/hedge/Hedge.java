@@ -19,6 +19,7 @@
 package io.github.resilience4j.hedge;
 
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.hedge.event.*;
 import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 import io.github.resilience4j.hedge.internal.HedgeImpl;
@@ -27,6 +28,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * A Hedge executes extra requests if the main execution does not return in time. Hedges rely on a scheduled thread pool
@@ -101,6 +104,25 @@ public interface Hedge {
     }
 
     /**
+     * Creates a Hedge with a custom Hedge configuration and a custom {@link ScheduledExecutorService}.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name            the name of the Hedge
+     * @param hedgeConfig     a custom Hedge configuration
+     * @param tags            tags added to the Hedge
+     * @param executorService the {@link ScheduledExecutorService} to use for scheduling and executing hedges
+     * @return a Hedge with a custom Hedge configuration and {@link ScheduledExecutorService}
+     */
+    static Hedge of(String name, HedgeConfig hedgeConfig,
+                    Map<String, String> tags,
+                    @Nullable ScheduledExecutorService executorService) {
+        return new HedgeImpl(name, hedgeConfig, tags, executorService);
+    }
+
+    /**
      * Creates a Hedge decorator with a timeout Duration.
      *
      * @param hedgeDuration the timeout Duration
@@ -111,6 +133,21 @@ public interface Hedge {
             .preconfiguredDuration(hedgeDuration)
             .build();
         return new HedgeImpl(DEFAULT_NAME, hedgeConfig);
+    }
+
+    /**
+     * Creates a Hedge decorator with a timeout Duration and a custom {@link ScheduledExecutorService}.
+     *
+     * @param hedgeDuration   the timeout Duration
+     * @param executorService the {@link ScheduledExecutorService} to use for scheduling and executing hedges
+     * @return The Hedge
+     */
+    static Hedge of(Duration hedgeDuration, @Nullable ScheduledExecutorService executorService) {
+        HedgeConfig hedgeConfig = HedgeConfig.custom()
+            .preconfiguredDuration(hedgeDuration)
+            .withExecutorService(executorService)
+            .build();
+        return of(DEFAULT_NAME, hedgeConfig, emptyMap(), executorService);
     }
 
     /**
@@ -171,6 +208,15 @@ public interface Hedge {
         long getSecondarySuccessCount();
         long getPrimaryFailureCount();
         long getSecondaryFailureCount();
+
+        /**
+         * Returns the approximate number of threads that are actively executing tasks in the
+         * secondary hedge executor pool, or {@code -1} when the hedge uses a custom
+         * {@link ScheduledExecutorService} that is not a {@link ThreadPoolExecutor}
+         * (such as a Micrometer {@code ContextExecutorService} wrapper).
+         *
+         * @return the number of active threads, or {@code -1} if unavailable
+         */
         int getSecondaryPoolActiveCount();
     }
 
