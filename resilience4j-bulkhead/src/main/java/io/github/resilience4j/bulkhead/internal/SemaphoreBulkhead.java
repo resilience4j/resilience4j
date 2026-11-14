@@ -319,7 +319,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         if (grantsInProgress.getAndIncrement() != 0) {
             return;
         }
-        RuntimeException consumerFailure = null;
+        Throwable consumerFailure = null;
         int missed = 1;
         do {
             while (!pendingPermissions.isEmpty() && semaphore.tryAcquire()) {
@@ -330,7 +330,7 @@ public class SemaphoreBulkhead implements Bulkhead {
                 }
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
-                } catch (RuntimeException e) {
+                } catch (Throwable e) {
                     if (consumerFailure == null) {
                         consumerFailure = e;
                     } else {
@@ -343,7 +343,13 @@ public class SemaphoreBulkhead implements Bulkhead {
             missed = grantsInProgress.addAndGet(-missed);
         } while (missed != 0);
         if (consumerFailure != null) {
-            throw consumerFailure;
+            if (consumerFailure instanceof Error error) {
+                throw error;
+            }
+            if (consumerFailure instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new RuntimeException(consumerFailure);
         }
     }
 
