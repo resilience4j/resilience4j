@@ -813,6 +813,74 @@ class SemaphoreBulkheadTest {
     }
 
     @TestTemplate
+    void shouldKeepGrantingQueuedPermissionsWhenPermittedEventConsumerThrowsError(ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncConsumerError", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        AtomicBoolean failOnce = new AtomicBoolean(true);
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            if (failOnce.getAndSet(false)) {
+                throw new AssertionError("BAM!");
+            }
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        assertThatThrownBy(bulkhead::onComplete)
+            .isInstanceOf(AssertionError.class)
+            .hasMessage("BAM!");
+
+        assertThat(first)
+            .as("permission must be granted although the event consumer failed in %s", threadType)
+            .isCompleted();
+        assertThat(second).isNotDone();
+
+        bulkhead.onComplete();
+        assertThat(second)
+            .as("later grants must not be blocked by the earlier consumer failure in %s", threadType)
+            .isCompleted();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @TestTemplate
+    void shouldKeepGrantingQueuedPermissionsWhenPermittedEventConsumerThrowsSneakyCheckedException(
+        ThreadType threadType) {
+        Bulkhead bulkhead = createQueueingBulkhead("asyncConsumerSneakyChecked", threadType, 1,
+            Duration.ofSeconds(10));
+        assertThat(bulkhead.tryAcquirePermission()).isTrue();
+        AtomicBoolean failOnce = new AtomicBoolean(true);
+        bulkhead.getEventPublisher().onCallPermitted(event -> {
+            if (failOnce.getAndSet(false)) {
+                sneakyThrow(new Exception("checked BAM!"));
+            }
+        });
+        CompletableFuture<Void> first = bulkhead.acquirePermissionAsync();
+        CompletableFuture<Void> second = bulkhead.acquirePermissionAsync();
+
+        Throwable thrown = Assertions.catchThrowable(bulkhead::onComplete);
+        assertThat(thrown).isInstanceOf(RuntimeException.class);
+        assertThat(thrown.getCause()).isInstanceOf(Exception.class).hasMessage("checked BAM!");
+
+        assertThat(first)
+            .as("permission must be granted although the event consumer failed in %s", threadType)
+            .isCompleted();
+        assertThat(second).isNotDone();
+
+        bulkhead.onComplete();
+        assertThat(second)
+            .as("later grants must not be blocked by the earlier consumer failure in %s", threadType)
+            .isCompleted();
+        bulkhead.onComplete();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void sneakyThrow(Throwable throwable) throws E {
+        throw (E) throwable;
+    }
+
+    @TestTemplate
     void shouldQueueSubMillisecondMaxWaitDurationInsteadOfFailingFast(ThreadType threadType)
         throws InterruptedException {
         Bulkhead bulkhead = createQueueingBulkhead("asyncSubMillisecond", threadType, 1,
