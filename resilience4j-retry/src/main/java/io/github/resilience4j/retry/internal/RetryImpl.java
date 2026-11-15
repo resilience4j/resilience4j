@@ -186,11 +186,11 @@ public class RetryImpl<T> implements Retry {
         @Override
         public boolean onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
-                totalAttemptsCounter.increment();
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
                 }
+                totalAttemptsCounter.increment();
 
                 if (consumeResultBeforeRetryAttempt != null) {
                     consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
@@ -388,11 +388,11 @@ public class RetryImpl<T> implements Retry {
         @Override
         public long onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
-                totalAttemptsCounter.increment();
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
                 if (currentNumOfAttempts >= maxAttempts) {
                     return -1;
                 }
+                totalAttemptsCounter.increment();
 
                 if(consumeResultBeforeRetryAttempt != null){
                     consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
