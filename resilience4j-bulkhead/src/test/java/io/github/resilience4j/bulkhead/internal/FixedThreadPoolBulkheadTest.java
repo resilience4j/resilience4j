@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -134,6 +135,72 @@ class FixedThreadPoolBulkheadTest {
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getConfiguration("testNotFound")).isEmpty();
         inMemoryThreadPoolBulkheadRegistry.addConfiguration("testConfig", defaultConfig);
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getConfiguration("testConfig")).isNotNull();
+    }
+
+    @Test
+    void shouldInterruptRunningCallableWhenFutureCancelled() throws Exception {
+        ThreadPoolBulkheadConfig singleThreadConfig = ThreadPoolBulkheadConfig.custom()
+            .coreThreadPoolSize(1)
+            .maxThreadPoolSize(1)
+            .queueCapacity(0)
+            .build();
+        FixedThreadPoolBulkhead singleThreadBulkhead = new FixedThreadPoolBulkhead("cancelCallable", singleThreadConfig);
+        try {
+            CountDownLatch started = new CountDownLatch(1);
+            CountDownLatch interrupted = new CountDownLatch(1);
+            CompletableFuture<String> future = singleThreadBulkhead.submit(() -> {
+                started.countDown();
+                try {
+                    Thread.sleep(10000);
+                    return "completed";
+                } catch (InterruptedException e) {
+                    interrupted.countDown();
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            });
+
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThat(future.cancel(true)).isTrue();
+            assertThat(future.isCancelled()).isTrue();
+            assertThat(interrupted.await(2, TimeUnit.SECONDS)).isTrue();
+            await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(singleThreadBulkhead.getMetrics().getActiveThreadCount()).isZero());
+        } finally {
+            singleThreadBulkhead.close();
+        }
+    }
+
+    @Test
+    void shouldInterruptRunningRunnableWhenFutureCancelled() throws Exception {
+        ThreadPoolBulkheadConfig singleThreadConfig = ThreadPoolBulkheadConfig.custom()
+            .coreThreadPoolSize(1)
+            .maxThreadPoolSize(1)
+            .queueCapacity(0)
+            .build();
+        FixedThreadPoolBulkhead singleThreadBulkhead = new FixedThreadPoolBulkhead("cancelRunnable", singleThreadConfig);
+        try {
+            CountDownLatch started = new CountDownLatch(1);
+            CountDownLatch interrupted = new CountDownLatch(1);
+            CompletableFuture<Void> future = singleThreadBulkhead.submit(() -> {
+                started.countDown();
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    interrupted.countDown();
+                    Thread.currentThread().interrupt();
+                }
+            });
+
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThat(future.cancel(true)).isTrue();
+            assertThat(future.isCancelled()).isTrue();
+            assertThat(interrupted.await(2, TimeUnit.SECONDS)).isTrue();
+            await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(singleThreadBulkhead.getMetrics().getActiveThreadCount()).isZero());
+        } finally {
+            singleThreadBulkhead.close();
+        }
     }
 
     private RegistryEventConsumer<ThreadPoolBulkhead> getNoOpsRegistryEventConsumer() {

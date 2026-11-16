@@ -21,6 +21,7 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -50,9 +51,13 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -106,6 +111,106 @@ class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isOne();
         assertThat(metrics.getNumberOfFailedCalls()).isOne();
+    }
+
+    @Test
+    void shouldCancelThreadPoolBulkheadTaskOnTimeoutAndFreePool() throws Exception {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(50))
+            .cancelRunningFuture(true)
+            .build());
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("helloBackend", ThreadPoolBulkheadConfig.custom()
+            .coreThreadPoolSize(1)
+            .maxThreadPoolSize(1)
+            .queueCapacity(0)
+            .build());
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        try {
+            CountDownLatch started = new CountDownLatch(1);
+            CountDownLatch interrupted = new CountDownLatch(1);
+            CompletionStage<String> timedOutStage = Decorators
+                .ofCallable(() -> {
+                    started.countDown();
+                    try {
+                        Thread.sleep(10000);
+                        return "late";
+                    } catch (InterruptedException e) {
+                        interrupted.countDown();
+                        Thread.currentThread().interrupt();
+                        throw e;
+                    }
+                })
+                .withThreadPoolBulkhead(bulkhead)
+                .withTimeLimiter(timeLimiter, scheduler)
+                .get();
+
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThatThrownBy(() -> timedOutStage.toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
+            assertThat(interrupted.await(2, TimeUnit.SECONDS)).isTrue();
+            await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(bulkhead.getMetrics().getActiveThreadCount()).isZero());
+
+            TimeLimiter followUpTimeLimiter = TimeLimiter.of("helloBackendFollowUp", TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(2))
+                .build());
+            String result = Decorators
+                .ofCallable(() -> "ok")
+                .withThreadPoolBulkhead(bulkhead)
+                .withTimeLimiter(followUpTimeLimiter, scheduler)
+                .get()
+                .toCompletableFuture()
+                .get();
+            assertThat(result).isEqualTo("ok");
+        } finally {
+            scheduler.shutdownNow();
+            bulkhead.close();
+        }
+    }
+
+    @Test
+    void shouldNotCancelThreadPoolBulkheadTaskOnTimeoutWhenCancelRunningFutureIsFalse() throws Exception {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(50))
+            .cancelRunningFuture(false)
+            .build());
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("helloBackend", ThreadPoolBulkheadConfig.custom()
+            .coreThreadPoolSize(1)
+            .maxThreadPoolSize(1)
+            .queueCapacity(0)
+            .build());
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        CountDownLatch releaseTask = new CountDownLatch(1);
+        try {
+            CountDownLatch started = new CountDownLatch(1);
+            AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+            CompletionStage<String> timedOutStage = Decorators
+                .ofCallable(() -> {
+                    started.countDown();
+                    try {
+                        releaseTask.await(2, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        wasInterrupted.set(true);
+                        Thread.currentThread().interrupt();
+                    }
+                    return "done";
+                })
+                .withThreadPoolBulkhead(bulkhead)
+                .withTimeLimiter(timeLimiter, scheduler)
+                .get();
+
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThatThrownBy(() -> timedOutStage.toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
+            scheduler.submit(() -> {}).get(1, TimeUnit.SECONDS);
+            assertThat(wasInterrupted.get()).isFalse();
+        } finally {
+            releaseTask.countDown();
+            scheduler.shutdownNow();
+            bulkhead.close();
+        }
     }
 
     @Test
