@@ -119,6 +119,63 @@ class TimeLimiterTest {
     }
 
     @Test
+    void shouldCancelCompletionStageOnTimeoutWhenCancelRunningFutureIsTrue() throws Exception {
+        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(50))
+            .cancelRunningFuture(true)
+            .build());
+        scheduler = Executors.newScheduledThreadPool(1);
+
+        CountDownLatch cancelLatch = new CountDownLatch(1);
+        AtomicBoolean cancelledWithInterrupt = new AtomicBoolean(false);
+        CompletableFuture<Integer> upstream = new CompletableFuture<>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                cancelledWithInterrupt.set(mayInterruptIfRunning);
+                cancelLatch.countDown();
+                return super.cancel(mayInterruptIfRunning);
+            }
+        };
+
+        CompletionStage<Integer> decorated = timeLimiter
+            .decorateCompletionStage(scheduler, () -> upstream).get();
+
+        assertThatThrownBy(() -> decorated.toCompletableFuture().get())
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseExactlyInstanceOf(TimeoutException.class);
+        assertThat(cancelLatch.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(cancelledWithInterrupt.get()).isTrue();
+    }
+
+    @Test
+    void shouldNotCancelCompletionStageOnTimeoutWhenCancelRunningFutureIsFalse() throws Exception {
+        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(50))
+            .cancelRunningFuture(false)
+            .build());
+        scheduler = Executors.newScheduledThreadPool(1);
+
+        AtomicBoolean cancelCalled = new AtomicBoolean(false);
+        CompletableFuture<Integer> upstream = new CompletableFuture<>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                cancelCalled.set(true);
+                return super.cancel(mayInterruptIfRunning);
+            }
+        };
+
+        CompletionStage<Integer> decorated = timeLimiter
+            .decorateCompletionStage(scheduler, () -> upstream).get();
+
+        assertThatThrownBy(() -> decorated.toCompletableFuture().get())
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseExactlyInstanceOf(TimeoutException.class);
+        // Ensure the scheduled timeout task has finished before checking cancelCalled.
+        scheduler.submit(() -> {}).get(1, TimeUnit.SECONDS);
+        assertThat(cancelCalled.get()).isFalse();
+    }
+
+    @Test
     void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter

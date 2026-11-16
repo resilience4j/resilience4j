@@ -78,7 +78,7 @@ public class TimeLimiterImpl implements TimeLimiter {
             ScheduledFuture<?> timeoutFuture =
                 Timeout
                     .of(future, scheduler, name, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
-                        TimeUnit.MILLISECONDS);
+                        TimeUnit.MILLISECONDS, getTimeLimiterConfig().shouldCancelRunningFuture());
 
             return future.whenComplete((result, throwable) -> {
                 // complete
@@ -180,9 +180,18 @@ public class TimeLimiterImpl implements TimeLimiter {
         static ScheduledFuture<?> of(
             CompletableFuture<?> future, ScheduledExecutorService scheduler, String name, long delay,
             TimeUnit unit) {
+            return of(future, scheduler, name, delay, unit, true);
+        }
+
+        static ScheduledFuture<?> of(
+            CompletableFuture<?> future, ScheduledExecutorService scheduler, String name, long delay,
+            TimeUnit unit, boolean shouldCancelRunningFuture) {
             return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
                     future.completeExceptionally(TimeLimiter.createdTimeoutExceptionWithName(name, null));
+                    if (shouldCancelRunningFuture) {
+                        future.cancel(true);
+                    }
                 }
             }, delay, unit);
         }

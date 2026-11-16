@@ -140,30 +140,10 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      */
     @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable) {
-        final CompletableFuture<T> promise = new CompletableFuture<>();
-        try {
-            CompletableFuture.supplyAsync(ContextPropagator.decorateSupplier(config.getContextPropagator(),() -> {
-                try {
-                    publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
-                    return callable.call();
-                } catch (CompletionException e) {
-                    throw e;
-                } catch (Exception e){
-                    throw new CompletionException(e);
-                }
-            }), executorService).whenComplete((result, throwable) -> {
-                publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
-                if (throwable != null) {
-                    promise.completeExceptionally(throwable);
-                } else {
-                    promise.complete(result);
-                }
-            });
-        } catch (RejectedExecutionException rejected) {
-            publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-            throw BulkheadFullException.createBulkheadFullException(this);
-        }
-        return promise;
+        return submitTask(ContextPropagator.decorateCallable(config.getContextPropagator(), () -> {
+            publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
+            return callable.call();
+        }));
     }
 
     /**
@@ -171,23 +151,33 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      */
     @Override
     public CompletableFuture<Void> submit(Runnable runnable) {
-        final CompletableFuture<Void> promise = new CompletableFuture<>();
+        Runnable decoratedRunnable = ContextPropagator.decorateRunnable(config.getContextPropagator(), () -> {
+            publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
+            runnable.run();
+        });
+        return submitTask(() -> {
+            decoratedRunnable.run();
+            return null;
+        });
+    }
+
+    private <T> CompletableFuture<T> submitTask(Callable<T> task) {
+        final BulkheadCompletableFuture<T> promise = new BulkheadCompletableFuture<>();
         try {
-            CompletableFuture.runAsync(ContextPropagator.decorateRunnable(config.getContextPropagator(),() -> {
+            Future<?> future = executorService.submit(() -> {
                 try {
-                    publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
-                    runnable.run();
-                } catch (Exception e) {
-                    throw new CompletionException(e);
-                }
-            }), executorService).whenComplete((result, throwable) -> {
-                publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
-                if (throwable != null) {
-                    promise.completeExceptionally(throwable);
-                } else {
+                    T result = task.call();
+                    publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
                     promise.complete(result);
+                } catch (CompletionException e) {
+                    publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
+                    promise.completeExceptionally(e);
+                } catch (Throwable throwable) {
+                    publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
+                    promise.completeExceptionally(new CompletionException(throwable));
                 }
             });
+            promise.setExecutionFuture(future);
         } catch (RejectedExecutionException rejected) {
             publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
             throw BulkheadFullException.createBulkheadFullException(this);
@@ -340,6 +330,32 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         @Override
         public int getAvailableThreadCount() {
             return getMaximumThreadPoolSize() - getActiveThreadCount();
+        }
+    }
+
+    private static final class BulkheadCompletableFuture<T> extends CompletableFuture<T> {
+
+        private volatile Future<?> executionFuture;
+        private volatile boolean cancelRequested;
+        private volatile boolean mayInterruptIfRunning;
+
+        void setExecutionFuture(Future<?> executionFuture) {
+            this.executionFuture = executionFuture;
+            if (cancelRequested || isCancelled()) {
+                executionFuture.cancel(mayInterruptIfRunning);
+            }
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            this.mayInterruptIfRunning = mayInterruptIfRunning;
+            this.cancelRequested = true;
+            boolean cancelled = super.cancel(mayInterruptIfRunning);
+            Future<?> future = this.executionFuture;
+            if (future != null) {
+                future.cancel(mayInterruptIfRunning);
+            }
+            return cancelled;
         }
     }
 }
