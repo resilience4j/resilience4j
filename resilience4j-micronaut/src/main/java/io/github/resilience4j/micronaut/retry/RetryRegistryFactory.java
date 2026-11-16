@@ -112,7 +112,9 @@ public class RetryRegistryFactory {
         int eventConsumerBufferSize = Optional.ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
             .map(CommonRetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
+        }
     }
 
 

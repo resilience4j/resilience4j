@@ -199,8 +199,8 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             requireNonNull(eventConsumerBufferSize, "eventConsumerBufferSize must not be null");
-            if (eventConsumerBufferSize < 1) {
-                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1");
+            if (eventConsumerBufferSize < 0) {
+                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 0");
             }
             this.eventConsumerBufferSize = eventConsumerBufferSize;
             return this;

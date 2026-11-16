@@ -193,8 +193,10 @@ public class TimeLimiterConfiguration {
         int eventConsumerBufferSize = Optional.ofNullable(timeLimiterConfigurationProperties.getInstanceProperties(timeLimiter.getName()))
                 .map(InstanceProperties::getEventConsumerBufferSize)
                 .orElse(100);
-        timeLimiter.getEventPublisher().onEvent(
-            eventConsumerRegistry.createEventConsumer(timeLimiter.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            timeLimiter.getEventPublisher().onEvent(
+                eventConsumerRegistry.createEventConsumer(timeLimiter.getName(), eventConsumerBufferSize));
+        }
     }
 
 }

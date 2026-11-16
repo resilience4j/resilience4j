@@ -10,6 +10,7 @@ import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulk
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.ContextPropagator;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.spring6.TestThreadLocalContextPropagator;
 import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
@@ -269,5 +270,54 @@ class BulkHeadConfigurationTest {
                 new CompositeCustomizer<>(Collections.emptyList())))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    void testDisableEventConsumerBufferSize() {
+        io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties defaultBulkheadProperties = new io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties();
+        defaultBulkheadProperties.setEventConsumerBufferSize(0);
+        io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties bulkheadProperties = new io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties();
+        bulkheadProperties.setEventConsumerBufferSize(0);
+        BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
+        bulkheadConfigurationProperties.getConfigs().put("default", defaultBulkheadProperties);
+        bulkheadConfigurationProperties.getInstances().put("backend1", bulkheadProperties);
+        BulkheadConfiguration bulkheadConfiguration = new BulkheadConfiguration();
+        DefaultEventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
+            .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()));
+
+        Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("backend1");
+        Bulkhead dynamicBulkhead = bulkheadRegistry.bulkhead("dynamicBackend");
+        assertThat(bulkheadEventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(bulkhead1.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicBulkhead.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultTpProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        defaultTpProperties.setEventConsumerBufferSize(0);
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties tpProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        tpProperties.setEventConsumerBufferSize(0);
+        CommonThreadPoolBulkheadConfigurationProperties tpConfigurationProperties = new CommonThreadPoolBulkheadConfigurationProperties();
+        tpConfigurationProperties.getConfigs().put("default", defaultTpProperties);
+        tpConfigurationProperties.getBackends().put("backend1", tpProperties);
+        ThreadPoolBulkheadConfiguration tpConfiguration = new ThreadPoolBulkheadConfiguration();
+        DefaultEventConsumerRegistry<BulkheadEvent> tpEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        ThreadPoolBulkheadRegistry tpRegistry = tpConfiguration
+            .threadPoolBulkheadRegistry(tpConfigurationProperties, tpEventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()));
+
+        ThreadPoolBulkhead tpBulkhead1 = tpRegistry.bulkhead("backend1");
+        ThreadPoolBulkhead dynamicTpBulkhead = tpRegistry.bulkhead("dynamicBackend");
+        assertThat(tpEventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(tpBulkhead1.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicTpBulkhead.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 }

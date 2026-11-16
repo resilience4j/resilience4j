@@ -293,9 +293,10 @@ class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
-    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+    void illegalArgumentOnEventConsumerBufferSizeLessThanZero() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        assertThat(defaultProperties.setEventConsumerBufferSize(0).getEventConsumerBufferSize()).isZero();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

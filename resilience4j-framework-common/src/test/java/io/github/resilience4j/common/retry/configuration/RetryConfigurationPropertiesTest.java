@@ -231,9 +231,10 @@ class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+    void illegalArgumentOnEventConsumerBufferSizeLessThanZero() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+        assertThat(defaultProperties.setEventConsumerBufferSize(0).getEventConsumerBufferSize()).isZero();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

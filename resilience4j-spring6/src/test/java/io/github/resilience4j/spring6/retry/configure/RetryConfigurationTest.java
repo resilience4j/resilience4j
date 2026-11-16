@@ -5,6 +5,7 @@ import io.github.resilience4j.common.retry.configuration.CommonRetryConfiguratio
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -114,6 +115,37 @@ class RetryConfigurationTest {
                 new CompositeRegistryEventConsumer<>(emptyList()), compositeRetryCustomizerTest()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    void testDisableEventConsumerBufferSize() {
+        InstanceProperties defaultProperties = new InstanceProperties();
+        defaultProperties.setEventConsumerBufferSize(0);
+        defaultProperties.setIgnoreExceptions(new Class[]{IllegalArgumentException.class});
+        InstanceProperties instanceProperties = new InstanceProperties();
+        instanceProperties.setEventConsumerBufferSize(0);
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getConfigs().put("default", defaultProperties);
+        retryConfigurationProperties.getInstances().put("backend1", instanceProperties);
+        RetryConfiguration retryConfiguration = new RetryConfiguration();
+        DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        RetryRegistry retryRegistry = retryConfiguration
+            .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()), compositeRetryCustomizerTest());
+
+        Retry retry1 = retryRegistry.retry("backend1");
+        Retry dynamicRetry = retryRegistry.retry("dynamicBackend");
+        assertThatThrownBy(() -> retry1.executeRunnable(() -> {
+            throw new IllegalArgumentException("ignored");
+        })).isInstanceOf(IllegalArgumentException.class);
+        assertThat(eventConsumerRegistry.getEventConsumer("backend1")).isNull();
+        assertThat(eventConsumerRegistry.getEventConsumer("dynamicBackend")).isNull();
+        assertThat(eventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(retry1.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicRetry.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 
     private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizerTest() {

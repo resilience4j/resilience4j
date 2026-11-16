@@ -8,6 +8,7 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreaker
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -131,6 +132,35 @@ class CircuitBreakerConfigurationTest {
                 compositeCircuitBreakerCustomizerTestInstance()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    void testDisableEventConsumerBufferSize() {
+        InstanceProperties defaultProperties = new InstanceProperties();
+        defaultProperties.setEventConsumerBufferSize(0);
+        InstanceProperties instanceProperties = new InstanceProperties();
+        instanceProperties.setEventConsumerBufferSize(0);
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("default", defaultProperties);
+        circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties);
+        CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(
+            circuitBreakerConfigurationProperties);
+        DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
+            .circuitBreakerRegistry(eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance());
+
+        CircuitBreaker circuitBreaker1 = circuitBreakerRegistry.circuitBreaker("backend1");
+        CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry.circuitBreaker("dynamicBackend");
+        assertThat(eventConsumerRegistry.getEventConsumer("backend1")).isNull();
+        assertThat(eventConsumerRegistry.getEventConsumer("dynamicBackend")).isNull();
+        assertThat(eventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(circuitBreaker1.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicCircuitBreaker.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizerTestInstance() {

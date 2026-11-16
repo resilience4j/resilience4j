@@ -150,7 +150,9 @@ public class CircuitBreakerRegistryFactory {
             .map(
                 io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
-            .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
+                .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
+        }
     }
 }

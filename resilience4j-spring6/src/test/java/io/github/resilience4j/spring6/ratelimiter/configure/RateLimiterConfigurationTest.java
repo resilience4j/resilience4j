@@ -4,6 +4,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -137,6 +138,28 @@ class RateLimiterConfigurationTest {
                 compositeRateLimiterCustomizerTest()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    void testDisableEventConsumerBufferSize() {
+        io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties();
+        instanceProperties.setSubscribeForEvents(true);
+        instanceProperties.setEventConsumerBufferSize(0);
+        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties);
+        RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
+        DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration
+            .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeRateLimiterCustomizerTest());
+
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("backend1");
+        assertThat(eventConsumerRegistry.getEventConsumer("backend1")).isNull();
+        assertThat(eventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(rateLimiter.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 
     public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizerTest() {

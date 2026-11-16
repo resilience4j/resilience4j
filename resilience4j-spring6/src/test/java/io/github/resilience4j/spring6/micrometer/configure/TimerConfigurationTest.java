@@ -4,6 +4,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.micrometer.TimerRegistry;
@@ -158,5 +159,32 @@ class TimerConfigurationTest {
         ))
                 .isInstanceOf(ConfigurationNotFoundException.class)
                 .hasMessage("Configuration with name 'unknown' does not exist");
+    }
+
+    @Test
+    void shouldDisableEventConsumerWhenBufferSizeIsZero() {
+        InstanceProperties defaultProperties = new InstanceProperties()
+                .setEventConsumerBufferSize(0);
+        InstanceProperties instanceProperties = new InstanceProperties()
+                .setEventConsumerBufferSize(0);
+        TimerConfigurationProperties configurationProperties = new TimerConfigurationProperties();
+        configurationProperties.getConfigs().put("default", defaultProperties);
+        configurationProperties.getInstances().put("backend1", instanceProperties);
+        TimerConfiguration configuration = new TimerConfiguration();
+        DefaultEventConsumerRegistry<TimerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        TimerRegistry registry = configuration.timerRegistry(
+                configurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()), new CompositeCustomizer<>(emptyList()), new SimpleMeterRegistry()
+        );
+
+        Timer timer1 = registry.timer("backend1");
+        Timer dynamicTimer = registry.timer("dynamicBackend");
+        assertThat(eventConsumerRegistry.getEventConsumer("backend1")).isNull();
+        assertThat(eventConsumerRegistry.getEventConsumer("dynamicBackend")).isNull();
+        assertThat(eventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(timer1.getEventPublisher())
+                .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicTimer.getEventPublisher())
+                .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 }

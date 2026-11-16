@@ -192,8 +192,10 @@ public class TimerConfiguration {
         int eventConsumerBufferSize = Optional.ofNullable(timerConfigurationProperties.getInstanceProperties(timer.getName()))
                 .map(InstanceProperties::getEventConsumerBufferSize)
                 .orElse(100);
-        timer.getEventPublisher().onEvent(
-                eventConsumerRegistry.createEventConsumer(timer.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            timer.getEventPublisher().onEvent(
+                    eventConsumerRegistry.createEventConsumer(timer.getName(), eventConsumerBufferSize));
+        }
     }
 
 }
