@@ -146,8 +146,8 @@ public class CommonTimeLimiterConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             Objects.requireNonNull(eventConsumerBufferSize);
-            if (eventConsumerBufferSize < 1) {
-                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+            if (eventConsumerBufferSize < 0) {
+                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 0.");
             }
 
             this.eventConsumerBufferSize = eventConsumerBufferSize;

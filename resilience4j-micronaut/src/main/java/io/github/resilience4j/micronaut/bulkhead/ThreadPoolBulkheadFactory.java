@@ -136,9 +136,11 @@ public class ThreadPoolBulkheadFactory {
             .map(
                 CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(
-            String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()),
-            eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(
+                String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()),
+                eventConsumerBufferSize));
+        }
     }
 
 }

@@ -4,6 +4,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -127,6 +128,33 @@ class TimeLimiterConfigurationTest {
         assertThatThrownBy(() -> timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()), compositeTimeLimiterCustomizerTestInstance()))
                 .isInstanceOf(ConfigurationNotFoundException.class)
                 .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    void testDisableEventConsumerBufferSize() {
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
+        defaultProperties.setEventConsumerBufferSize(0);
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
+        instanceProperties.setEventConsumerBufferSize(0);
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        timeLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
+        timeLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties);
+        TimeLimiterConfiguration timeLimiterConfiguration = new TimeLimiterConfiguration();
+        DefaultEventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+        TimeLimiterRegistry timeLimiterRegistry = timeLimiterConfiguration.timeLimiterRegistry(
+            timeLimiterConfigurationProperties, eventConsumerRegistry,
+            new CompositeRegistryEventConsumer<>(emptyList()), compositeTimeLimiterCustomizerTestInstance());
+
+        TimeLimiter timeLimiter1 = timeLimiterRegistry.timeLimiter("backend1");
+        TimeLimiter dynamicTimeLimiter = timeLimiterRegistry.timeLimiter("dynamicBackend");
+        assertThat(eventConsumerRegistry.getEventConsumer("backend1")).isNull();
+        assertThat(eventConsumerRegistry.getEventConsumer("dynamicBackend")).isNull();
+        assertThat(eventConsumerRegistry.getAllEventConsumer()).isEmpty();
+        assertThat(timeLimiter1.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
+        assertThat(dynamicTimeLimiter.getEventPublisher())
+            .isInstanceOfSatisfying(EventProcessor.class, ep -> assertThat(ep.hasConsumers()).isFalse());
     }
 
     private CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizerTestInstance() {

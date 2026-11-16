@@ -151,8 +151,10 @@ public class RetryConfiguration {
             .ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
             .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        retry.getEventPublisher().onEvent(
-            eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            retry.getEventPublisher().onEvent(
+                eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
+        }
     }
 
     /**

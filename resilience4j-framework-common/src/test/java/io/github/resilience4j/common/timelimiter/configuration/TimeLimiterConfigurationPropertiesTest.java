@@ -137,9 +137,10 @@ class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test
-    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
-        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+    void illegalArgumentOnEventConsumerBufferSizeLessThanZero() {
+        CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
+        assertThat(defaultProperties.setEventConsumerBufferSize(0).getEventConsumerBufferSize()).isZero();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

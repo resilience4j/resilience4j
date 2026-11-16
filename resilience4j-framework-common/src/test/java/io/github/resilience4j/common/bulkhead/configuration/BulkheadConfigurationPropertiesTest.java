@@ -236,9 +236,10 @@ CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new
     }
 
     @Test
-    void bulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+    void bulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanZero() {
+        CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
+        assertThat(defaultProperties.setEventConsumerBufferSize(0).getEventConsumerBufferSize()).isZero();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

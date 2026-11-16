@@ -194,7 +194,9 @@ public class CircuitBreakerConfiguration {
             .findCircuitBreakerProperties(circuitBreaker.getName())
             .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
-            .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
+                .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
+        }
     }
 }

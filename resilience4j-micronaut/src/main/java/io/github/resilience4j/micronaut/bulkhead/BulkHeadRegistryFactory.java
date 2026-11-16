@@ -119,8 +119,10 @@ public class BulkHeadRegistryFactory {
             .map(
                 io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
-        bulkHead.getEventPublisher().onEvent(
-            eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
+        if (eventConsumerBufferSize > 0) {
+            bulkHead.getEventPublisher().onEvent(
+                eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
+        }
     }
 
     /**

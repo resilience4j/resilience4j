@@ -152,13 +152,13 @@ public class RateLimiterConfiguration {
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
         InstanceProperties limiterProperties = rateLimiterConfigurationProperties.getInstances()
             .get(rateLimiter.getName());
-        if (limiterProperties != null && limiterProperties.getSubscribeForEvents() != null
-            && limiterProperties.getSubscribeForEvents()) {
-            rateLimiter.getEventPublisher().onEvent(
-                eventConsumerRegistry.createEventConsumer(rateLimiter.getName(),
-                    limiterProperties.getEventConsumerBufferSize() != null
-                        && limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties
-                        .getEventConsumerBufferSize() : 100));
+        if (limiterProperties != null && Boolean.TRUE.equals(limiterProperties.getSubscribeForEvents())) {
+            int eventConsumerBufferSize = limiterProperties.getEventConsumerBufferSize() != null
+                ? limiterProperties.getEventConsumerBufferSize() : 100;
+            if (eventConsumerBufferSize > 0) {
+                rateLimiter.getEventPublisher().onEvent(
+                    eventConsumerRegistry.createEventConsumer(rateLimiter.getName(), eventConsumerBufferSize));
+            }
         }
     }
 

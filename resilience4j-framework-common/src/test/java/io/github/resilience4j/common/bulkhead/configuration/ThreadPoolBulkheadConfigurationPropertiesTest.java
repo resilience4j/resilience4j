@@ -193,9 +193,10 @@ class ThreadPoolBulkheadConfigurationPropertiesTest  {
     }
 
     @Test
-    void threadPoolBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+    void threadPoolBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanZero() {
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        assertThat(defaultProperties.setEventConsumerBufferSize(0).getEventConsumerBufferSize()).isZero();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
