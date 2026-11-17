@@ -26,12 +26,14 @@ public class RateLimiterEventDTO {
     private RateLimiterEvent.Type type;
     @Nullable
     private String creationTime;
+    private int numberOfPermits;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
         RateLimiterEventDTO dto = new RateLimiterEventDTO();
         dto.setRateLimiterName(rateLimiterEvent.getRateLimiterName());
         dto.setType(rateLimiterEvent.getEventType());
         dto.setCreationTime(rateLimiterEvent.getCreationTime().toString());
+        dto.setNumberOfPermits(rateLimiterEvent.getNumberOfPermits());
         return dto;
     }
 
@@ -60,5 +62,13 @@ public class RateLimiterEventDTO {
 
     public void setCreationTime(@Nullable String creationTime) {
         this.creationTime = creationTime;
+    }
+
+    public int getNumberOfPermits() {
+        return numberOfPermits;
+    }
+
+    public void setNumberOfPermits(int numberOfPermits) {
+        this.numberOfPermits = numberOfPermits;
     }
 }
