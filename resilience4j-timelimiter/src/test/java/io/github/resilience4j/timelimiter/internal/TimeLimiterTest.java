@@ -141,6 +141,48 @@ class TimeLimiterTest {
     }
 
     @Test
+    void shouldCancelRunningFutureWhenInterruptedWhileWaiting() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+
+        @SuppressWarnings("unchecked")
+        Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
+
+        Supplier<Future<Integer>> supplier = () -> mockFuture;
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .willThrow(new InterruptedException());
+
+        Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
+
+        assertThatThrownBy(decorated::call)
+                .isInstanceOf(InterruptedException.class);
+
+        then(mockFuture).should().cancel(true);
+    }
+
+    @Test
+    void shouldNotCancelRunningFutureWhenInterruptedWhileWaitingIfCancelDisabled() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter
+                .of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+                        .cancelRunningFuture(false).build());
+
+        @SuppressWarnings("unchecked")
+        Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
+
+        Supplier<Future<Integer>> supplier = () -> mockFuture;
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .willThrow(new InterruptedException());
+
+        Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
+
+        assertThatThrownBy(decorated::call)
+                .isInstanceOf(InterruptedException.class);
+
+        then(mockFuture).should(never()).cancel(true);
+    }
+
+    @Test
     void shouldReturnResult() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);

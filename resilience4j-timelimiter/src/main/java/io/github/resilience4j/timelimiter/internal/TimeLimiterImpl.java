@@ -54,6 +54,11 @@ public class TimeLimiterImpl implements TimeLimiter {
                     future.cancel(true);
                 }
                 throw timeoutException;
+            } catch (InterruptedException e) {
+                if (getTimeLimiterConfig().shouldCancelRunningFuture()) {
+                    future.cancel(true);
+                }
+                throw e;
             } catch (ExecutionException e) {
                 Throwable t = e.getCause();
                 if (t == null) {
