@@ -168,52 +168,29 @@ class ThreadPoolBulkheadTest {
 
     @Test
     void shouldExecuteCallableAndFailWithBulkHeadFull() throws Exception {
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        final AtomicReference<Exception> exception = new AtomicReference<>();
-
-        Thread first = new Thread(() -> {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        try (ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config)) {
+            CompletionStage<Object> first = bulkhead.executeCallable(() -> {
+                started.countDown();
+                release.await();
+                return null;
+            });
+            CompletionStage<String> second;
             try {
-                bulkhead.executeCallable(() -> {
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    return null;
-                });
-            } catch (Exception e) {
-                exception.set(e);
+                assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
+                second = bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+                assertThatThrownBy(() -> bulkhead.executeCallable(helloWorldService::returnHelloWorld))
+                    .isInstanceOfSatisfying(BulkheadFullException.class,
+                        exception -> assertThat(exception.getBulkheadName()).isEqualTo(bulkhead.getName()));
+            } finally {
+                release.countDown();
             }
-        });
-        first.start();
-
-        Thread second = new Thread(() -> {
-            try {
-                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.set(e);
-            }
-        });
-        second.start();
-
-        Thread third = new Thread(() -> {
-            try {
-                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.set(e);
-            }
-        });
-        third.start();
-
-        first.join(100);
-        second.join(100);
-        third.join(100);
-
-        final Exception caughtException = exception.get();
-
-        assertThat(caughtException).isInstanceOf(BulkheadFullException.class);
-        assertThat(((BulkheadFullException) caughtException).getBulkheadName()).isEqualTo(bulkhead.getName());
+            assertThat(first.toCompletableFuture().get(5, TimeUnit.SECONDS)).isNull();
+            assertThat(second.toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("Hello world");
+            then(helloWorldService).should(times(1)).returnHelloWorld();
+        }
     }
 
     @Test
