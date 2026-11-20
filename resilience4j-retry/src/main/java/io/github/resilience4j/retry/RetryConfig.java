@@ -87,7 +87,14 @@ public class RetryConfig implements Serializable {
     }
 
     /**
-     * Creates a default Retry configuration.
+     * Creates a default Retry configuration: at most 3 attempts, 500 ms apart, and every exception
+     * is retried.
+     * <p>
+     * Retrying is safe only for calls that can run more than once. A call can fail after its
+     * effect has already happened: for example, a database transaction whose commit succeeded on
+     * the server but whose reply was lost when the connection dropped. Retrying such a call
+     * applies its effect more than once. For calls that are not idempotent, use an idempotency
+     * key, or check whether the failed attempt took effect before retrying.
      *
      * @return a default Retry configuration.
      */
@@ -320,6 +327,9 @@ public class RetryConfig implements Serializable {
         /**
          * Configures a Predicate which evaluates if an exception should be retried. The Predicate
          * must return true if the exception should be retried, otherwise it must return false.
+         * If neither this Predicate nor {@link #retryExceptions(Class[])} is configured, every
+         * exception not ignored through {@link #ignoreExceptions(Class[])} is retried; see
+         * {@link RetryConfig#ofDefaults()} for calls that are not idempotent.
          *
          * @param predicate the Predicate which evaluates if an exception should be retried or not.
          * @return the RetryConfig.Builder
