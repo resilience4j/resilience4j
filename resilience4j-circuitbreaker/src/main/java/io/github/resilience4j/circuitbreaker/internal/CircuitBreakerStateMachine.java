@@ -838,7 +838,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             lock.lock();
 
             try {
-                if (isOpen.compareAndSet(true, false)) {
+                // Ignore in-flight callbacks of a state that has already been replaced.
+                if (stateReference.get() == this && isOpen.compareAndSet(true, false)) {
                     transitionToHalfOpenState();
                 }
             } finally {
@@ -1160,12 +1161,18 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         private void toState(State transitionState) {
-            if (isHalfOpen.compareAndSet(true, false)) {
-                switch (transitionState) {
-                    case OPEN -> transitionToOpenState();
-                    case CLOSED -> transitionToClosedState();
-                    default -> throw new IllegalArgumentException("Unsuported transition state: " + transitionState);
+            lock.lock();
+            try {
+                // Ignore in-flight callbacks of a state that has already been replaced.
+                if (stateReference.get() == this && isHalfOpen.compareAndSet(true, false)) {
+                    switch (transitionState) {
+                        case OPEN -> transitionToOpenState();
+                        case CLOSED -> transitionToClosedState();
+                        default -> throw new IllegalArgumentException("Unsuported transition state: " + transitionState);
+                    }
                 }
+            } finally {
+                lock.unlock();
             }
         }
 

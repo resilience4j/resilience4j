@@ -974,6 +974,61 @@ class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    void staleHalfOpenTimerCallbackDoesNotTransitionReplacedState() {
+        java.util.List<Runnable> callbacks = new ArrayList<>();
+        java.util.concurrent.ScheduledExecutorService scheduler =
+            mock(java.util.concurrent.ScheduledExecutorService.class);
+        org.mockito.Mockito.when(scheduler.schedule(any(Runnable.class), org.mockito.ArgumentMatchers.anyLong(),
+            any(TimeUnit.class))).thenAnswer(invocation -> {
+            callbacks.add(invocation.getArgument(0));
+            return null;
+        });
+        SchedulerFactory schedulerFactory =
+            mock(SchedulerFactory.class);
+        org.mockito.Mockito.when(schedulerFactory.getScheduler()).thenReturn(scheduler);
+        circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
+            .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
+            .transitionToStateAfterWaitDuration(CircuitBreaker.State.OPEN)
+            .build(), schedulerFactory);
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(callbacks).hasSize(1);
+
+        circuitBreaker.reset();
+        // simulates a callback that had already started when reset() replaced the state
+        callbacks.get(0).run();
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CLOSED);
+    }
+
+    @Test
+    void staleOpenTimerCallbackDoesNotTransitionReplacedState() {
+        java.util.List<Runnable> callbacks = new ArrayList<>();
+        java.util.concurrent.ScheduledExecutorService scheduler =
+            mock(java.util.concurrent.ScheduledExecutorService.class);
+        org.mockito.Mockito.when(scheduler.schedule(any(Runnable.class), org.mockito.ArgumentMatchers.anyLong(),
+            any(TimeUnit.class))).thenAnswer(invocation -> {
+            callbacks.add(invocation.getArgument(0));
+            return null;
+        });
+        SchedulerFactory schedulerFactory =
+            mock(SchedulerFactory.class);
+        org.mockito.Mockito.when(schedulerFactory.getScheduler()).thenReturn(scheduler);
+        circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(1))
+            .build(), schedulerFactory);
+        circuitBreaker.transitionToOpenState();
+        assertThat(callbacks).hasSize(1);
+
+        circuitBreaker.reset();
+        // simulates a callback that had already started when reset() replaced the state
+        callbacks.get(0).run();
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CLOSED);
+    }
+
+    @Test
     void concurrentTransitionsDoNotLeaveOrphanedAutomaticTransitions() throws Exception {
         int threads = 8;
         List<CircuitBreaker> circuitBreakers = new ArrayList<>();
