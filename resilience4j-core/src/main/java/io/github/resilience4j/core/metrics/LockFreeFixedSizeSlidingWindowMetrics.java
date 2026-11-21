@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
  * The algorithm is based on the following conditions:
  * <ul>
  * <li>if there is no next node -> try to add one </li>
- * <li>else, if the head and tail represent the same N-th stats -> advance the head</li>
+ * <li>else, if the next tail and head have the same id but are different nodes -> advance the head</li>
  * <li>else -> advance the tail</li>
  * </ul>
  *
@@ -101,7 +101,6 @@ public class LockFreeFixedSizeSlidingWindowMetrics implements Metrics {
         int spinCount = 0;
         while (true) {
             Node head = headRef;
-            Node headNext = head.next;
 
             Node tail = tailRef;
             Node tailNext = tail.next;
@@ -140,17 +139,19 @@ public class LockFreeFixedSizeSlidingWindowMetrics implements Metrics {
                     //
                     // These operations can fail spuriously, but they are not critical, as the next thread will
                     // complete the job, by moving them.
-                    if (HEAD.weakCompareAndSet(this, head, headNext)) {
+                    // In a single-call window head is tail, so read its next after linking the node.
+                    if (HEAD.weakCompareAndSet(this, head, head.next)) {
                         TAIL.weakCompareAndSet(this, tail, nextNode);
                     }
 
                     return new SnapshotImpl(nextNode.stats);
                 }
-            } else if (tailNext.id == head.id) {
-                if (HEAD.compareAndSet(this, head, headNext)) {
+            } else if (tailNext.id == head.id && tailNext != head) {
+                if (HEAD.compareAndSet(this, head, head.next)) {
                     TAIL.compareAndSet(this, tail, tailNext);
                 }
             } else {
+                // The head may already be tailNext in a single-call window; only the tail must move.
                 TAIL.compareAndSet(this, tail, tailNext);
             }
 

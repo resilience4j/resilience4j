@@ -99,6 +99,42 @@ class CircuitBreakerTest {
     }
 
     @Test
+    void shouldExecuteRepeatedSuppliersWithSingleCallLockFreeWindow() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .slidingWindow(1, 1, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
+                CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.LOCK_FREE)
+            .permittedNumberOfCallsInHalfOpenState(1)
+            .build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", config);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+
+        for (int i = 0; i < 3; i++) {
+            assertThat(circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld))
+                .isEqualTo("Hello world");
+            assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+            assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isOne();
+            assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isOne();
+            assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        }
+
+        IllegalStateException failure = new IllegalStateException("Backend failure");
+        assertThatThrownBy(() -> circuitBreaker.executeSupplier(() -> { throw failure; }))
+            .isSameAs(failure);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld))
+            .isEqualTo("Hello world");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld))
+            .isEqualTo("Hello world");
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isOne();
+        then(helloWorldService).should(times(5)).returnHelloWorld();
+    }
+
+    @Test
     void shouldDecorateSupplierAndReturnWithException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();

@@ -24,6 +24,70 @@ class LockFreeMetricsContentionTest {
     private static final Logger LOG = LoggerFactory.getLogger(LockFreeMetricsContentionTest.class);
 
     @TestTemplate
+    void shouldMaintainSingleCallWindowUnderContention(ThreadType threadType) throws Exception {
+        LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(1);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+
+        int writerCount = 8;
+        int readerCount = 2;
+        int operations = 500;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        AtomicInteger recordedCalls = new AtomicInteger();
+        AtomicInteger snapshotsRead = new AtomicInteger();
+        ExecutorService executor = threadType == ThreadType.VIRTUAL
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(writerCount + readerCount);
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < writerCount; i++) {
+                final int writer = i;
+                futures.add(executor.submit(() -> {
+                    startLatch.await();
+                    for (int j = 0; j < operations; j++) {
+                        boolean error = (writer + j) % 2 == 0;
+                        Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS,
+                            error ? Metrics.Outcome.SLOW_ERROR : Metrics.Outcome.SUCCESS);
+                        assertThat(snapshot.getTotalNumberOfCalls()).isOne();
+                        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(error ? 1 : 0);
+                        assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(error ? 1 : 0);
+                        assertThat(snapshot.getTotalDuration()).hasMillis(100);
+                        recordedCalls.incrementAndGet();
+                    }
+                    return null;
+                }));
+            }
+            for (int i = 0; i < readerCount; i++) {
+                futures.add(executor.submit(() -> {
+                    startLatch.await();
+                    for (int j = 0; j < operations; j++) {
+                        Snapshot snapshot = metrics.getSnapshot();
+                        assertThat(snapshot.getTotalNumberOfCalls()).isOne();
+                        assertThat(snapshot.getNumberOfSuccessfulCalls()
+                            + snapshot.getNumberOfFailedCalls()).isOne();
+                        assertThat(snapshot.getTotalDuration()).hasMillis(100);
+                        snapshotsRead.incrementAndGet();
+                    }
+                    return null;
+                }));
+            }
+
+            startLatch.countDown();
+            for (Future<?> future : futures) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+            assertThat(recordedCalls.get()).isEqualTo(writerCount * operations);
+            assertThat(snapshotsRead.get()).isEqualTo(readerCount * operations);
+            assertThat(metrics.getSnapshot().getTotalNumberOfCalls()).isOne();
+            LOG.info("Single-call window test passed in {}: {} writes, {} reads",
+                threadType, recordedCalls.get(), snapshotsRead.get());
+        } finally {
+            startLatch.countDown();
+            executor.shutdownNow();
+            assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    @TestTemplate
     void shouldHandleHighContentionWithoutStarvation(ThreadType threadType) throws Exception {
         LOG.info("Running shouldHandleHighContentionWithoutStarvation in {}", threadType);
 
