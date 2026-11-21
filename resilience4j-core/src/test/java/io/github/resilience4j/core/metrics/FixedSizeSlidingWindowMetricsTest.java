@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +50,81 @@ class FixedSizeSlidingWindowMetricsTest {
                 new FixedSizeSlidingWindowMetrics(2),
                 new LockFreeFixedSizeSlidingWindowMetrics(2)
         );
+    }
+
+    private static List<Metrics> singleCallSlidingWindow() {
+        return Arrays.asList(
+                new FixedSizeSlidingWindowMetrics(1),
+                new LockFreeFixedSizeSlidingWindowMetrics(1)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("singleCallSlidingWindow")
+    void shouldKeepOnlyTheLatestCallInSingleCallWindow(Metrics metrics) {
+        Snapshot first = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_ERROR);
+        assertThat(first.getTotalNumberOfCalls()).isOne();
+        assertThat(first.getNumberOfFailedCalls()).isOne();
+        assertThat(first.getNumberOfSlowFailedCalls()).isOne();
+        assertThat(first.getTotalDuration()).hasMillis(100);
+
+        Snapshot success = metrics.record(200, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        assertThat(success.getTotalNumberOfCalls()).isOne();
+        assertThat(success.getNumberOfSuccessfulCalls()).isOne();
+        assertThat(success.getNumberOfFailedCalls()).isZero();
+        assertThat(success.getTotalNumberOfSlowCalls()).isZero();
+        assertThat(success.getTotalDuration()).hasMillis(200);
+        assertThat(success.getFailureRate()).isZero();
+        assertThat(success.getSlowCallRate()).isZero();
+
+        Snapshot slowSuccess = metrics.record(300, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
+        assertThat(slowSuccess.getTotalNumberOfCalls()).isOne();
+        assertThat(slowSuccess.getNumberOfSuccessfulCalls()).isOne();
+        assertThat(slowSuccess.getNumberOfFailedCalls()).isZero();
+        assertThat(slowSuccess.getNumberOfSlowSuccessfulCalls()).isOne();
+        assertThat(slowSuccess.getNumberOfSlowFailedCalls()).isZero();
+        assertThat(slowSuccess.getTotalDuration()).hasMillis(300);
+        assertThat(slowSuccess.getSlowCallRate()).isEqualTo(100);
+
+        Snapshot error = metrics.record(400, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
+        assertThat(error.getTotalNumberOfCalls()).isOne();
+        assertThat(error.getNumberOfSuccessfulCalls()).isZero();
+        assertThat(error.getNumberOfFailedCalls()).isOne();
+        assertThat(error.getTotalNumberOfSlowCalls()).isZero();
+        assertThat(error.getAverageDuration()).hasMillis(400);
+        assertThat(error.getFailureRate()).isEqualTo(100);
+        assertThat(metrics.getSnapshot().getTotalDuration()).hasMillis(400);
+
+        // Replacing the current call must not mutate an already returned snapshot.
+        assertThat(first.getNumberOfSlowFailedCalls()).isOne();
+        assertThat(first.getTotalDuration()).hasMillis(100);
+    }
+
+    @Test
+    void shouldAdvanceLaggingTailWithoutAdvancingSingleCallHeadTwice() throws Exception {
+        LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(1);
+        Field tailRef = LockFreeFixedSizeSlidingWindowMetrics.class.getDeclaredField("tailRef");
+        tailRef.setAccessible(true);
+        Object previousTail = tailRef.get(metrics);
+
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+
+        // Recreate the handoff after HEAD advanced but before TAIL caught up.
+        // Set HEAD explicitly because its weak CAS may have failed spuriously.
+        Field next = previousTail.getClass().getDeclaredField("next");
+        next.setAccessible(true);
+        Field headRef = LockFreeFixedSizeSlidingWindowMetrics.class.getDeclaredField("headRef");
+        headRef.setAccessible(true);
+        headRef.set(metrics, next.get(previousTail));
+        tailRef.set(metrics, previousTail);
+
+        Snapshot snapshot = metrics.record(200, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_ERROR);
+        assertThat(snapshot.getTotalNumberOfCalls()).isOne();
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isOne();
+        assertThat(snapshot.getTotalDuration()).hasMillis(200);
+        assertThat(metrics.getSnapshot().getTotalDuration()).hasMillis(200);
     }
 
     @ParameterizedTest
