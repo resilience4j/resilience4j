@@ -66,6 +66,13 @@ public class CircuitBreakerConfig implements Serializable {
     private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
     private transient Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+    // The predicates as passed to the builder, before they are combined with recordExceptions and
+    // ignoreExceptions. Builder(CircuitBreakerConfig) copies these, so that the combined predicates
+    // are not combined with the exception lists a second time.
+    @Nullable
+    private transient Predicate<Throwable> customRecordExceptionPredicate;
+    @Nullable
+    private transient Predicate<Throwable> customIgnoreExceptionPredicate;
     private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
@@ -378,8 +385,8 @@ public class CircuitBreakerConfig implements Serializable {
             this.failureRateThreshold = baseConfig.failureRateThreshold;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
-            this.recordExceptionPredicate = baseConfig.recordExceptionPredicate;
-            this.ignoreExceptionPredicate = baseConfig.ignoreExceptionPredicate;
+            this.recordExceptionPredicate = baseConfig.customRecordExceptionPredicate;
+            this.ignoreExceptionPredicate = baseConfig.customIgnoreExceptionPredicate;
             this.currentTimestampFunction = baseConfig.currentTimestampFunction;
             this.timestampUnit = baseConfig.timestampUnit;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
@@ -1014,6 +1021,8 @@ public class CircuitBreakerConfig implements Serializable {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.customRecordExceptionPredicate = recordExceptionPredicate;
+            config.customIgnoreExceptionPredicate = ignoreExceptionPredicate;
             config.ignoreExceptionsPrecedenceEnabled = ignoreExceptionsPrecedenceEnabled;
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
