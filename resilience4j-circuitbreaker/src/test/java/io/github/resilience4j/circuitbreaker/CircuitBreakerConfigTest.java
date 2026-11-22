@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.Either;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -563,6 +564,75 @@ class CircuitBreakerConfigTest {
         then(extendedConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.TIME_BASED);
         then(extendedConfig.getSlidingWindowSynchronizationStrategy())
             .isEqualTo(SlidingWindowSynchronizationStrategy.LOCK_FREE);
+    }
+
+    @Test
+    void shouldOnlyRecordListedExceptionsWhenRecordExceptionsIsSetOnCopiedDefaultConfig() {
+        CircuitBreakerConfig config = from(ofDefaults())
+            .recordExceptions(IOException.class)
+            .build();
+
+        then(config.getRecordExceptionPredicate().test(new IOException())).isTrue();
+        then(config.getRecordExceptionPredicate().test(new IllegalStateException())).isFalse();
+    }
+
+    @Test
+    void shouldReplaceBaseConfigRecordExceptions() {
+        CircuitBreakerConfig baseConfig = custom()
+            .recordExceptions(IllegalStateException.class)
+            .build();
+
+        CircuitBreakerConfig config = from(baseConfig)
+            .recordExceptions(IOException.class)
+            .build();
+
+        then(config.getRecordExceptionPredicate().test(new IOException())).isTrue();
+        then(config.getRecordExceptionPredicate().test(new IllegalStateException())).isFalse();
+    }
+
+    @Test
+    void shouldReplaceBaseConfigIgnoreExceptions() {
+        CircuitBreakerConfig baseConfig = custom()
+            .ignoreExceptions(IllegalStateException.class)
+            .build();
+
+        CircuitBreakerConfig config = from(baseConfig)
+            .ignoreExceptions(IOException.class)
+            .build();
+
+        then(config.getIgnoreExceptionPredicate().test(new IOException())).isTrue();
+        then(config.getIgnoreExceptionPredicate().test(new IllegalStateException())).isFalse();
+    }
+
+    @Test
+    void shouldKeepBaseConfigExceptionPredicatesAndListsWhenNotOverridden() {
+        CircuitBreakerConfig baseConfig = custom()
+            .recordException(e -> e instanceof IllegalArgumentException)
+            .recordExceptions(IOException.class)
+            .ignoreException(e -> e instanceof UnsupportedOperationException)
+            .ignoreExceptions(IllegalStateException.class)
+            .build();
+
+        CircuitBreakerConfig config = from(baseConfig).build();
+
+        then(config.getRecordExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        then(config.getRecordExceptionPredicate().test(new IOException())).isTrue();
+        then(config.getRecordExceptionPredicate().test(new RuntimeException())).isFalse();
+        then(config.getIgnoreExceptionPredicate().test(new UnsupportedOperationException())).isTrue();
+        then(config.getIgnoreExceptionPredicate().test(new IllegalStateException())).isTrue();
+        then(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+    }
+
+    @Test
+    void shouldNotCountUnlistedExceptionAsFailureWhenRecordExceptionsIsSetOnCopiedConfig() {
+        CircuitBreakerConfig config = from(ofDefaults())
+            .recordExceptions(IOException.class)
+            .build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("test", config);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IllegalStateException());
+
+        then(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
     }
 
     @Test
